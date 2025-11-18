@@ -27,3 +27,5 @@ Office2019
 Bandicam
 HiSuite
 block-ads
+360zip
+WPS Office
