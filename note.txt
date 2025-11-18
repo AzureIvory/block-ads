@@ -22,7 +22,8 @@ Xmind--思维导图
 JetBrains--IDE系列
 Everything--搜索
 bandicam--录屏
-Office2016
+360zip--360压缩
+WPS Office--金山办公WPS Office
 ToWinCleaner--垃圾清理大师
 AIxiezuoquannengwang--AI写作全能王
 haigeshishujuhuibidashi--嗨格式数据恢复大师
