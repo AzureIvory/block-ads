@@ -240,7 +240,7 @@ func HasWV2() bool {
 	msg := "缺少运行库 WebView2，是否安装？\n\n" +
 		"是：安装运行库\n" +
 		"否：退出\n" +
-		"跳过：继续运行（已安装请直接跳过）"
+		"取消：继续运行"
 	cap := "提示"
 
 	u32 := syscall.NewLazyDLL("user32.dll")
