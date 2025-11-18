@@ -1,0 +1,1206 @@
+Windows--系统目录（必须加入白名单）
+Tencent--腾讯软件
+Epic Games--Epic商店
+Application--系统应用
+Microsoft VS Code--如其名
+JianyingPro--剪映
+KwMusic--酷我音乐
+AMD--AMD驱动
+Intel--英特尔驱动
+Clash for Windows--如其名
+mingw64--编译器
+PotPlayer--PotPlayer播放器
+aDrive--阿里云盘
+Thunder--迅雷
+PixPin--长截图工具
+BaiduNetdisk--百度网盘
+VirtualBox--虚拟机
+Oray--向日葵系
+123pan--123云盘
+VMware--虚拟机
+Xmind--思维导图
+JetBrains--IDE系列
+Everything--搜索
+bandicam--录屏
+Office2016
+ToWinCleaner--垃圾清理大师
+AIxiezuoquannengwang--AI写作全能王
+haigeshishujuhuibidashi--嗨格式数据恢复大师
+yuanqizhuomianbizhi--元气桌面壁纸
+AiPPTxunchaAiPPT--AI制作ppt
+NetPoweZipLYT--流氓解压工具
+Doubao--豆包
+PCjiamiWorkDir--文件夹加密工具
+PCjiami--文件夹加密工具
+2345Soft--2345安全管家
+2345PCSafe--2345安全管家
+2345SafeCenter--2345安全管家
+2345AvScan--2345安全管家
+360huobao--360画报
+360Safe--360安全
+LuDaShi--鲁大师
+SoftMgr_2345--2345安全管家
+WinAssist--流氓壁纸
+BirdWallpaper--小鸟壁纸
+kingsoft--金山毒霸
+DriveTheLife--驱动人生
+DTLSoft--驱动人生
+360bizhi--360壁纸
+365SpeedImage--极速图片查看器
+55Viewer--流氓
+66bizhi--流氓壁纸
+6789GameBox--6789游戏盒子
+6789Zip--6789压缩
+7654Browser--7654浏览器
+AbcInvoice--流氓
+ADBlockMaster--广告拦截大师（自身流氓）
+AetherShut--流氓
+aibizhi--流氓壁纸
+AiCiIdiom--带着AI的大部分流氓
+AICleaner--AI清理
+AiCoolStdn--AI学习
+AideClock--AI时钟
+AiHanYu--AI汉语
+BearScreenShot--Best截屏
+BentlyCut--Best录屏
+BestZip--Best压缩
+BetaPic--图片浏览器
+BigFishInvoice-- 大鱼发票识别
+BigFishSearch--大鱼易搜
+BILINote--梦蓝记事
+BirdWallpaper--小鸟壁纸
+BiscuitZip--饼干压缩
+BKPDFReader--贝壳PDF
+BlissCalendar--清理大师
+BlockMaster--流氓
+BlockMasterpAth--流氓
+Blue Eye Master--蓝眼护眼
+BlueDoveUnist--驱动卸载
+BlueDoveUnistData--驱动卸载
+Bluewhale--流氓
+browsercrx--广告程序目录
+buffaloCalendar--水牛日历
+BugPicture--瓢虫看图
+ButflyImage--蝴蝶看图
+BXAudioConverter--百讯音频转换器
+BzySearch--八爪鱼搜索
+bzzhushou--壁纸助手
+CalfWallpaper--小象壁纸
+CameraOla--欧拉录屏
+CAScreenshot--CA一键截屏
+Cataclysmic--Ms-Zip广告目录
+CatehelaPdf--科特PDF
+CETranslate--小策中英翻译
+ChanelPicture--ChanelPicture
+changewpshell--换桌面壁纸
+ChangLianWifi--畅连wifi
+CherryBlossoms--高效搜索广告目录
+ChromeSE--安全浏览器
+Clean Master--C盘清理大师
+ClearManage--ClearManage
+ClearManagepAth--ClearManage目录
+ClickDesktop--点点桌面
+ClitesRecord--云汐录屏
+CloudNotePad--云记事本
+CloudPlayer--云窗播放器
+CloudsToolbar--云朵工具栏
+CloudZip--CloudZip
+CoconutTreeInvoice--一键转换发票到图片
+ColorfulPicture--七彩看图
+ColorfulWiFi--七彩wifi
+ColorNote--Fast压缩软件
+ColorXEditor--ColorX图片编辑助手
+ConchPicture--海螺看图
+ConchZip--贝壳压缩
+ConhZip--贝壳压缩
+ConverterModule--迅读PDF大师
+CoolRAR--酷压
+CooltaScreen--CooltaScreen
+CouponMaster--优惠大师（鲁大师系列）
+CSChrm--ChromeNewTab
+CubeWallpaper--魔方壁纸
+CupBj--CupBj
+CutMaster--截图大师
+czNote--橙子多彩便签
+CzPolicySvc--今日看点、热点资讯
+DandelionWifi--蒲公英wifi
+DataRecovery--易极数据恢复
+DaydayAlarm--天天好钟
+DaydayAlarmEx--天天好钟广告目录
+DAYdayImage--DAYdayImage
+DaYuWallpaper--大鱼壁纸
+DBGHelp--快捷锁屏相关组件
+dczhushou--电池助手
+DDesktopTools--点点桌面
+DDPhoto--多顿看图
+DelphinWiFi--海豚wifi
+Deltalup--Deltalup
+DeskMagnifier--桌面放大镜
+DidaCale--滴答日历
+DiDaWallpaper--嘀嗒壁纸
+DiamondCode--DiamondCode
+dingpdf--迅看PDF大师
+DiorRecord--DiorRecord
+DMOPELL--极速搜索相关组件
+doctranslate--doctranslate
+DocumaKing--文件管理王
+DolphinWallpaper--海豚壁纸
+DouMai--豆麦笔记
+Doyo--逗游游戏盒
+DsAlarmClock--定时小闹钟
+DsGameBox--袋鼠游戏盒子
+dsgter--大数智图PDF阅读器组件目录
+DsPdfReader--大数智图PDF阅读器
+dybook--dybook
+EasyBk--简易记事本
+EasyCalendar--EasyCalendar
+EasyClip--EasyClip
+EasycurSrec--易葫录屏
+EasyHider--Easyhider保险柜
+EasyHiderCrate--Easyhider保险柜
+EasyHiderData--Easyhider保险柜
+EasyPDF--EasyPDF
+EfficientSearch--高效搜索
+EideNotepad--艾德记事本
+ElementViewer--元素看图
+ElephantPDF--大象PDF
+ElPDFReader--大象PDF
+EMTree--简易记事本广告目录
+ENote--简易记事本
+ENotepad--简易记事本组件目录
+EOcr--E识别
+EsayDrawing--EsayDrawing
+EtawallSet--EtawallSet
+ETPlayer--ETPlayer
+ExData--简易记事本组件目录
+EXEDOWN--流氓软件下载目录
+EyesGuardCn--Eyes保护师
+EyesHelper--护眼小能手
+eyesprite--护眼精灵
+FaceClock--飞思时钟
+FastCode--条码生成器
+FastOffice--极简办公
+fastpdf--云动PDF
+Fastpic--极速看图
+FastSearch--快速搜索
+FastSign--快速便签
+faststart--FastStart
+FastTranslate--快速翻译助手
+FastZip--快捷压缩
+FasWiFi--FastWiFi
+FBCCleaner--非凡C盘清理
+FeiRar--飞压
+FeiSuPDF--飞速PDF
+FeiSuZip--飞速压缩
+FenBiClass--粉笔课程表
+fengchaobizhi--蜂巢壁纸
+FffMemoryTrain--风枫蜂记忆力训练
+FHWatermark--非哗水印
+FibreFlowerWifi--麻花wifi
+FigrhapPDF--指悦PDF
+FileAssistor--FileAssistor
+FileInspector--FileInspector
+filemanager--文件管理大师
+filenameth--文件批量改名
+FileSearch--文件搜索
+FileZhuoYi--文件琢移
+FirstbPlayer--第一佳播放器
+FishCalendar--FishCalendar
+FishingJoy--捕鱼达人
+FliTik--翻页时钟
+FLManager--风灵软件管家
+FlowerShopAssistant--花购助手
+flybird--飞鸟壁纸
+flyfish--flyfish
+flyHorsePdf--飞马PDF
+flysvr--火萤视频桌面组件
+FordCollect--FordCollect
+FoxCode--快码条码生成器
+FPTOcr--FPTOcr
+FrameTach--高效搜索相关组件
+FrewodPlayer--火木播放器
+fslocal--极速搜索广告目录
+FsZip--FsZip
+FtpySer--未知广告组件
+FuLiQuan--福利券
+FunAcce--风行视频加速器
+FWStorage--方围储存转换
+fypdfr--简易PDF
+FYScreenshot--FYScreenshot
+FyStore--风云软件管家
+FZip--F-Zip
+GameBox--游戏盒子
+GameDDZ--哒哒斗地主
+GamePlatform--中华游戏大厅
+GammaTime--GammaTime
+GaoSuBrowser--GaoSuBrowser
+GeekZip--极客压缩
+GhostConvert--幽灵转换
+gifluzhi--Gif录制
+Giftools--Giftools
+GiugeoswlPDF--集优PDF
+GoodmoodCode--条码生成器
+GoodyScrshot--古迪截屏
+GoodZip--GoodZip
+GrainsEditor--米粒记事本
+GrassCode--条码生成器
+greenlight--绿电日历
+GreenPomeloClean--青柚Cleaner
+GreenPomeloData--青柚Cleaner
+GreenZip--GreenZip
+GrenShutdn--格睿关机
+GSoInput--极速输入法目录
+GucciMemo--古驰记事
+GxSheelT--ENote组件
+HaiNote--橙子多彩便签
+HaloDeskPets--Halo桌面宠物
+HaloDesktop--海螺桌面
+HaloWallPaper--Halo壁纸
+HaoKan--好看看图
+HaoKanWallPaper--好看壁纸
+HaoKanWp--好看壁纸
+HaoKnWallPaper--好看壁纸
+haomikt--好米看图
+HaoTuKanKan--好图看看
+HappinessClock--幸福时钟
+HappyPicture--开心看图
+HDPic--HDPic
+hdwwp--溜溜壁纸（66壁纸）
+Heinote--小黑记事本
+HeraclesPdf--大力PDF
+HermClock--HermClock
+HermClockEx--HermClock广告目录
+HEUactivation--推装激活工具
+hexedit--HexEdit
+HFDate--红枫日历
+HICalendar--HI日历
+HiInput--嗨输入法
+HillMagnifier--小山放大镜
+HLNote--瀚立便签
+HKWallPaper--好看壁纸
+HologramCap--全息录屏
+hongfeiNotepad--鸿飞记事本
+HongMengRL--鸿蒙日历
+HotrabCut--红兔截屏
+HsbOcr--HsbOcr
+HtPlay--C Player
+HttpSvrt--广告程序目录
+HuanYmage--HuanYmage
+HuayiGifScr--画伊录屏
+HuiLeMe--惠了么助手
+HuixDraw--彗星画图
+HYDictionary--华育字典
+HYFastSide--火萤视频桌面组件
+hylite--火萤视频桌面
+HYNotepad--好用记事本
+IBoFang--IBoFang
+idesk--iDesk助手
+IdouDesk--爱豆助手
+iEyePicture--iEyePicture
+iguidang--I归档
+iHuYan--爱护眼
+ikantu--爱看图
+ikantu365--爱看图
+ILocalPlayer--ILocalPlayer
+ILoveImage--52看图
+ImageClip--切图大师
+Imagine--Imagine
+IMagnifier--IMagnifier
+IMedia--IMedia
+InfoNote--随笔记事本
+InkImg--水墨看图
+iNote--i-Note
+iNotePad--iNotePad
+InpaintMAX--水印MAX
+iOSRecovery--易极苹果数据恢复
+iPDF--云上PDF
+iPdfReader--PDF 查看程序
+iSearch--iSearch
+ITextEditor--ITextEditor
+itv--i搜影
+ixiasou--爱虾搜
+izip--爱压缩（iZip）
+JaneDrawing--简笔画
+JfSearch--极风搜索
+JGBYPC--激光捕鱼广告
+JianBook--简易记事本
+JianDesk--简桌面
+jiankangzhushou--健康助手
+JianSuZip--简速压缩
+JiJianFormwork--极简办公模板
+JiJianMuBan--极简模板
+JiJianNote--极简笔记
+JikePDF2--即刻PDF
+JikePDFConverter--即刻PDF转换器
+JiKePDFReader--即刻PDF阅读器
+JingJianZip--精简压缩
+JinSPDFReader--金速PDF阅读器
+JiSuSearch--极速搜索
+JpgSeeImg--JPG看图
+JPPDFConvert--极品PDF转换器
+JpPicture--极品看图王
+JTWallpaper--焦糖壁纸
+JuzipClock--JuzipClock
+JXFileEncry--记星文件加密
+JzPcMonitor--桔子电脑监测
+k52zip--52好压
+k52zippdf--52好压组件目录
+KaKaPDF--KaKaPDF
+kangnote--kangnote
+kantu365--365看图
+KaoZip--拷压
+KappaCamera--卡帕相机
+KateDrawing--凯特画图
+KeepHelp--简易记事本组件目录
+kfastpic--极速看图
+KindyboomZoom--惠嗒放大
+KingMemo--KingMemo
+KJCompress--快洁压缩
+KJFileLocker--快捷文件锁
+kjminipage--快捷文件锁广告目录
+kjplug--快捷文件锁组件
+kjupgrade--快捷文件锁组件
+KKView--快快看图
+KoalaWall--考拉壁纸
+KooZip--酷压
+kplayer--kplayer
+KryptonMusic--克拉音乐
+KuaisuGameAccelerator--快速网游加速器
+KXAdBlocker--广告拦截专家
+KyPicture--快阅看图王
+kyqwppdf--元气PDF阅读器右键菜单
+kz--快压
+LabdaClosure--LabdaClosure
+LabdaShut--LabdaShut
+LanShanOffice--蓝山Office
+LanShanPDF--蓝山PDF
+LanShanPDFConverter--蓝山PDF转换器
+LanShanZip--蓝山压缩
+LanyuInMind--LanyuInMind
+laoyouNote--老友便签
+LazyWifi--懒人wifi
+ldsLDSShellExt--小鸟壁纸右键菜单
+LDSGameMaster--手机模拟大师
+LdsLite--白兔硬件精灵
+LeafAttrVie--树叶属性查看
+lemonz--柠檬压缩
+LevinBoot--启动项管理
+LeyouGamebox--乐游游戏盒
+LFCalendar--拉法日历
+LFCalendar--拉法日历3
+LhongNote--长鸿记事本
+LifeNote--LifeNote
+LightingView--闪电看图
+Lightpdf--莱特PDF
+LightPlayer--光速播放
+lightregulate--亮度调节器
+LinkImage--RNG看图
+LittleBit--LittleBit
+LittlePicture--迷你看图王
+Localfinder--光速搜索
+Localminin--今日热点
+Localmodelp--广告程序目录
+LocalUnity3DCorp--ChromeNewTab
+LocalWeiDuan--游戏微端目录
+LookCode--看看条码
+lookeverything--lookeverything
+LoveFastSShot--爱捷截图
+LucaredShut--鲁刻关机
+LuckyCalendar--幸运日历
+LuDaShiutils--饼干压缩等软件
+LuDaShiapps--Tabx Explorer等软件
+LunarCale--LunarCale
+m_pdfedit--转转大师PDF编辑器目录
+MagicToolKit--MagicToolKit
+MagMaster--屏幕放大专家
+MaiGuangData--麦光文档
+MaiGuangOffice--麦光文档
+mandoudou--漫兜兜
+MasterPDF--迅读PDF大师
+MasterPDFData--迅读PDF大师广告目录
+McoloPaint--彩画
+MelonNote--西瓜便签
+meTools--每图天气
+MFileMgr--M-文件管理器
+mfmminipage--M-文件管理器广告组件
+MGsearch--芒果搜索
+MGWallpaper--蘑菇壁纸
+MiaoRar--秒压
+MiaoRar2--秒压
+MicroCool--微酷PDF
+MicroFile--ChromeNewTab
+MicroGame--游戏微端
+MicrosofService--ENote广告程序目录
+MicrosoftWindowsTemplates--通杀常见的dllhost.exe启动的计划任务广告程序
+MiniInpaint--水印微管家
+Minimalism--极简下载
+MiniNotes--迷你记事本
+minizoom--迷你放大镜
+Minority--Ms-Zip广告目录
+MinsinFmg--名信文件管理
+MJImageConverter--名捷图片转换器
+MJShop--麦家购物助手
+MkCool--微酷PDF
+MobileEmuMaster--手机模拟大师
+MoMiao--魔喵壁纸
+MoMiaoNew--魔喵壁纸
+MosInspector--莫斯检查器
+mousemenu--mousemenu
+mp3jq--mp3截取
+Ms-Zip--Ms-Zip
+Mtkantu--每天看图
+MusesMusic--缪斯音乐
+MYNovel--香蕉悦读
+MYPGNotes--苹果便签
+MyWebBook--Myweb网页收藏夹
+NarcissusWiFi--水仙wifi
+nationwide--随笔记事本广告服务目录
+NestWiFi--蜂巢Wi-Fi
+NewExeDown--流氓软件下载目录
+NewNotebook--新记事本
+NewsMini--广告程序今日热点
+newsminin--广告程序今日热点
+nguidang--N归档
+NiuXiaoQuan--牛小券
+NNBJ--NNBJ
+NO1Date--兰博万年历
+NoteToTo--NoteToTo
+Note+--Note+ plus版
+OctopusInput--章鱼输入法
+OfficeAddinZhix--OfficeAid
+OfficeAidDesktop--OfficeAid
+OKTool--OK工具箱
+OmegaDesk--米伽桌面
+OrahMpedia--欧哈MP3播放器
+OrangeNote--OrangeNote
+OrangeZip--OrangeZip
+OriginPDFReader--起点PDF阅读器
+PandaPDF--熊猫PDF
+PandPdf--熊猫PDF
+PCDate--电脑日历
+PDFConverter--PDF转换器
+pdfmaster--pdf大师阅读器
+PeaFSearch--豌豆快搜
+PeanutCleanData--花生清理
+PeanutClean--花生清理
+PetalEyeCare--花瓣护眼
+PetBuddy--小伴桌宠
+PGYWifi--蒲公英wifi
+PhantomCut--幻影截屏
+photoviewer--ABC看图
+PhotoYoYo--图UU
+picovert--图片格式转换
+pictool--图片小帮手
+PicView--星星看图
+PomeloClock--柚子时钟
+PowerCode--能量条码
+PPTMoudle--PPT模板大师
+PrinterMaster--打印机大师
+Program FilesCalendar--土豆日历
+Program Files (x86)Calendar--土豆日历
+Program Files SoftMgr--天极软件管家
+Program Files (x86)SoftMgr--天极软件管家
+PrompotRecord--捷库录屏
+ptsandf--PPT模板大师广告
+PuddingDesktop--布丁桌面
+PuddingZip--布丁压缩
+qdate--趣日历
+QianXingZip--千行压缩
+QiaoYa--巧压
+QiaoZip--巧压
+QiEImage--企鹅高清看图
+QiHuaDownTime--QiHuaDownTime
+QiKe--奇客PDF
+QiKeZip--奇客压缩
+QingEZip--QingEZip
+QingFengPicture--青蜂看图
+QingFengRL--清风日历
+QingJiePdf--轻捷PDF
+QingYaZip--轻压压缩
+QingYunCalendar--QingYunCalendar
+QingyunZip--轻云压缩
+QkeImage--企鹅高清看图
+qkpdf--qkpdf
+QMDX--轻描淡写
+QNWallpaper--青鸟壁纸
+QNZip--全能压缩
+QSPDFReader--轻速PDF阅读器
+QuanNotePad--记事能手
+QuanTxtReader--记事能手
+QuickSee--快看图
+QuickTimer--小捷定时关机
+QuickZip--便捷压缩
+QWallpaper--Q版壁纸
+QWallpaperEx--Q版壁纸相关目录
+QYMediaFormat--轻映视频转换器
+QYScreenRecorder--轻映录屏软件
+RainbowNote--彩虹记事软件
+RainWallpaper--雨滴壁纸
+RapidPoetry--迅学古诗
+RAVAntivirus--RAVAntivirus
+ReadWell--好好看书
+RecordMaster--录屏专家
+redianNote--热点便签
+RedrabCut--红兔截屏
+regfastsearch--RegFastSearch
+RenaTime--雷诺时钟
+rightkeymenu--鼠标右键菜单管理
+RingNote--风铃便签
+RJHZ--软件盒子
+RNGImage--RNG看图
+RnonWiFi--小浣熊wifi
+Roaming365Data--365速看图相关目录
+Roamingabcpb--屏保广告
+Roamingassembling--随笔记事本广告目录
+Roamingbzzs--壁纸助手
+Roamingcert--切图大师相关目录
+Roamingconfig--切图大师相关目录
+RoamingConvert--迅读PDF大师组件
+Roamingcrx--锁屏画报目录
+Roamingdata--切图大师相关目录
+Roamingeliminating--随笔记事本广告目录
+Roamingfbwp--飞鸟壁纸目录
+Roamingjishiben--iNotePad相关目录
+Roaminglockscreen--锁屏画报（360系列）
+Roaminglszip--雷神压缩广告目录
+RoamingMicrosoftProtect--通杀隐藏的广告插件启动项
+Roamingmicros~1Protect--同上（短路径）
+Roamingminblink--恒星播放器Miniblink.exe
+RoamingSHApp--搜狐影音组件目录
+Roamingshuiyin--图片小帮手组件
+Roamingtx--奇客PDF转换器
+Roamingupdate--大连纵梦更新程序目录
+RocketCode--火箭条码
+RomeClock--罗马时钟
+SaiTaoTao--赛淘淘购物助手
+screenocr--screenocr
+ScreenSaver--快捷锁屏
+ScrewCode--螺旋条码
+SeagullWallpaper--海鸥壁纸
+search616--文件搜索
+SevenDayBJ--SevenDayBJ
+ShadowSaver--ShadowSaver
+ShanOcr--ShanOcr
+SharkPhoto--鲨鱼看图
+ShellWiFi--贝壳wifi
+ShinesPlayer--翔安播放器
+ShiningZip--闪压缩
+ShowmeMusic--咻咪音乐
+ShuYuDecimal--数语进制转换
+SigmaNote--西马便签
+SigmaRec--西玛录屏
+SigoalPlayer--讯果静听
+SiHaiClock--四海世界时钟
+SimpleBook--简易记事本
+SimpleNotepad--简单记事本
+SimpleZip--简压缩
+SizeAssistant--小美尺码
+SkyCompress--天空压缩
+SkyPicture--星空看图
+smallerpdf--smallerpdf
+SmallTreePDF--小树PDF
+SmallTreesPDF--小树PDF
+SMAppManage--SMAppManage
+SmartCloudInput--智能云输入法
+SmartInput--智能云输入法
+SmartLook--万象预览
+SmartWBInput--智能云五笔
+SnowCalendar--小雪日历
+SnowFalling--SnowFalling
+SoftMgr_2345--2345软件管家
+SogouSoftware--搜狗下载器
+SophPicture--智子画图
+speedImage--RNG看图
+SpeedonPdf--速通PDF
+speedpdf--speedpdf
+SpOpen--windows_简单天气
+SPWY--视频无忧
+sqzip--松鼠压缩
+SSLocal--快捷锁屏广告目录
+SssKeyboard--虽随水键盘练习
+StarCloudZip--星云压缩
+StarNote--StarNote
+StarPlayer--StarPlayer
+StarWifi--StarWifi
+StellarPlayer--恒星播放器
+Steamalypc--Steamalypc
+StormPlayer--暴风影音
+SuGouShop--速购助手
+SuiShouJi--随手记、随身记
+SuiXinNote--随心笔记
+SunnyDay--晴天日历
+SuperX--极客大师
+SwanNote--天鹅便签
+SWebDrive--高效搜索相关组件
+SWebHelp--极速搜索相关组件
+SwiftImage--蜂鸟看图
+SwiftImg--蜂鸟看图
+swunzip--糖果解压
+sysoptasst--金牌电脑管家
+TabXExplorer--TabX Explorer
+TaoBook--简单记事本
+TaoShopAssistant--淘购助手
+TaotaoPic--淘淘看图
+TankCshot--Tank截屏
+TarInspector--塔尔文件管理
+TarotMedia--舒克播放器
+TarotShut--塔罗关机
+TaskBarSearch--2345搜索工具栏
+TaskBarWeather--2345天气工具栏
+taskdone--任务完成助手
+TatPuzzle--TatPuzzle
+TaxOcr--ADaiPictureToText
+temp--通杀临时目录启动项
+timecalendar--时光日历
+TimulingClock--蒂牧时钟
+tinybird--小鸟壁纸
+TinyGame--游戏微端
+TkPdfViewer--糖块PDF阅读器
+TodayStar--今日星运
+ToImage--RNG看图
+Tools_Plus--清理优化工具
+TSBrowser--极速浏览器
+TTnote--蓝梦记事
+TuJiTV--兔几直播
+TutuAudioer--图图音乐播放器
+TutuCamera--图图相机
+TutuEditor--图图文本编辑器
+TutuPlayer--图图播放器
+UFilesExplorer--UFiles资源管理器
+uninstallmaster--软件管家
+UsersPublicAccountPictures--通杀某些白加黑远控
+UsersPublicDocuments--通杀微信双开各版本
+UsersPublicDownloads--通杀某些白加黑远控
+UsersPublicMusic--通杀某些白加黑远控
+UsersPublicPictures--通杀某些白加黑远控
+UsersPublicVideos--通杀某些白加黑远控
+vdesk--小薇桌面
+VioletlokPic--堇色看图
+visionmanagersoft--视力管家
+vitalwallpaper--元气壁纸
+VolcaManager--火山文件管理
+wADaiPictureToText--ADaiPictureToText
+WangYunNote--网云笔记
+WanMeiSeeImage--完美看图
+WanMeiZip--完美压缩
+WanNengInput--万能输入法
+WanNengSoftManager--万能软件管家
+WanNengZip--万能压缩
+WanPicture--万能看图王
+WBService--简易记事本广告目录
+wdbook--wdbook
+WdGame--网页游戏微端
+weiku--微酷PDF
+WellHost--好好看书组件
+WIFIInspector--洋葱wifi
+wincompress--Win解压缩
+WindowMergecy--高效搜索组件
+WindZip--WindZip
+WinInsignty--广告程序下载目录
+winManager--WindSoul软件管家
+winmaster--优化大师
+winrzip--WinRZIP
+wisdom--智慧帮手
+WishSShot--如意截屏
+WMSeeImg--完美看图
+WnPDFReader--万能PDF阅读器
+WnRecovery--万能恢复大师
+WoodpeckerCode--啄木鸟条码生成器
+WordHelper--词组助手
+WorthyShop--值购助手
+WPengine--火萤视频桌面
+WxOpen--微信多开盒
+wzip--Win压缩
+XBDate--小白日历
+NetPowerZipBingTwo--zip压缩
+xbpic--小白看图
+XDImageShow--迅读看图
+XHWanNian--小黄万年历
+XiangCaoWifi--香草wifi
+XiaoBeiMoney--小贝金额转换
+XiaoFeiWords--小飞字数统计
+xiaogz--小刚压缩
+XiaoMaPDF--飞马PDF阅读器
+XiaoMiNote--小秘便签
+XiaoNote--橙子多彩便签
+XiaoXiaoNotepad--小小记事本
+xiaoyu--小鱼便签
+XiaoYuNotepad--小雨记事本
+ximalaya--喜马拉雅
+XiMusic--XiMusic
+XingRecord--星之录屏
+xinnote--小新记事本
+XinSuZip--新速压缩
+XKCalendar--星空日历
+XKPhonePlace--迅看归属地查询
+XNewLook--小新看图
+XQCalendar--心晴日历
+XraOfficeTable--礼拜一办公
+XsPicture--星速看图王
+XSUPDFReader--XSUPDFReader
+xunpdf--迅看PDF大师
+XunZip--迅压
+xxpic--星星看图
+xxrl--小熊日历
+xxtt--小讯头条
+XYRadish--萝卜截图
+XYZSudoku--XYZSudoku
+XZWallpaper--袖珍壁纸
+YDate--悦日历
+YENote--优易贴
+yibook--简易记事本
+YiDeRelative--易得亲戚计算器
+YiFastView--易捷看图
+YiiMiZip--一米压缩
+Yingyan--鹰眼看图
+YinNote--橙子多彩便签
+YizeCamera--伊泽相机
+YouJianDaShi--右键管家
+youwohz--游窝盒子
+YouXiangWiFi--优享wifi
+yscqGame--游戏微端
+YunDianJi--云点击浏览器
+YunGameBox--云即玩游戏盒
+YunMiniInfo--云记事本广告组件
+YunTXT--云记事本
+YxhGamebox--即刻玩游戏盒
+YZBiZhi--柚子壁纸
+YZWallpaper--柚子壁纸
+ZdShut--准点关机
+ZeroZip--零压
+ZheGouZhuShou--折购助手
+zhengdbb--整点播报
+ZHGameBox--中华网游戏盒
+ZhiNengPYInput--智能拼音输入法
+ZhiNengZip--智能压缩
+ZhongHuaPdf--中华PDF阅读器
+ZhongXiangWiFi--众享免费wifi
+ZHPDFReader--中华PDF阅读器
+zhuomianrili--桌面日历
+ZhuoMiClicks--ZhuoMiClicks
+ZHWorkKit--中华办公模板
+ZManager--宙斯文件管理器
+ZmartFileMg--ZmartFileMg
+zmassist--广告程序目录
+zmNotepad--纵梦记事本
+ZPDFEdit--转转大师PDF编辑器
+zShut--Juzip定时关机
+ZuiJieZip--最洁压缩
+ZZDS--转转大师PDF转Word
+定时任务大师--定时任务大师
+简单记事本--简单记事本
+鲸彩壁纸--鲸彩壁纸
+快快压缩--快快压缩
+快压--快压
+雷神压缩--雷神压缩
+文件加密大师--文件加密大师
+智效严选--智效严选
+Anhui Shabake Network Technology--高速下载器
+Beijing Yundongshidai Network Technology--高速下载器
+Shanghai XuSong investment partnership Enterprise--高速下载器
+Tuling Times Information Technology--高速下载器
+Guangdong Fengqi Technology--高速下载器
+Ningbo Runji Network Technology--高速下载器
+合肥听风雨网络科技--高速下载器
+上海剑姬网络科技--高速下载器
+重庆天极魅客科技--高速下载器
+宁波润吉网络科技--高速下载器
+苏州赞鼎信息技术--高速下载器
+Anhui Aiqi Network Technology--爱压缩（iZip）、i-Note、iSearch
+Anhui Longxun Network Technology--同下安徽龙讯网络科技
+Beijing AoLanDe Information Technology--高速下载器、云动PDF、WIN工具箱
+Beijing Banyun Polymerization Technology--播播乐
+Beijing CloudStory Inc--桌面日历
+Beijing Funshion Online--风行视频加速器
+Beijing HuiZhuGongYing Technology Development--飞压压缩
+Beijing Jiexun Cloud Network Technology--LookEverything、天喻音频转换器
+Beijing Tianbao Kuantian Information Technology--贝贝看图
+Beijing Wakaka Network Information Technology--万能应用市场
+Beijing Xiaoshu Germination Network Technology--clearmanage、广告拦截大师
+Beijing Yundong Zhixiao Network Technology--伪Office365、智效严选、OfficeAid
+ChangSha QiHang Network Science--护眼小能手
+Changxiang Mutual Entertainment Network Technology--截帮帮
+Chengdu Aishang Office Technology--迅读看图、迅读CAD极速看图、迅读Zip解压、迅读驱动、Windows优化C盘清理、迅读格式工厂、CAD看图编辑王、极速卸载精灵、DS一键安装工具-R1电脑版、Winz解压缩、DLLRepairOfficial、迅读完美播放器、艾上画报
+Chengdu Qilu Technology--鲁大师数签
+ChengDu XunGuo Data Technology--讯果静听
+Chongqing Aibeibei Technology--飞米压缩
+Chongqing Chenyixuan Technology--ResManagerRes、StarEditor
+Chongqing Hanli Network Technology--瀚立便签、小秘便签
+Chongqing Hengzhisheng Envir Pro Technology--欧拉录屏
+Chongqing HuaBo Technology Center--云窗播放器、简笔画、准点关机、缪斯音乐、雨滴壁纸、风铃便签、定时小闹钟、伊泽相机、星之录屏、咻咪音乐、爱酷关机
+Chongqing Jiawo Industrial--淘淘看图、莱特PDF、零压、小山放大镜、文件管理王、飞思时钟
+Chongqing Jinghua Xulian Technology--极客压缩
+Chongqing Jiuqu Network Technology--Explorer++、吉吉资源管理器、GifRecord
+Chongqing Minjue Science and Technology--I-FileManager、JuzipClock、EtawallSet、BentlyCut、FordCollect、幻影截屏、CooltaScreen
+Chongqing Newsletter Culture Media--火木播放器、塔尔文件管理、欧哈MP3播放器
+Chongqing QianDuiXue Technology--红兔截屏、惠嗒放大
+Chongqing Qianrenhang Technology--千行压缩
+Chongqing Weihao Technology Development--指悦PDF、艾德记事本、堇色看图、FileInspector
+Chongqing Xinhaohong Enterprise Management Consulting--米粒记事本、Tank截屏
+Chongqing Xudeng Instrument--EvaPicture、西玛录屏、名信文件管理
+Chongqing Yanzhikou Technology--TMeter计时器
+ChongQing YiSuTong Data Technology--截图大师、速通PDF
+Chongqing Zhongzhicheng Technology--凯特画图、桌面放大镜、光速播放、柚子时钟、易葫录屏
+Dongguan Youxiao Network Technology--翻页时钟
+Dragon Boss Solutions LLC--浏览器劫持程序
+Fashion cloud culture media--6789zip
+Fashion Cloud Culture Media--6789游戏盒子、广告拦截专家
+Fuzhou Zhongyi culture media--麻花wifi、袖珍壁纸、速购助手、星速看图王、飞速压缩、轻速PDF阅读器、极简办公
+Global Security Network Service--便捷压缩
+Guangxi Yunao Network Technology--风灵软件管家、WindSoul软件管家
+Hangzhou Dongen Network Technology--优声音频转换大师
+HangZhou JinXianYang Trading--螺旋条码、一键转换图片到文字、小雪日历、条码生成器
+Hangzhou Yanlin Network Technology--克拉音乐、元素看图、舒克播放器
+Hangzhou Yanyan Network Technology--火山文件管理、全息录屏
+Hangzhou Yaotu Steel--DiamondCode、一键转换发票到图片、能量条码、大鱼发票识别
+Hefei Shunyue Network Technology--快快看图
+He Fei Yun Biao--极速输入法GsoInput、云上PDF、云上压缩、小象记事本、小薇桌面、魔方美图、视频无忧、ChromeSE、F-Zip、打印机大师、嗨输入法
+Hefei Yunbiao--同上。
+Hubei KuKan Technology--酷看精选壁纸
+Hubei Yinyue Ecommerce--优兔看图
+Hunan Jiayue Kaitai Electronic Commerce--windows_简单天气
+IVY (ShenZhen) Software Technology--ChromeCore浏览器
+JiangXi CheSheng Technology--HI日历、FishCalendar、看看条码
+Jiangxia Information Technology (Huizhou)--RAR解压缩
+J.onaxh Network Technology--Vpings动态视频桌面软件、火萤视频桌面
+Kailong Huang--游戏盒子
+Kashi Guangxun Network Technology--伪office365
+Kuaixunda Software--123压缩
+Kunshan Core Network Technology--爱护眼、PDF 查看程序
+Kunshan Longbo Information Technology--快捷锁屏、切图大师
+Kunshan Mindray Network Technology--PDF 查看程序
+Ma'anshan Canghong Information Technology--FakeChrome
+Ma'anshan Lianmeng Network Technology--小刚压缩
+Ma'anshan Qisi Network Technology--预立闹钟
+Martino Fund Management--滴答日历
+NanChang Qiuen Network Technology--E识别、HsbOcr、盒子条码、条码生成器、幽灵转换
+Nanchang Xianyang Network Technology--水牛日历（buffaloCalendar）、绿电日历（greenlight）、条码生成器（fastcode）、时光日历（timecalendar）、FPTOcr、HDPic
+Nanjing BaiZeyou Network Technology--星星看图
+Nanjing Ruobai Network Technology--拷压
+Nanjing Weinuoxing Network Technology--KaKaPDF
+Nanjing Wenle Network Technology--炫彩便签
+Nanjing Yingxing Network--小美尺码
+Nanjing Yunshouju Network Technology--土豆日历
+Nanjing Zhixiao Information Technology--趣日历
+Ningbo Kunda Intelligent Technology--青鸟壁纸
+Ningbo Yunchi Network Technology--同宁波云炽网络科技
+Optimum Collection (Chongqing) International Logistics--翔安播放器、集优PDF、幸福时钟、图图文本编辑器
+Qingdao Kunru Information Technology--蓝梦记事、飞鱼笔记、视力管家
+Qingdao Stack Network Technology--365速看图
+Reason Cybersecurity Inc--RAVAntivirus
+Shang Hai Jing Ke Wang Luo Ke Ji--游戏盒子
+Shang Hai Shen Wei Wang Luo Ke Ji--简压压缩
+Shang Hai Zi Wei Wang Luo Ke Ji--快闪压缩、风云PDF、MagicToolkit、定时任务大师
+Shanghai DingXuan Technology--Eyes保护师、水印微管家、便携记事本（wdbbook）、KangImage、smallerpdf、迅看PDF大师、speedpdf、简易记事本（JianBook、SimpleBook、yibook）、wdbook、dybook、qkpdf、HuanYmage
+Shanghai Dongyao Information Technology--图片小帮手
+Shanghai Doukaijing Network Technology--全能看图、网购优惠券客户端
+Shanghai Dudian Network Technology--ChromeNewTab扩展
+Shanghai Guosui Network Technology--文件搜索
+Shanghai Hewei Information Technology--桌面壁纸、爱看图、飞鸟壁纸
+Shanghai Jiya Information Technology--以太关机、科特PDF
+Shanghai Lanshan office software--蓝山PDF、蓝山PDF转换器、蓝山Office、蓝山压缩
+Shanghai Lezhan Information Technology--FsZip
+Shanghai Mengge Ecommerce--FileAssistor
+Shanghai Oriental Webcasting--东方输入法、万能五笔、万能看图王、万能压缩、万能游戏盒、花购助手、兔几直播、焦糖壁纸、香草wifi、快速网游加速器、万能PDF阅读器
+Shanghai Paifang Information Technology--迅压
+Shanghai Qianmu Network Tech--iNotePad
+Shanghai Quhe Network Technology--蓝光护眼大师、文件加密大师
+Shanghai Shuteng Software Technology--快捷压缩
+Shanghai Yangtu Baozhen Network Technology--诗词快查（poemDC）、ADaiPictureToText（TaxOcr）、啄木鸟条码生成器、爱汉语
+Shanghai Yicen Network Technology--极品PDF转换器
+Shanghai Yingshuang Network Technology--同下海影双网络科技
+Shanghai Youbu Network Technology--小熊日历
+Shanghai Youwo Information Technology--游窝盒子
+Shanghai YouXin Media Studio--TTnote、白马PDF、flyfish、RNG看图（SpeedImage、RNGImage）、橙子多彩便签（YinNote、HaiNote、czNote）、XiaoNote、BMWPdf、LifeNote、飞马PDF（flyHorsePdf）、OrangeNote、bjienote、kangnote、CupBj、SevenDayBJ、NNBJ、NoteToTo、AideClock
+Shanghai Yueke Network Technology--古迪截屏、长鸿记事本、屏幕放大专家
+Shanghai Yuesong Information Technology--每天看图、YunTab标签页助理、ViewHelper
+Shanghai zaimeng information technology--365看图、zmrepair、ViewHelper
+Shanghai Zhuguli Jewelry Studio--幸运日历
+ShangHai ZiXin NetWork Studio--小马PDF、水印MAX
+Shaoxing Keqiao Yaogang Renewable Resources Recovery--极简下载
+Shaoxing Yaogang Network Technology--ADaiPictureToText、ShanOcr、爱图（AiTu）、快码条码生成器（FoxCode）
+Sharp Brilliance Communication Technology--Imagine
+Shenzhen Chongcheng Yuanshun Technolog--极简模板、即刻PDF、BKPDF
+Shenzhen Chongcheng zhisui Technology--贝壳PDF
+Shenzhen Dazhongsheng Technology--Fast截屏大师
+Shenzhen FunByte Technology--非凡C盘清理
+Shenzhen Kaixin Kangaroo Technology--GoodZip、开心看图
+Shenzhen Youyou Technology--6玩游戏大厅
+Shenzhen Yunwang Online Technology--云即玩游戏盒、云点击浏览器
+Sichuan Chengfang Software Technology--惠了么助手、大鱼壁纸、瓢虫看图（BugPicture）
+Sichuan Ouding Software Technology--海螺看图、贝壳wifi、轻压压缩、福利券（FuLiQuan）、袋鼠游戏盒子
+Sichuan Ruiyi Technology--贝贝看图
+Sichuan Weima Network--优享wifi、青蜂看图、折购助手、元气壁纸
+Sichuan Wenchi International Trade--蒂牧时钟、云汐录屏、彩画
+Sichuan Zhiling Shidai Network Technology--七彩看图、海鸥壁纸
+Sichuan Zhiling Times Network Technology--值购助手、新速压缩、坚果wifi
+Sichuan Zhirongtong Trading--彗星画图、画伊录屏、格睿关机、大力PDF、录屏专家
+Suqian Qianzhongwang Network Technology--Super应用市场
+Suzhou Dongyou Network Technology--微信多开盒
+Suzhou JinYuTang Information Technology--Gif录制
+Tianjin Xundu Technology--轻映视频转换器、迅读看图
+United Group (Beijing) Network Technology--聚众文件锁、亿迅图片转换器、名捷图片转换器、百讯音频转换器
+Wuhan Jiajia Yiyong Technology--流氓软件驱动
+Wuhan Ruisen Zhuoxin Network Technology--FakeBandizip
+Wuhan Secway Network Technology--流氓软件驱动
+Wuhan Wangluo Bafang Technology--天空压缩
+Wuhan Weizhinuo Network Technology--整点播报
+Wuhan Xiaozhuo Network Technology--同下 武汉晓卓网络科技
+Wuhan Yishuo Network Technology--健康助手
+Wuhan Yongda Network Technology--I归档、N归档
+Wuhan Yuyajie Network Technology--XJFileLock
+Xi an haofeng Information Technology--iDesk
+Xi'an Listen Snow Network Technology--i搜影（itv）
+Xiangshui Yamei Network Technology--爱壁纸
+Xingning Suya--速压
+XinSing Network Service--游戏盒子
+Yi Zai Network Technology--柠檬压缩
+Yihuang Shenying Network Technology--简速压缩
+YuanTou Shopping Technology(ChongQing)--鲁刻关机、第一佳播放器、图图音乐播放器、罗马时钟
+Yuzhong Ruikuo Business Information--智子画图、莫斯检查器
+Zaizhong Network Technology--亮度调节器、智慧帮手
+Zhao Qin Network Technology--StarNote
+Zhengzhou Juruxin Network and Technology--IECode
+安徽龙讯网络科技--好用记事本、随心笔记、极简笔记、网云笔记
+安徽磐石星空科技--蘑菇壁纸、海豚wifi、星云压缩、赛淘淘购物助手、星空看图
+暴风集团--暴风影音
+北京布丁--包含布丁跳跳、布丁跑跑系列软件，如麦家购物助手、蒲公英WiFi、布丁桌面、布丁压缩、智能云输入法、柚子壁纸、快阅看图王、金速PDF阅读器、智能拼音输入法、智能压缩
+北京创想界科技--大文件清理、重复文件清理、微信专清、一键换壁纸、Go垃圾清理
+北京东方海达网络科技--lock_SetupWIFI、鸿蒙日历、小小记事本（XiaoXiaoNotepad）、FastPicSetup、鸿飞记事本
+北京逗游网络技术--逗游游戏盒
+北京弘道长兴国际贸易--老友便签
+北京华网智讯信息--中华PDF阅读器、中华办公模板、中华网游戏盒、中华游戏大厅、哒哒斗地主、全能电脑助手
+北京兰会时光科技--护眼精灵
+北京美屏传媒--titan
+北京溱洧泽溪网络科技--米兔精品游戏盒
+北京双竞科技--流氓软件驱动
+北京小树发芽网络科技--好看壁纸、小树PDF、fastwifi、巧压、新记事本（NewNotebook）、好好看书（ReadWell）、ClearManage
+北京智慧章鱼科技--章鱼输入法
+北京众耀科技--简压缩（SimpleZip）、博士wifi
+沧州句号网络科技--GreenZip、CloudZip、win电脑助手
+沧州微酷网络科技--微酷PDF（MicroCool）、畅连wifi、52看图、Zip好压缩、JPG看图
+沧州战斧网络科技--飞速PDF、微压
+常州贝壳网络科技--迷你记事本
+常州赤文网络科技--AI压缩
+常州道力网络科技--RainbowNote
+成都艾广科技--鹰眼看图、海豚壁纸、Halo壁纸、换桌面壁纸
+成都安易迅科技--妙翰林AI智能写作
+成都赤侠信息科技--好看看图、Halo桌面宠物、换换鼠标、AI垃圾清理、系统DLL修复、C盘清理大师
+成都斐阅科技--即刻玩游戏盒、乐游游戏盒
+成都汇电时代科技--CleanCut
+成都霁悦科技--广告拦截大师、启动项管理、Win权限管理、win优化大师、幻笔Magic AI、全能压、超级文件粉碎、DeepAICleaner、PrivacyGuard+
+成都宽喜信息技术--超级书签、垃圾清理、AI重复文件清理、内存优化Pro、简桌面、妙翰林、dll修复托盘程序、Anything、SmartChat、C盘清理、灵艺壁纸、微信垃圾专清
+成都鹭乐魔方科技--酷压（KooZip）
+成都盟诺商务咨询服务--极速输入法JSInput
+成都奇鲁科技--鲁大师、鲁大师BrowserGuard、鲁大师上网管家、SafeSurf、鲁大师上网助手、LhpLionProtect、PandaProtect、电脑智能防卡顿、大师壁纸、重复文件清理、LhpNetSentinel、BrowserAssistant、ShieldBrowser、TigerProtect、GuardianHome、Taskbar Acrylic、WebFence、DS一键安装工具、ToBrowser、AI智能磁盘清理、SmartLock、CloudShield、SecretCipher、显卡性能优化、DataVault、内存优化Pro、HomepageAssistant、SafeView、MaxProtect、pushgame_space、鲁大师PDF、BrowserProtect、磁盘碎片整理、疾风软件市场、健康护眼、NullCipher、WebFortify、LockBox、LockerX、PrivaLock、Windows系统瘦身、AI智能降温、SecureVault、CryptoVeil、VaultCore、ShieldDocs、CipherLock、系统性能监控、软件权限管理、电脑性能优化、NanoVault、ByteLocker、游闪闪、开始菜单Pro、VaultSeal、微信多开、Swiftlock、RecyClean、ProtectTab、文件回收站、GameScout、PlayFinder、BinKeeper、QuickPlay、DiskRecycle、TidyBin、GameFlash、AutoRecycle、PlayWave、SpeedGame、DataLock、回收站管家、回收站小助手、PlayZone
+成都深智科技--Pixelvue
+成都市颖悟网络科--魔喵壁纸（MoMiao）
+成都星汉云科科技--PicSnapX、智绘AI壁纸、QQ垃圾清理
+成都盈畅时代文化传播--蓝鲸电脑加密、蓝鲸垃圾清理、蓝鲸C盘专清、内存优化防卡顿、小鸟壁纸
+成都游韧天下网络科技--云记事本（YunTXT）
+成都有望科技--EchoFind、白鸥图片工坊、Ai磁盘管家、柠檬看图
+成都知安天下信息技术--多标签文件管理器
+成都智云界科技--智迅多开、桌面AI助手、智迅文件整理
+成都仲启网络科技--小威隐私管家、豌豆快搜
+楚宬商务咨询服务（武汉）--LanyuInMind、非哗水印（FHWatermark）、小策中英翻译（CETranslate）、迅看归属地查询（XKPhonePlace）、轻描淡写（QMDX）、爱捷截图、华育字典
+大连纵梦网络科技--纵梦记事本、小雨记事本、红枫日历
+东莞市旭升锦网络科技--智能C盘清理
+东莞舞动风云科技--Win压缩
+风尚云起文化传媒--6789压缩、云记事本
+佛山市鑫卓讯软件科技--123加速浏览器
+福建智度科技--秒压
+广东天元实业--GameBoxUse驱动数签
+广州暴款网络科技--爱虾搜
+广州华多网络科技--未知广告程序、Giftools
+广州极智信息科技--Imagine驱动
+广州启创信息技术--超压
+广州素界电子商务科技--网络流量工具
+广州天行客网络科技--云骑士、韩博士、黑鲨、小鱼、小熊、小白等一系列一键重装工具
+广西月海映画网络科技--GptChrome
+海南好望科技--123导航桌面版
+海南聚火科技--精灵壁纸
+海南乐鱼互动网络科技--乐鱼酷搜
+海南训英商贸--雷霆压缩广告程序
+杭州凤侠网络科技--游侠日历
+杭州九天网络信息技术--豆麦笔记
+杭州至流科技--奇客PDF转换器
+合肥贵卓网络科技--轻云压缩
+合肥两谢网络信息--StarWifi、完美看图、完美压缩
+合肥题厝网络科技--捆绑rootkit的假谷歌浏览器
+合肥云表信息科技--表情助手、Chrome安全浏览器
+黑龙江祥硕科技--LunarCale、星空日历
+湖北锷创科技中心--RenaTime
+湖北翰辉企业管理咨询--SnowFalling、Juzip定时关机（zshut）、ChanelPicture
+湖北真格法律咨询--OK工具箱、树叶属性查看
+淮安成思科技--熊猫PDF、贝壳压缩、七彩wifi、爱豆助手
+黄冈腾瑞网络科技中心--每日壁纸、天天闹钟、米伽桌面（OmegaDesk）、StarPlayer、ZManager
+昆山悦唱信息科技--酷玩游戏盒
+兰溪市晴朗电子商务--联行号查询工具
+冷湖科技（武汉）--恒星播放器
+连云港博然网络科技--快捷文件锁（KJFileLock）、MFileMgr
+马鞍山鹏来网络科技--BaoZip
+拇指世界（北京）网络科技--悦日历（YDate）
+南京晨曦网络科技--旋风PDF
+南京博世嘉信文化传媒--糖块PDF阅读器、记事能手
+南京大数智图网络科技--大数智图PDF阅读器
+南京小臻网络科技--闪电看图
+南京友为新网络技术--快搜桌面、快快压缩
+南京云首聚网络科技--土豆日历
+南通百瑞网络科技--即刻看图
+南通兴客信息技术--huiping屏保
+南阳多竹网络科技--简易记事本（ENote）、全能压缩
+宁波云炽网络科技--小熊截屏、风云软件管家
+青岛三喜贸易--热点便签
+厦门充能科技--极客大师（SuperX）
+厦门帝易鑫软件科技--六合记事本
+上海顿多网络科技--多顿看图
+上海都点网络科技--ChromeNewTab
+上海铎文信息技术--Ms-Zip
+上海广乐网络科技--快压
+上海果艾网络科技--壁纸助手
+上海合梦网络科技--屏保广告
+上海合寿弘正会务--万象预览
+上海嘉美诺软件技术中心--芝麻输入法
+上海舟江网络科技--Fast压缩软件
+上海九罗网络科技--拉法日历
+上海钧尧网络科技--悦日历（YDate）
+上海马齿苋科技--鲨鱼看图
+上海萌格电子商务--快速软件助手、酷雷压缩、FileAssistor、小白看图
+上海睦欣网络科技--雷神压缩、小新记事本、鲸彩壁纸、轻捷PDF、云朵工具栏
+上海诺韦网络科技--香蕉悦读、游戏微端
+上海奇鲁网络科技--TabX Explorer
+上海启思教育科技--土豆日历驱动数签
+上海青枣网络科技--好图看看、小象壁纸
+上海曲合网络科技--趣压、commander、蓝光护眼大师
+上海任成任心网络科技--点点桌面
+上海首享广告--捷库录屏、塔罗关机
+上海喜马拉雅科技--喜马拉雅
+上海霞安信息科技--cdwndev3
+上海鑫鑫网络服务--记事能手
+上海夜半科技信息技术--大象PDF、LazyWifi、万花动态壁纸、简易PDF（EasyPdf）、蚂蚁压缩（AntZip）
+上海影双网络科技--同上Shanghai Yingshuang Network Technology。ScreenOCR、快速搜索（fastsearch）、miniwifi、蜂巢壁纸、鼠标右键菜单管理、kplayer、RegFastSearch、HexEdit、鼠标右键菜单管理（rightkeymenu）、快速翻译助手
+上海永楚网络科技--拷贝兔
+上海游创网络科技--玩游戏盒
+上海逾谦科技--任务完成助手
+上海跃客网络科技--ILocalPlayer、HermClock、IMagnifier、西马便签（SigmaNote）、卡帕相机（KappaCamera）、嘻嘻音乐（XiMusic）、迷你放大镜
+上海展盟网络科技--小黑记事本、小鱼便签、Finder、ABC看图、7654浏览器
+上饶市风云网络科技--newnote、faststart、极简便签
+上饶市吉龙网络科技--酷压
+绍兴易游网络科技--驱动木马利用黑数签
+沈阳棠烁科技--糖果解压
+沈阳元微科技--松鼠压缩
+深圳金奇异果科技--金牌电脑管家、WinRZIP
+深圳市黄豆泡泡科技--豆压
+深圳市竞天石网络技术--驱动木马利用黑数签、小白日历
+深圳市克罗姆科技--fcc001
+深圳市唯铃科技--百图秀
+深圳市象塔科技--极速浏览器（TSBrowser）
+深圳市优弈科技--广告程序
+深圳市重诚远顺科技--极简模板
+深圳中鼎兴基金管理--好米看图
+四川比价兔网络科技--考拉壁纸、牛小券、极品看图王、众享免费wifi
+四川齐鑫网络科技--蝴蝶看图
+四川悠闲的熊猫网络科技--淘购助手、起点PDF、迷你看图王、水仙wifi、起点PDF转换器、精简压缩、魔方壁纸
+苏州奇客乐思网络科技--雷霆压缩
+宿迁漾彩轩商贸--C Player（HtPlay）
+天津邦兴利达科技--Vaultify
+天津诚汇科技--大鱼易搜、UFiles资源管理器、Myweb网页收藏夹、ColorX图片编辑助手
+天津川成弘远科技--青柚Cleaner
+天津斐文网络科技--快看图、八爪鱼搜索
+天津拂云科技--Easyhider保险柜、花生清理
+天津简诚科技--小伴桌宠、小蓝鸽极速卸载、大力文件粉碎、芒果快压
+天津立方星球文化传媒--FileFort
+天津珊瑚信息科技--小鸟壁纸、嘀嗒壁纸、Bluewhale
+天津速读科技--迅读PDF大师
+天津微极智科技--AnyWhere、我爱摸鱼、极智文件瘦身、AIChat、AI智桌面、AIWrite、小小书签
+天津杏仁桉科技--蜂火精灵模拟器、密齿私人文件柜、极风搜索、礼拜一办公
+天津欣远科技--图UU、花瓣护眼
+天津迅读科技--迅读PDF大师、易极数据恢复、轻映录屏软件
+天津中思明达科技--超级回收站、SecureBox
+甜瓜（上海）信息技术--花猫斗图、小熊日历
+威尔阳（武汉）信息技术--奶油便签
+武汉苍牙网络科技--一米压缩、水墨看图、蜂巢Wi-Fi
+武汉宸象网络科技--快洁压缩
+武汉鼎娥科技--记星文件加密
+武汉苟富贵网络科技--FileAssortSearch
+武汉弘辉人力资源管理--小黄万年历
+武汉火诚传媒--方围储存转换
+武汉金玉时网络科技--如意便签
+武汉静之网络--mp3截取
+武汉巨博优科技--上海展盟广告
+武汉凯佳奥科技--今日记账
+武汉康聚和网络科技--今日星运、SuJiWord、迅学古诗
+武汉乐享其识科技--风枫蜂记忆力训练、四海世界时钟
+武汉酩悦贸易--文件琢移
+武汉谋略添地科技--小捷定时关机、如意截屏
+武汉诺沃网络科技--SafeKey
+武汉同进科技--青竹选色器、随心日历
+武汉网罗八方科技--天空压缩
+武汉网幂科技--Dll错误修复工具、zip解压缩、幂果画报
+武汉网亿商贸--虽随水键盘练习、小贝金额转换、数语进制转换、桔子电脑监测
+武汉维才道伟教育咨询管理--SMAppManage、FastSign
+武汉维之诺网络科技--文件批量改名
+武汉吾知恋教育咨询--FYScreenshot
+武汉西橙科技--心晴日历、粉笔课程表
+武汉晓卓网络科技--桌面日历
+武汉鑫博伟科技--优易贴、明玉动态截屏、小新看图
+武汉旭大科技--易捷看图、易得亲戚计算器
+武汉续达科技--趣压缩（Amusingzip）、易捷看图
+武汉耀智航科技--词组助手、爱词成语接龙、小飞字数统计
+武汉夜雨惊鹊科技--WindZip
+武汉一烁网络科技--随手记
+武汉勇达网络科技--图片格式转换
+武汉众合互娱网络科技--麻花日历
+芜湖神月网络科技--CA一键截屏
+西安市沣东新城唯诺顿信息科技工作室--EasyClip
+西安芮成网络科技--iNotePad
+西安炫讯网络科技--微信双开
+响水县亚美网络科技--每图天气
+新疆亿事联网络科技--悦日历（YDate）、兰博万年历（NO1Date）
+盐城市盐南高新区品看网络科技--Note+ plus版
+游族（福州）网络科技--快捷压缩
+浙江自贸区耀光网络科技--风云压缩、风影看图王
+重庆锷创科技中心--天鹅便签
+重庆赫赫有盾科技--UltraShred文件粉碎、DustAway清理、DirectX'强力修复
+重庆福晟达科技--全能记事本
+重庆华博科技中心--极客压缩
+重庆秋鸿有信科技--西瓜便签
+重庆趣探科技--易简日历、OrangeZip
+重庆市槐华商务咨询--KingMemo、Q版壁纸、DiorRecord、贝塔看图（BetaPic）、AlphaCut
+重庆旭登仪器仪表--ITextEditor、AppleDrawing、古驰记事（GucciMemo）、Deltalup、LabdaShut、LabdaClosure、ETPlayer
+重庆智领云英教育科技--21压缩
+舟山丙火网络科技--小浣熊WiFi、蜂鸟看图、闪压缩
+珠海市莫停之科技--pdf大师阅读器、优化大师、Win解压缩
+珠海市内维淼科技--AlphaSE Chrome安全浏览器
+武汉网幂科技有限公司--元壁纸，PDF转换编辑器，录屏君，Zip解压缩，桌面数字时钟，桌面壁纸君，思维导图大师，音频格式转换器，全能格式转换器，视频剪辑器，文件加密助手，显卡驱动助手，CAJ阅读编辑器
+XiaMen YINLEME Information Technologies Stock CO.,LTD--格式转换器
+Shanghai Hudun Information Technology Co., Ltd.--迅捷PDF转换器，迅捷图片转换器
+苏州开心盒子软件有限公司--嗨格式PDF转换器等等嗨格式全家桶
+Zhuhai Yingzhi Technology Co., Ltd.--AI写作
+Beijing Kingsoft Security software Co.,Ltd--金山毒霸等
+北京春田知韵科技有限公司--金山旗下公司
+重庆赫赫有盾科技有限公司--dx修复
+Keroro Technology Ltd--红警
+Guizhou Aidobi Technology Co., Ltd.--ps
+珠海市莫停之科技有限公司--清理大师
+Jiangxia Information Technology (Huizhou) Co., Ltd.--打印机驱动
+Shenzhen Chaoshidai Software Co., Ltd.--打印机驱动，dll修复
+Changsha Little Tomato Technology Co., Ltd.--dx修复
+长沙亿语科技有限公司--dll修复
+XFQDXTool--dx修复
+Adobe Installers--ps安装
+3DMRepairMaster--3dm游戏i修复
+jinzhousoft--打印机驱动，dll修复
+DLL错误修复工具--dll修复
+LocalHuaiCaiSoftOff--office安装
+Chengdu Qilu Technology Co. Ltd.--鲁大师、BrowserGuard、鲁大师上网管家、SafeSurf、鲁大师上网助手、LhpLionProtect、PandaProtect、电脑智能防卡顿、大师壁纸、重复文件清理、LhpNetSentinel、BrowserAssistant、ShieldBrowser、TigerProtect、GuardianHome、Taskbar
+成都奇鲁科技有限公司--鲁大师、BrowserGuard、鲁大师上网管家、SafeSurf、鲁大师上网助手、LhpLionProtect、PandaProtect、电脑智能防卡顿、大师壁纸、重复文件清理、LhpNetSentinel、BrowserAssistant、ShieldBrowser、TigerProtect、GuardianHome、Taskbar
+成都盈畅时代文化传播有限公司--蓝鲸电脑加密、蓝鲸垃圾清理、蓝鲸C盘专清、内存优化防卡顿、小鸟壁纸
+360.cn--360系列软件
+Chongqing Kuosiliang Technology Co., Ltd--下载器
+深圳市超时代软件有限公司--文件夹加密
+Kingsoft Corporation--金山毒霸等
+Beijing Qihu Technology Co., Ltd.--360安全卫士，360杀毒等等
+Shenzhen Drive The Life Technology Co.,Ltd.--驱动人生
+Shanghai 2345 Mobile Technology Co., Ltd.--2345系列
+沧州句号网络科技有限公司--看图的

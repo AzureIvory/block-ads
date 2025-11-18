@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <title>名单管理</title>
+  <link rel="icon" href="icon.ico">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="app">
+  <div class="top">
+    <div class="top-l">
+      <img src="icon.ico" class="top-ico" onerror="this.style.display='none';">
+      <div class="top-txt">名单管理</div>
+    </div>
+    <div class="top-mid">
+      <span id="admTxt" class="tag">...</span>
+      <span id="runTxt" class="tag">...</span>
+    </div>
+    <div class="top-r">
+      <button id="btnRun" class="btn">启动</button>
+      <button id="btnStop" class="btn btn-sec">停止</button>
+      <label class="chk-box">
+        <input type="checkbox" id="chkBoot">
+        <span>开机自启</span>
+      </label>
+      <button id="btnFake" class="btn btn-sec">一键伪装</button>
+      <button id="btnHelp" class="btn btn-sec">使用指南</button>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab act" data-key="sign">签名<span>sign</span></button>
+    <button class="tab" data-key="folder">黑名单<span>folder</span></button>
+    <button class="tab" data-key="whitelist">白名单<span>white</span></button>
+  </div>
+
+  <div class="bar">
+    <input id="srch" class="inp" type="text" placeholder="搜索文本">
+    <input id="newL" class="inp" type="text" placeholder="新增一行内容">
+    <button id="btnAdd" class="btn bar-btn">添加</button>
+    <button id="btnDel" class="btn btn-sec bar-btn">删除选中</button>
+  </div>
+
+  <div class="main">
+    <div class="main-top">
+      <div class="lst-head">
+        <span>内容</span>
+        <span>注释</span>
+      </div>
+      <div class="lst-box" id="lstBox">
+        <ul id="lst"></ul>
+      </div>
+    </div>
+
+    <div class="log-wrap">
+      <div class="log-head">
+        <span>每日拦截记录</span>
+        <span id="logInfo" class="log-sub"></span>
+      </div>
+      <div class="log-box">
+        <ul id="logLst"></ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="msg" id="msg"></div>
+
+  <div class="ctx" id="logMenu">
+    <div class="ctx-item" data-act="rm">尝试卸载(测试功能)</div>
+    <div class="ctx-item" data-act="del">强制删除</div>
+  </div>
+</div>
+
+<script src="main.js"></script>
+</body>
+</html>
