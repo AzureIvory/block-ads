@@ -736,6 +736,13 @@ func main() {
 
 		return true, nil
 	})
+	//前往GitHub
+	_ = w.Bind("doGit", func() (bool, error) {
+		if err := goUrl("https://github.com/AzureIvory/block-ads"); err != nil {
+			return false, err
+		}
+		return true, nil
+	})
 	_ = w.Bind("setAut", func(on bool) (bool, error) {
 		if err := setBoot(exe, on); err != nil {
 			return false, err

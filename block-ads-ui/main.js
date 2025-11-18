@@ -370,6 +370,16 @@ async function refLog() {
   }
 }
 
+async function onGit() {
+  try {
+    await doGit();
+    setMsg("", false);
+  } catch (e) {
+    console.error(e);
+    setMsg("无法打开 GitHub: " + e, true);
+  }
+}
+
 // 初始化
 function initUI() {
   document.querySelectorAll(".tab").forEach(function (btn) {
@@ -398,6 +408,7 @@ function initUI() {
   document.getElementById("chkBoot").addEventListener("change", onBoot);
   document.getElementById("btnHelp").addEventListener("click", onHel);
   document.getElementById("btnFake").addEventListener("click", onFak);
+  document.getElementById("btnGit").addEventListener("click", onGit);
 
   // 右键菜单
   const menu = document.getElementById("logMenu");
