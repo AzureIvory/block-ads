@@ -7,19 +7,27 @@
 >目录白名单:在该名单内的目录运行的程序将会跳过
 #### note.txt
 >注释文本：该文件为folder.txt、sign.txt、whitelist.txt提供注释
-#### Code.exe和fake目录
+#### fake目录
 >用于伪装技术人员
->>运行后将为伪装成vscode进程，并且窗口类名为"CabinetWClass",标题为"控制面板"
 #### block-ads-ui目录
 >基于webview2的ui
 #### tools目录
 >打包用的工具
+#### block-ads.exe
+>拦截核心程序,直接双击运行同样可以实现拦截
+#### UI.exe
+>为各种名单和核心程序提供可视化界面
+#### Code.exe
+>运行后将为伪装成vscode进程，并且窗口类名为"CabinetWClass",标题为"控制面板"
 
 # 效果
 ![效果](tools/eg.gif)
 
 # 卸载软件
 ![卸载](tools/uninst.gif)
+
+# 定位软件
+>#### 双击下方拦截记录的列表项目
 
 # 使用说明
 >#### 需要webview2运行时
@@ -44,6 +52,9 @@
 >#### 6.伪装技术人员
 >将会在后台运行一个空壳程序"Code.exe"(vscode),其中窗口类名为"CabinetWClass",标题为"控制面板"
 
+# 不安装webview2runtime
+> #### 直接执行"block-ads.exe"同样可以实现拦截
+
 
 # 浏览器解决广告（推荐）
 #### 不建议使用360/2345等浏览器
@@ -60,8 +71,11 @@
 >[webview2](https://developer.microsoft.com/zh-cn/microsoft-edge/webview2)
 
 # 库
->go.mod
->
+>github.com/bi-zone/etw
+>golang.org/x/sys/windows
+>github.com/webview/webview_go
+>golang.org/x/sys/windows/registry
+
 # 编译
 >go build -ldflags="-H=windowsgui -s -w" -trimpath
 
