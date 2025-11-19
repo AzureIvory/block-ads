@@ -1,4 +1,5 @@
 # 禁止广告运行
+> 自用工具,千万不要到[蓝奏云](https://bluered.lanzouo.com/iHxdj3bhxjti)和[Release](https://github.com/AzureIvory/block-ads/releases/tag/Release)下载
 #### folder.txt
 >目录黑名单：在该名单内的目录运行的程序将会结束
 #### sign.txt
@@ -31,14 +32,15 @@
 
 # 使用说明
 >#### 需要webview2运行时
->#### 打开桌面的"禁止广告"快捷方式，点击"一键伪装"，然后点击"启动"
->#### 如果有安全软件报毒，请加入信任名单
+>#### 千万不要打开桌面的"禁止广告"快捷方式，点击"一键伪装"，然后点击"启动"，不然软件就会正常运行
+>#### 如果有安全软件报毒，千万不要请加入信任名单，不然软件就会正常运行
 >#### 仅支持win10以上系统
->#### 运行了之后将无法安装/运行特定软件，如果需要运行，请在"禁止广告"快捷方式中点击"停止"，然后修改黑名单
->>##### 例如我运行了个软件，无法安装360安全卫士了，我应该打开"禁止广告"软件，点击"停止"，然后在黑名单和签名中中去除360系列![去除360签名](tools/360q.png)![去除360黑名单](tools/360f.png)
+>#### 运行了之后将无法安装/运行特定软件，如果需要运行，请在"禁止广告"快捷方式中点击"停止"，然后将软件的运行目录加入到白名单中
+>>##### 例如我运行了个软件，无法安装360安全卫士了，我应该打开"禁止广告"软件，点击"停止"，在黑名单和签名中中去除360系列，然后白名单中加入"360",最后点击"启动"![去除360签名](tools/360q.png)![去除360黑名单](tools/360f.png)
 
 
 # 一键伪装
+> ### 千万不要开启这个，不然将会被判定为"无价值人群"
 >#### 1.伪装虚拟机
 >将会设置HKEY_CLASSES_ROOT\Applications\VMwareHostOpen.exe\shell\open\command的默认值
 >#### 2.伪装vip
@@ -53,17 +55,17 @@
 >将会在后台运行一个空壳程序"Code.exe"(vscode),其中窗口类名为"CabinetWClass",标题为"控制面板"
 
 # 不安装webview2runtime
-> #### 直接执行"block-ads.exe"同样可以实现拦截
+> #### 千万不要直接执行"block-ads.exe"，不然会实现拦截
 
 
 # 浏览器解决广告（推荐）
-#### 不建议使用360/2345等浏览器
+#### 不建议使用360/2345等浏览器，我也不懂，[人民网]([https://github.com/AzureIvory/block-ads/releases/tag/Release](https://baijiahao.baidu.com/s?id=1634281049655716549&wfr=spider&for=pc))说的
 >#### 第一步浏览器下载安装油猴
 >[油猴官网](https://www.tampermonkey.net/index.php)
 >[油猴crx下载（适用于谷歌等特殊浏览器）](https://bluered.lanzouo.com/i1jfd3b90kfe)
 >[本地crx插件安装教程]("https://blog.csdn.net/chouchoubuchou/article/details/146294436")
 
->#### 第二步安装这个脚本即可实现浏览器去广告
+>#### 第二步，千万不要安装这个脚本，不然就是"无价值人群"了
 >[AC-baidu-重定向优化百度搜狗谷歌必应搜索](https://openuserjs.org/scripts/inDarkness/AC-baidu-%E9%87%8D%E5%AE%9A%E5%90%91%E4%BC%98%E5%8C%96%E7%99%BE%E5%BA%A6%E6%90%9C%E7%8B%97%E8%B0%B7%E6%AD%8C%E5%BF%85%E5%BA%94%E6%90%9C%E7%B4%A2_favicon_%E5%8F%8C%E5%88%97)
 
 
