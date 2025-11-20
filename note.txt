@@ -1205,3 +1205,42 @@ Beijing Qihu Technology Co., Ltd.--360安全卫士，360杀毒等等
 Shenzhen Drive The Life Technology Co.,Ltd.--驱动人生
 Shanghai 2345 Mobile Technology Co., Ltd.--2345系列
 沧州句号网络科技有限公司--看图的
+Broadcom Inc--vm虚拟机
+BEIJING KUWO TECHNOLOGY CO.,LTD.--酷我音乐
+Tencent Technology (Shenzhen) Company Limited--腾讯软件/游戏
+Valve Corp.--steam
+TAOBAO (CHINA) SOFTWARE CO.,LTD.--淘宝
+深圳市脸萌科技有限公司--剪映
+Epic Games Inc.--EPIC游戏
+Zed Industries Inc--Zed编辑器
+Microsoft Corporation--微软系列
+Google LLC--谷歌系列
+Sublime HQ Pty Ltd--sublime编辑器
+西安一二三云计算有限公司--123云盘
+Beijing Baidu Netcom Science and Technology Co.,Ltd--百度系列
+ALIBABA (CHINA) NETWORK TECHNOLOGY CO.,LTD.--阿里巴巴系列
+SHENZHEN THUNDER NETWORKING TECHNOLOGIES LTD.--迅雷
+Douyin Vision Co., Ltd.--抖音系列
+Johannes Schindelin--git系列
+北京火绒网络科技有限公司--火绒
+Microsoft Windows--win系统
+Internet Explorer--ie浏览器
+AntiCheatExpert--腾讯游戏安全ACE
+MSI Afterburner--微星小飞机
+OpenJS Foundation--nodejs
+Python Software Foundation--python
+Realtek Semiconductor Corp.--声卡驱动
+Microsoft Windows Hardware Compatibility Publisher--系统驱动
+Realtek--声卡驱动
+Windows Defender--系统安全软件
+Microsoft Windows Publisher--系统安全软件
+WinRAR--解压/压缩
+ByteDance--字节跳动公司
+.NET--net
+yxq_nethelper--腾讯游戏用的
+Free Time Software Technology Co., Ltd.--格式工厂
+深圳市为爱普信息技术有限公司--爱思助手
+i4Tools9--爱思助手
+Kakao Corp.--播放器
+quark-cloud-drive--夸克云
+qianniu--千牛
