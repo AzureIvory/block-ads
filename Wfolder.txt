@@ -1,0 +1,69 @@
+Windows
+Tencent
+Epic Games
+Application
+Microsoft VS Code
+JianyingPro
+KwMusic
+AMD
+Intel
+Clash for Windows
+mingw64
+PotPlayer
+aDrive
+Thunder
+PixPin
+BaiduNetdisk
+VirtualBox
+Oray
+123pan
+VMware
+Xmind
+JetBrains
+Everything
+bandicam
+Office2016
+Office2019
+Bandicam
+HiSuite
+block-ads
+360zip
+WPS Office
+Git
+Huorong
+Internet Explorer
+7-Zip
+AntiCheatExpert
+MSI Afterburner
+Common Files
+Microsoft SQL Server
+Microsoft Visual Studio
+nodejs
+Npcap
+Python313
+Windows Defender
+Windows Mail
+Windows Media Player
+Windows NT
+Windows Photo Viewer
+WindowsApps
+WindowsPowerShell
+WinRAR
+AlibabaProtect
+ByteDance
+Futuremark
+HTML Help Workshop
+Microsoft
+Microsoft SDKs
+Microsoft.NET
+MSBuild
+Reference Assemblies
+RivaTuner Statistics Server
+Visual Studio
+Windows Kits
+WindowsPowerShell
+yxq_nethelper
+OneDrive
+i4Tools9
+qianniu
+quark-cloud-drive
