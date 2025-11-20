@@ -22,7 +22,8 @@ import (
 var lstMap = map[string]string{
 	"sign":      "sign.txt",
 	"folder":    "folder.txt",
-	"whitelist": "whitelist.txt",
+	"whitelist": "Wfoler.txt",
+	"signWhite": "Wsign.txt",
 }
 
 const (
@@ -166,45 +167,6 @@ func (d *appDat) log() []string {
 	return out
 }
 
-// 用日志文件时间取出时间间隔，超过一天清空skin.txt
-func chkSkn(dir string) {
-	logDir := filepath.Join(dir, "log")
-
-	ents, err := os.ReadDir(logDir)
-	if err != nil {
-		return
-	}
-
-	var last time.Time
-	for _, e := range ents {
-		if e.IsDir() {
-			continue
-		}
-		name := e.Name()
-		if !strings.HasSuffix(name, ".log") {
-			continue
-		}
-		base := strings.TrimSuffix(name, ".log")
-		t, err := time.Parse("2006-01-02", base)
-		if err != nil {
-			continue
-		}
-		if t.After(last) {
-			last = t
-		}
-	}
-
-	// 没找到有效日志就不处理
-	if last.IsZero() {
-		return
-	}
-
-	if time.Since(last) > 24*time.Hour {
-		p := filepath.Join(dir, "skin.txt")
-		_ = os.WriteFile(p, []byte{}, 0644)
-	}
-}
-
 func (d *appDat) addLn(key, txt string) ([]string, error) {
 	txt = strings.TrimSpace(txt)
 	if txt == "" {
@@ -245,6 +207,135 @@ func (d *appDat) delLn(key string, idx int) ([]string, error) {
 	out := make([]string, len(v))
 	copy(out, v)
 	return out, nil
+}
+
+// 从日志加入白名单：kind = "folder" / "sign"
+// val: 日志中的第三段 ps[2]（folder 关键词 / 签名）
+// path: 日志中的路径（最后一段开始的完整路径）
+func (d *appDat) addWhite(kind, val, path string) (bool, error) {
+	kind = strings.ToLower(strings.TrimSpace(kind))
+	val = strings.TrimSpace(val)
+	path = strings.TrimSpace(path)
+
+	d.mu.Lock()
+	defer d.mu.Unlock()
+
+	switch kind {
+	case "folder":
+		return d.addWfolder(path)
+	case "sign":
+		return d.addWsign(val)
+	default:
+		return false, os.ErrInvalid
+	}
+}
+
+// sign 模式：把签名加入 Wsign.txt（去重）
+func (d *appDat) addWsign(sign string) (bool, error) {
+	if sign == "" {
+		return false, os.ErrInvalid
+	}
+	wl := d.lst["signWhite"]
+
+	// 已存在则不重复写入
+	for _, s := range wl {
+		if strings.EqualFold(s, sign) {
+			return false, nil
+		}
+	}
+
+	wl = append(wl, sign)
+	d.lst["signWhite"] = wl
+	if err := d.svLst("signWhite"); err != nil {
+		return false, err
+	}
+	return true, nil
+}
+
+// folder 模式：从路径各级目录中找出与 folder.txt 行一致的名字，加入 Wfoler.txt（去重）
+//
+// 规则：
+// - 路径按 `\` 或 `/` 切分
+// - 去掉空段
+// - 第一段视为根目录，不匹配
+// - 最后一段视为文件名，不匹配
+// - 中间各级目录如果和 folder.txt 中某行（非注释）完全相同（忽略大小写），则加入白名单
+func (d *appDat) addWfolder(path string) (bool, error) {
+	if path == "" {
+		return false, os.ErrInvalid
+	}
+
+	folders := d.lst["folder"]
+	if len(folders) == 0 {
+		return false, nil
+	}
+	wl := d.lst["whitelist"]
+
+	// 预处理 folder.txt：忽略注释行
+	fset := make(map[string]struct{})
+	for _, ln := range folders {
+		ln = strings.TrimSpace(ln)
+		if ln == "" {
+			continue
+		}
+		if strings.HasPrefix(ln, "#") || strings.HasPrefix(ln, ";") {
+			continue
+		}
+		fset[strings.ToLower(ln)] = struct{}{}
+	}
+
+	// 现有白名单集合，用于去重
+	wset := make(map[string]struct{})
+	for _, ln := range wl {
+		wset[strings.ToLower(strings.TrimSpace(ln))] = struct{}{}
+	}
+
+	// 统一分隔符
+	p := strings.ReplaceAll(path, "/", `\`)
+	var segs []string
+	for _, part := range strings.Split(p, `\`) {
+		part = strings.TrimSpace(part)
+		if part == "" {
+			continue
+		}
+		segs = append(segs, part)
+	}
+	if len(segs) <= 2 {
+		// 只有根和文件名，没啥可匹配的
+		return false, nil
+	}
+
+	added := false
+	// 从第二段到倒数第二段（中间各级目录）
+	for i := 1; i < len(segs)-1; i++ {
+		name := strings.TrimSpace(segs[i])
+		if name == "" {
+			continue
+		}
+		low := strings.ToLower(name)
+
+		if _, ok := fset[low]; !ok {
+			continue
+		}
+		if _, ok := wset[low]; ok {
+			// 已在白名单
+			continue
+		}
+
+		wl = append(wl, name)
+		wset[low] = struct{}{}
+		added = true
+	}
+
+	if !added {
+		return false, nil
+	}
+
+	d.lst["whitelist"] = wl
+	if err := d.svLst("whitelist"); err != nil {
+		return false, err
+	}
+	return true, nil
 }
 
 // 在程序目录找到常见卸载程序然后执行
@@ -678,7 +769,7 @@ func main() {
 	w := webview.New(false)
 	defer w.Destroy()
 
-	w.SetSize(700, 540, webview.HintNone)
+	w.SetSize(690, 540, webview.HintNone)
 	w.SetTitle("拦截管理")
 
 	_ = w.Bind("getAll", func() (map[string][]string, error) {
@@ -805,6 +896,10 @@ func main() {
 			return false, err
 		}
 		return true, nil
+	})
+	// 从日志记录加入白名单
+	_ = w.Bind("addWht", func(kind, val, path string) (bool, error) {
+		return dat.addWhite(kind, val, path)
 	})
 
 	h := filepath.Join(dir, "index.html")

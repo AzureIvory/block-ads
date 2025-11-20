@@ -18,7 +18,7 @@ function banDev() {
 }
 
 const st = {
-  dat: { sign: [], folder: [], whitelist: [] },
+  dat: { sign: [], folder: [], whitelist: [], signWhite: [] },
   note: {},
   log: [],
   key: "sign",
@@ -28,6 +28,7 @@ const st = {
   run: false,
   boot: false,
   ctxp: "",
+  ctx: null,
 };
 
 function setMsg(t, err) {
@@ -196,6 +197,9 @@ function rendLog() {
 
     const nt = st.note[it.v] || "";
     li.dataset.path = it.p || "";
+    // 保存类型与值
+    li.dataset.kind = it.k || "";
+    li.dataset.val = it.v || "";
 
     const top = document.createElement("div");
     top.className = "log-top";
@@ -237,6 +241,12 @@ function rendLog() {
       const p = this.dataset.path || "";
       if (!p) return;
       st.ctxp = p;
+      // 记录当前行上下文
+      st.ctx = {
+        k: this.dataset.kind || "",
+        v: this.dataset.val || "",
+        p: p,
+      };
       showCtx(e.clientX, e.clientY);
     });
 
@@ -369,7 +379,37 @@ async function refLog() {
     console.error(e);
   }
 }
+// 从日志加入白名单
+async function AddWhite() {
+  const ctx = st.ctx || {};
+  const kind = (ctx.k || "").toLowerCase();
+  const val = ctx.v || "";
+  const p = ctx.p || "";
 
+  if (!kind) {
+    setMsg("无法识别当前记录类型。", true);
+    return;
+  }
+
+  try {
+    // 调用Go的addWht
+    const ok = await addWht(kind, val, p);
+    if (ok) {
+      setMsg("已加入白名单。", false);
+      // 再取一次名单
+      const all = await getAll();
+      if (all) {
+        st.dat = all;
+        rend();
+      }
+    } else {
+      setMsg("未添加，可能已经在白名单中。", false);
+    }
+  } catch (e) {
+    console.error(e);
+    setMsg("加入白名单失败: " + e, true);
+  }
+}
 async function onGit() {
   try {
     await doGit();
@@ -422,18 +462,22 @@ function initUI() {
       }
       const p = st.ctxp || "";
       hideCtx();
-      if (!p) return;
+      if (!p && t.dataset.act !== "addWhite") return;
+
       if (t.dataset.act === "rm") {
         tryrm(p)
-      .then(function () {
-        setMsg("已调用尝试卸载: " + p, false);
-      })
-      .catch(function (err) {
-        console.error("tryrm err:", err);
-        setMsg("尝试卸载失败: " + err, true);
-      });
+          .then(function () {
+            setMsg("已尝试卸载: " + p, false);
+          })
+          .catch(function (err) {
+            console.error("tryrm err:", err);
+            setMsg("尝试卸载失败: " + err, true);
+          });
       } else if (t.dataset.act === "del") {
         trydel(p);
+      } else if (t.dataset.act === "addWhite") {
+        // 加入白名单
+        AddWhite();
       }
     });
   }
