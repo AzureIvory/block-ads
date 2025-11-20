@@ -1,0 +1,32 @@
+Google LLC
+Microsoft Corporation
+Zed Industries Inc
+Epic Games Inc.
+深圳市脸萌科技有限公司
+TAOBAO (CHINA) SOFTWARE CO.,LTD.
+Valve Corp.
+Tencent Technology (Shenzhen) Company Limited
+BEIJING KUWO TECHNOLOGY CO.,LTD.
+Broadcom Inc
+Sublime HQ Pty Ltd
+西安一二三云计算有限公司
+Beijing Baidu Netcom Science and Technology Co.,Ltd
+ALIBABA (CHINA) NETWORK TECHNOLOGY CO.,LTD.
+SHENZHEN THUNDER NETWORKING TECHNOLOGIES LTD.
+Douyin Vision Co., Ltd.
+Johannes Schindelin
+北京火绒网络科技有限公司
+Microsoft Windows
+OpenJS Foundation
+Python Software Foundation
+Nmap Software LLC
+Microsoft Windows Hardware Compatibility Publisher
+Realtek Semiconductor Corp.
+Tomasz Moń
+Microsoft Windows Publisher
+.NET
+Underwriters Laboratories Inc.
+Free Time Software Technology Co., Ltd.
+The Qt Company Oy
+深圳市为爱普信息技术有限公司
+Kakao Corp.
