@@ -36,23 +36,15 @@ var (
 // 日志
 var (
 	appDir string
-	logDir string   //日志目录
-	skpObj *skpList //机器生成的skip.txt
+	logDir string //日志目录
 )
 
 // 黑名单 + 白名单
 type blkSet struct {
-	Signers map[string]struct{} //sign.txt
-	Folders map[string]struct{} //folder.txt
-	White   map[string]struct{} //whitelist.txt
-}
-
-// 机器白名单
-type skpList struct {
-	path string
-	mu   sync.RWMutex
-	set  map[string]struct{}
-	last time.Time
+	Signers      map[string]struct{} // sign.txt       黑名单签名
+	Folders      map[string]struct{} // folder.txt     黑名单目录
+	White        map[string]struct{} // Wfolder.txt    白名单目录
+	WhiteSigners map[string]struct{} // Wsign.txt      白名单签名
 }
 
 var (
@@ -60,86 +52,54 @@ var (
 	winDirLower string
 )
 
-func newSkp(path string) *skpList {
-	return &skpList{
-		path: path,
-		set:  make(map[string]struct{}),
+// 签名缓存
+var (
+	signCache    = make(map[string]string)
+	signCacheMu  sync.RWMutex
+	signCacheMax = 5000 // 最大缓存条数
+)
+
+// 取签名+缓存
+func getSignC(path string) string {
+	if path == "" {
+		return ""
 	}
-}
-
-// 加载机器白名单
-func (s *skpList) reload() {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-
-	if !s.last.IsZero() && time.Since(s.last) < time.Minute {
-		return
+	//检查缓存
+	signCacheMu.RLock()
+	if s, ok := signCache[path]; ok {
+		signCacheMu.RUnlock()
+		return s
 	}
+	signCacheMu.RUnlock()
 
-	f, err := os.Open(s.path)
+	// 没缓存的情况下获取签名
+	s, err := utils.GetSignName(path)
 	if err != nil {
-		s.last = time.Now()
-		return
+		s = ""
 	}
-	defer f.Close()
 
-	m := make(map[string]struct{})
-	sc := bufio.NewScanner(f)
-	for sc.Scan() {
-		line := strings.TrimSpace(sc.Text())
-		if line == "" || strings.HasPrefix(line, "#") || strings.HasPrefix(line, "//") {
-			continue
-		}
-		m[line] = struct{}{}
+	// 写入缓存
+	signCacheMu.Lock()
+	if len(signCache) >= signCacheMax {
+		// map满了就清空
+		signCache = make(map[string]string)
 	}
-	//换新
-	s.set = m
-	s.last = time.Now()
-}
+	signCache[path] = s
+	signCacheMu.Unlock()
 
-func (s *skpList) has(p string) bool {
-	if s == nil || p == "" {
-		return false
-	}
-	s.reload()
-
-	s.mu.RLock()
-	defer s.mu.RUnlock()
-	_, ok := s.set[p]
-	return ok
-}
-
-func (s *skpList) add(p string) {
-	if s == nil || p == "" {
-		return
-	}
-	s.reload()
-
-	s.mu.Lock()
-	if _, ok := s.set[p]; ok {
-		s.mu.Unlock()
-		return
-	}
-	s.set[p] = struct{}{}
-	s.mu.Unlock()
-
-	//添加进skip.txt
-	f, err := os.OpenFile(s.path, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
-	if err != nil {
-		return
-	}
-	defer f.Close()
-	_, _ = f.WriteString(p + "\n")
+	return s
 }
 
 func readBlk(baseDir string) (*blkSet, error) {
 	signSet, _ := readSet(filepath.Join(baseDir, "sign.txt"))
 	foldSet, _ := readSet(filepath.Join(baseDir, "folder.txt"))
-	whiteSet, _ := readSet(filepath.Join(baseDir, "whitelist.txt"))
+	whiteFoldSet, _ := readSet(filepath.Join(baseDir, "Wfolder.txt"))
+	whiteSignSet, _ := readSet(filepath.Join(baseDir, "Wsign.txt"))
 	return &blkSet{
-		Signers: signSet,
-		Folders: foldSet,
-		White:   whiteSet,
+		Signers:      signSet,
+		Folders:      foldSet,
+		White:        whiteFoldSet,
+		WhiteSigners: whiteSignSet,
 	}, nil
 }
 
@@ -372,8 +332,9 @@ type hitInfo struct {
 	Text string
 }
 
-// 跟黑名单比对路径
+// 跟黑名单比对路径/签名
 func chkHit(fullPath string, bl *blkSet, allowShort bool) (hits []hitInfo, signer string) {
+	// 目录黑名单
 	if ok, seg := hitFolder(fullPath, bl.Folders); ok {
 		hits = append(hits, hitInfo{Kind: "folder", Text: seg})
 		if allowShort {
@@ -381,17 +342,31 @@ func chkHit(fullPath string, bl *blkSet, allowShort bool) (hits []hitInfo, signe
 		}
 	}
 
-	if len(bl.Signers) > 0 {
-		sig, err := utils.GetSignName(fullPath)
-		if err == nil && sig != "" {
-			signer = sig
-		}
-		if signer != "" {
-			if ok, which := hitSign(signer, bl.Signers); ok {
-				hits = append(hits, hitInfo{Kind: "sign", Text: which})
-			}
+	// 签名黑名单=0，签名白名单=0，跳过
+	if len(bl.Signers) == 0 && len(bl.WhiteSigners) == 0 {
+		return hits, ""
+	}
+
+	// 获取签名
+	signer = getSignC(fullPath)
+	if signer == "" {
+		return hits, ""
+	}
+
+	// 先检查签名白名单
+	if len(bl.WhiteSigners) > 0 {
+		if ok, _ := hitSign(signer, bl.WhiteSigners); ok {
+			return hits, signer
 		}
 	}
+
+	// 再检查签名黑名单
+	if len(bl.Signers) > 0 {
+		if ok, which := hitSign(signer, bl.Signers); ok {
+			hits = append(hits, hitInfo{Kind: "sign", Text: which})
+		}
+	}
+
 	return hits, signer
 }
 
@@ -469,21 +444,11 @@ func procHit(pid, ppid uint32, fullPath, src string, bl *blkSet, short bool) {
 	if inWhite(fullPath, bl.White) {
 		return
 	}
-	//跳过机器白名单
-	if skpObj != nil && skpObj.has(fullPath) {
-		return
-	}
-
-	//跟黑名单比对
+	// 跟黑名单比对
 	hits, signer := chkHit(fullPath, bl, short && len(bl.Folders) > 0)
 	if len(hits) == 0 {
-		//不在黑名单内就加入skip.txt
-		if skpObj != nil {
-			skpObj.add(fullPath)
-		}
 		return
 	}
-
 	//干掉黑名单
 	fuck(pid, ppid, fullPath, signer, hits, src)
 }
@@ -533,9 +498,18 @@ func runETW(bl *blkSet, short bool) (*etw.Session, *sync.WaitGroup, error) {
 	//Microsoft-Windows-Kernel-Process
 	guid, _ := windows.GUIDFromString("{22FB2CD6-0E7B-422B-A0C7-2FAD1FD0E716}")
 	session, err := etw.NewSession(guid, etw.WithName("blockads-ProcMon-ETW"))
-
+	//提高鲁棒性
 	if err != nil {
-		return nil, nil, fmt.Errorf("创建ETW会话失败: %w", err)
+		etw.KillSession("blockads-ProcMon-ETW")
+		session, err = etw.NewSession(guid, etw.WithName("blockads-ProcMon-ETW"))
+		if err != nil {
+			etw.KillSession("blockads-ProcMon-ETW")
+			session, err = etw.NewSession(guid, etw.WithName("blockads-ProcMon-ETW1"))
+			if err != nil {
+				etw.KillSession("blockads-ProcMon-ETW1")
+				return nil, nil, fmt.Errorf("创建 ETW 会话失败: %v", err)
+			}
+		}
 	}
 
 	cb := func(e *etw.Event) {
@@ -578,9 +552,8 @@ func run() error {
 	exe, _ := os.Executable()
 	appDir = filepath.Dir(exe)
 	logDir = filepath.Join(appDir, "log")
-	skpObj = newSkp(filepath.Join(appDir, "skip.txt"))
-
 	bl, _ := readBlk(appDir)
+
 	if len(bl.Signers) == 0 {
 		log.Printf("[WARN] sign.txt 缺失或为空")
 	}
@@ -588,7 +561,10 @@ func run() error {
 		log.Printf("[WARN] folder.txt 缺失或为空")
 	}
 	if len(bl.White) == 0 {
-		log.Printf("[INFO] whitelist.txt 缺失或为空")
+		log.Printf("[INFO] Wfolder.txt 缺失或为空")
+	}
+	if len(bl.WhiteSigners) == 0 {
+		log.Printf("[INFO] Wsign.txt 缺失或为空")
 	}
 
 	//并发扫描
