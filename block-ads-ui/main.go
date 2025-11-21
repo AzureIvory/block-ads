@@ -45,6 +45,19 @@ type uiSta struct {
 	Boot bool `json:"boot"`
 }
 
+func stopAd(dir string) error {
+	if err := utils.Kill("block-ads.exe"); err != nil {
+		return err
+	}
+	if err := etw.KillSession("blockads-ProcMon-ETW"); err != nil {
+		fmt.Println("结束ETW会话失败:", err)
+	}
+	p := filepath.Join(dir, "skin.txt")
+	_ = os.WriteFile(p, []byte{}, 0644)
+
+	return nil
+}
+
 func newDat(dir string) *appDat {
 	d := &appDat{
 		dir: dir,
@@ -632,7 +645,24 @@ func main() {
 		return dat.delLn(key, idx)
 	})
 	_ = w.Bind("trydel", utils.Del)
-	_ = w.Bind("tryrm", utils.Tryrm)
+	_ = w.Bind("tryrm", func(p string) error {
+		up, wd, err := utils.FindUn(p)
+		if err != nil || up == "" {
+			utils.PopMsg("提示", "未找到卸载程序,请手动卸载", 0x00000000, 0x00000030)
+			return err
+		}
+
+		msg := "已找到卸载程序\n是否停止拦截进程并开始卸载?"
+		ret := utils.PopMsg("提示", msg, 0x00000001, 0x00000030)
+		if ret != 1 {
+			return nil
+		}
+
+		if err := stopAd(dir); err != nil {
+			return err
+		}
+		return utils.RunUn(up, wd)
+	})
 
 	// 状态检查
 	_ = w.Bind("stChk", func() (uiSta, error) {
@@ -658,17 +688,9 @@ func main() {
 		return true, nil
 	})
 	_ = w.Bind("doStop", func() (bool, error) {
-		if err := utils.Kill("block-ads.exe"); err != nil {
+		if err := stopAd(dir); err != nil {
 			return false, err
 		}
-		// 结束ETW
-		if err := etw.KillSession("blockads-ProcMon-ETW"); err != nil {
-			fmt.Println("结束ETW会话失败:", err)
-		}
-		//清空skin.txt
-		p := filepath.Join(dir, "skin.txt")
-		os.WriteFile(p, []byte{}, 0644)
-
 		return true, nil
 	})
 	//前往GitHub
