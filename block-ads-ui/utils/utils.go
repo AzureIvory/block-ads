@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"os/exec"
@@ -298,4 +299,229 @@ func chkKey_pv(root reg.Key, sub string) bool {
 		return true
 	}
 	return false
+}
+
+// 在程序目录找到常见卸载程序然后执行
+func Tryrm(exePath string) error {
+	exePath = filepath.Clean(exePath)
+	if exePath == "" {
+		return errors.New("exe 空")
+	}
+
+	uns := []string{
+		"uninstall.exe",
+		"uninstaller.exe",
+		"uninst.exe",
+		"unins000.exe",
+		"unins001.exe",
+		"unins002.exe",
+		"unins003.exe",
+		"unins004.exe",
+		"remove.exe",
+		"uninstall64.exe",
+		"uninstall_x64.exe",
+	}
+	unsSet := make(map[string]struct{}, len(uns))
+	for _, n := range uns {
+		unsSet[n] = struct{}{}
+	}
+
+	// 在单个目录中找
+	fin := func(d string) (string, error) {
+		ents, err := os.ReadDir(d)
+		if err != nil {
+			return "", err
+		}
+
+		var wild string
+		for _, e := range ents {
+			if e.IsDir() {
+				continue
+			}
+			name := e.Name()
+			low := strings.ToLower(name)
+
+			// 匹配常见卸载文件名
+			if _, ok := unsSet[low]; ok {
+				return filepath.Join(d, name), nil
+			}
+			// 模糊匹配 unins/uninst
+			if wild == "" && (strings.Contains(low, "unins") || strings.Contains(low, "uninst")) {
+				wild = filepath.Join(d, name)
+			}
+		}
+
+		if wild != "" {
+			return wild, nil
+		}
+		return "", errors.New("no uns")
+	}
+
+	// 往下搜索，最多找4层
+	type dirNode struct {
+		dir   string
+		depth int
+	}
+	finDeep := func(root string, maxDepth int) (string, error) {
+		ents, err := os.ReadDir(root)
+		if err != nil {
+			return "", err
+		}
+
+		// 起点
+		q := make([]dirNode, 0, 32)
+		for _, e := range ents {
+			if !e.IsDir() {
+				continue
+			}
+			q = append(q, dirNode{
+				dir:   filepath.Join(root, e.Name()),
+				depth: 1,
+			})
+		}
+
+		for len(q) > 0 {
+			n := q[0]
+			q = q[1:]
+
+			up, err := fin(n.dir)
+			if err == nil {
+				return up, nil
+			}
+
+			if n.depth >= maxDepth {
+				continue
+			}
+
+			sub, err := os.ReadDir(n.dir)
+			if err != nil {
+				// 没权限/不存在直接跳过
+				continue
+			}
+			for _, e := range sub {
+				if !e.IsDir() {
+					continue
+				}
+				q = append(q, dirNode{
+					dir:   filepath.Join(n.dir, e.Name()),
+					depth: n.depth + 1,
+				})
+			}
+		}
+		return "", errors.New("no uns")
+	}
+
+	// 为防止限制，用多种方式启动卸载程序
+	run := func(p, d string) error {
+		var e1, e2, e3 error
+
+		c := exec.Command(p)
+		c.SysProcAttr = &syscall.SysProcAttr{
+			HideWindow: true,
+		}
+		c.Dir = d
+		e1 = c.Start()
+		if e1 == nil {
+			return nil
+		}
+
+		c = exec.Command("cmd", "/C", p)
+		c.SysProcAttr = &syscall.SysProcAttr{
+			HideWindow: true,
+		}
+		c.Dir = d
+		e2 = c.Start()
+		if e2 == nil {
+			return nil
+		}
+
+		c = exec.Command("rundll32", "shell32.dll,ShellExec_RunDLL", p)
+		c.SysProcAttr = &syscall.SysProcAttr{
+			HideWindow: true,
+		}
+		c.Dir = d
+		e3 = c.Start()
+		if e3 == nil {
+			return nil
+		}
+
+		return fmt.Errorf("run err: %v | %v | %v", e1, e2, e3)
+	}
+
+	// 先在 exe 目录找
+	edir := filepath.Dir(exePath)
+	edir = filepath.Clean(edir)
+
+	if up, err := fin(edir); err == nil {
+		// 设置工作目录为卸载程序所在目录
+		return run(up, filepath.Dir(up))
+	}
+
+	// 用 folder.txt 获取安装目录
+	self, e2 := os.Executable()
+	if e2 != nil {
+		return fmt.Errorf("get exe err: %w", e2)
+	}
+	sdir := filepath.Dir(self)
+	ff := filepath.Join(sdir, "folder.txt")
+	dat, e3 := os.ReadFile(ff)
+	if e3 != nil {
+		return fmt.Errorf("read folder.txt err: %w", e3)
+	}
+
+	var kws []string
+	for _, ln := range strings.Split(string(dat), "\n") {
+		ln = strings.TrimSpace(ln)
+		if ln == "" {
+			continue
+		}
+		if strings.HasPrefix(ln, "#") || strings.HasPrefix(ln, ";") {
+			continue
+		}
+		kws = append(kws, strings.ToLower(ln))
+	}
+	if len(kws) == 0 {
+		return errors.New("no kw")
+	}
+
+	// 从 exe 所在目录往上爬，用关键字找安装根目录
+	dir := edir
+	var id string
+	for {
+		bs := filepath.Base(dir)
+		lb := strings.ToLower(bs)
+		hit := false
+		for _, kw := range kws {
+			if lb == kw || strings.Contains(lb, kw) {
+				id = dir
+				hit = true
+				break
+			}
+		}
+		if hit {
+			break
+		}
+		pd := filepath.Dir(dir)
+		if pd == dir {
+			break
+		}
+		dir = pd
+	}
+
+	if id == "" {
+		return errors.New("no dir")
+	}
+
+	// 在安装目录扫一圈
+	if up, err := fin(id); err == nil {
+		return run(up, filepath.Dir(up))
+	}
+
+	// 向下搜索4层
+	up, err := finDeep(id, 4)
+	if err != nil {
+		return fmt.Errorf("no uns in %s: %w", id, err)
+	}
+
+	return run(up, filepath.Dir(up))
 }

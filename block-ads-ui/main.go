@@ -2,7 +2,6 @@ package main
 
 import (
 	"block-ads-ui/utils"
-	"errors"
 	"fmt"
 	"os"
 	"os/exec"
@@ -210,8 +209,6 @@ func (d *appDat) delLn(key string, idx int) ([]string, error) {
 }
 
 // 从日志加入白名单：kind = "folder" / "sign"
-// val: 日志中的第三段 ps[2]（folder 关键词 / 签名）
-// path: 日志中的路径（最后一段开始的完整路径）
 func (d *appDat) addWhite(kind, val, path string) (bool, error) {
 	kind = strings.ToLower(strings.TrimSpace(kind))
 	val = strings.TrimSpace(val)
@@ -230,7 +227,7 @@ func (d *appDat) addWhite(kind, val, path string) (bool, error) {
 	}
 }
 
-// sign 模式：把签名加入 Wsign.txt（去重）
+// sign 模式：把签名加入Wsign.txt
 func (d *appDat) addWsign(sign string) (bool, error) {
 	if sign == "" {
 		return false, os.ErrInvalid
@@ -252,14 +249,9 @@ func (d *appDat) addWsign(sign string) (bool, error) {
 	return true, nil
 }
 
-// folder 模式：从路径各级目录中找出与 folder.txt 行一致的名字，加入 Wfoler.txt（去重）
-//
-// 规则：
-// - 路径按 `\` 或 `/` 切分
-// - 去掉空段
-// - 第一段视为根目录，不匹配
-// - 最后一段视为文件名，不匹配
-// - 中间各级目录如果和 folder.txt 中某行（非注释）完全相同（忽略大小写），则加入白名单
+// folder 模式：从路径各级目录中找出与 folder.txt 行一致的名字，加入Wfoler.txt
+// - 第一段和最后一段不匹配
+// - 中间各级目录如果和 folder.txt 中某行相同（忽略大小写），加入白名单
 func (d *appDat) addWfolder(path string) (bool, error) {
 	if path == "" {
 		return false, os.ErrInvalid
@@ -271,7 +263,7 @@ func (d *appDat) addWfolder(path string) (bool, error) {
 	}
 	wl := d.lst["whitelist"]
 
-	// 预处理 folder.txt：忽略注释行
+	// 预处理folder.txt
 	fset := make(map[string]struct{})
 	for _, ln := range folders {
 		ln = strings.TrimSpace(ln)
@@ -306,7 +298,7 @@ func (d *appDat) addWfolder(path string) (bool, error) {
 	}
 
 	added := false
-	// 从第二段到倒数第二段（中间各级目录）
+	// 从第二段到倒数第二段
 	for i := 1; i < len(segs)-1; i++ {
 		name := strings.TrimSpace(segs[i])
 		if name == "" {
@@ -336,154 +328,6 @@ func (d *appDat) addWfolder(path string) (bool, error) {
 		return false, err
 	}
 	return true, nil
-}
-
-// 在程序目录找到常见卸载程序然后执行
-func tryrm(exePath string) error {
-	exePath = filepath.Clean(exePath)
-	if exePath == "" {
-		return errors.New("exe 空")
-	}
-
-	uns := []string{
-		"uninstall.exe",
-		"uninstaller.exe",
-		"uninst.exe",
-		"unins000.exe",
-		"unins001.exe",
-		"unins002.exe",
-		"unins003.exe",
-		"unins004.exe",
-		"remove.exe",
-		"uninstall64.exe",
-		"uninstall_x64.exe",
-	}
-
-	//找卸载程序
-	fin := func(d string) (string, error) {
-		for _, n := range uns {
-			p := filepath.Join(d, n)
-			inf, e := os.Stat(p)
-			if e == nil && !inf.IsDir() {
-				return p, nil
-			}
-		}
-		// 上个匹配没找到
-		pat := []string{"*unins*.exe", "*uninst*.exe"}
-		for _, g := range pat {
-			ms, _ := filepath.Glob(filepath.Join(d, g))
-			for _, m := range ms {
-				inf, e := os.Stat(m)
-				if e == nil && !inf.IsDir() {
-					return m, nil
-				}
-			}
-		}
-		return "", errors.New("no uns")
-	}
-
-	// 为防止限制，用多种方式启动卸载程序
-	run := func(p, d string) error {
-		var e1, e2, e3 error
-		c := exec.Command(p)
-		c.SysProcAttr = &syscall.SysProcAttr{
-			HideWindow: true,
-		}
-		c.Dir = d
-		e1 = c.Start()
-		if e1 == nil {
-			return nil
-		}
-		c = exec.Command("cmd", "/C", p)
-		c.SysProcAttr = &syscall.SysProcAttr{
-			HideWindow: true,
-		}
-		c.Dir = d
-		e2 = c.Start()
-		if e2 == nil {
-			return nil
-		}
-		c = exec.Command("rundll32", "shell32.dll,ShellExec_RunDLL", p)
-		c.SysProcAttr = &syscall.SysProcAttr{
-			HideWindow: true,
-		}
-		c.Dir = d
-		e3 = c.Start()
-		if e3 == nil {
-			return nil
-		}
-
-		return fmt.Errorf("run err: %v | %v | %v", e1, e2, e3)
-	}
-
-	edir := filepath.Dir(exePath)
-	edir = filepath.Clean(edir)
-
-	up, err := fin(edir)
-	if err == nil {
-		return run(up, edir)
-	}
-
-	//用folder.txt找安装目录
-	self, e2 := os.Executable()
-	if e2 != nil {
-		return fmt.Errorf("get exe err: %w", e2)
-	}
-	sdir := filepath.Dir(self)
-	ff := filepath.Join(sdir, "folder.txt")
-	dat, e3 := os.ReadFile(ff)
-	if e3 != nil {
-		return fmt.Errorf("read folder.txt err: %w", e3)
-	}
-
-	var kws []string
-	for _, ln := range strings.Split(string(dat), "\n") {
-		ln = strings.TrimSpace(ln)
-		if ln == "" {
-			continue
-		}
-		if strings.HasPrefix(ln, "#") || strings.HasPrefix(ln, ";") {
-			continue
-		}
-		kws = append(kws, strings.ToLower(ln))
-	}
-	if len(kws) == 0 {
-		return errors.New("no kw")
-	}
-
-	dir := edir
-	var id string
-	for {
-		bs := filepath.Base(dir)
-		lb := strings.ToLower(bs)
-		hit := false
-		for _, kw := range kws {
-			if lb == kw || strings.Contains(lb, kw) {
-				id = dir
-				hit = true
-				break
-			}
-		}
-		if hit {
-			break
-		}
-		pd := filepath.Dir(dir)
-		if pd == dir {
-			break
-		}
-		dir = pd
-	}
-
-	if id == "" {
-		return errors.New("no dir")
-	}
-
-	up, err = fin(id)
-	if err != nil {
-		return fmt.Errorf("no uns in %s: %w", id, err)
-	}
-
-	return run(up, id)
 }
 
 // 是否管理员
@@ -788,7 +632,7 @@ func main() {
 		return dat.delLn(key, idx)
 	})
 	_ = w.Bind("trydel", utils.Del)
-	_ = w.Bind("tryrm", tryrm)
+	_ = w.Bind("tryrm", utils.Tryrm)
 
 	// 状态检查
 	_ = w.Bind("stChk", func() (uiSta, error) {
