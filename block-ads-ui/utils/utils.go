@@ -20,11 +20,12 @@ const (
 	th32csSnapProcess = 0x00000002
 	processTerminate  = 0x0001
 
-	shmName       = "block-ads-unins" // 共享内存名
-	shmSize       = 4096              // 4KB就够用了
-	pageReadWrite = 0x04              // PAGE_READWRITE
-	fileMapWrite  = 0x0002            // FILE_MAP_WRITE
-	fileMapRead   = 0x0004            // FILE_MAP_READ
+	shmNameLocal  = "block-ads-unins"         // 共享内存名（同会话）
+	shmNameGlobal = "Global\\block-ads-unins" // 跨会话共享内存名
+	shmSize       = 4096                      // 4KB就够用了
+	pageReadWrite = 0x04                      // PAGE_READWRITE
+	fileMapWrite  = 0x0002                    // FILE_MAP_WRITE
+	fileMapRead   = 0x0004                    // FILE_MAP_READ
 )
 
 var (
@@ -65,7 +66,7 @@ type processEntry32 struct {
 
 // 把卸载程序文件名写入共享内存，供 block-ads.exe 读取并临时放行
 // 约定：共享内存中存的是 UTF-8 文本，按换行符分隔多个文件名
-func addUn(name string) error {
+func addUnWithName(name, shmName string) error {
 	name = strings.TrimSpace(name)
 	if name == "" {
 		return fmt.Errorf("空卸载名")
@@ -173,6 +174,18 @@ func addUn(name string) error {
 	copy(buf, []byte(out))
 
 	return nil
+}
+
+func addUn(name string) error {
+	var lastErr error
+	for _, shmName := range []string{shmNameGlobal, shmNameLocal} {
+		if err := addUnWithName(name, shmName); err == nil {
+			return nil
+		} else {
+			lastErr = err
+		}
+	}
+	return lastErr
 }
 
 func Kill(exeName string) error {

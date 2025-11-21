@@ -140,9 +140,10 @@ func getSignC(path string) string {
 
 // 共享内存
 const (
-	shmName     = "block-ads-unins"
-	shmSize     = 4096
-	fileMapRead = 0x0004
+	shmNameLocal  = "block-ads-unins"
+	shmNameGlobal = "Global\\block-ads-unins"
+	shmSize       = 4096
+	fileMapRead   = 0x0004
 )
 
 var (
@@ -158,7 +159,7 @@ var (
 )
 
 // 从共享内存中读取卸载程序列表的原始文本
-func readUninsRaw() string {
+func readUninsRawByName(shmName string) string {
 
 	namePtr, err := syscall.UTF16PtrFromString(shmName)
 	if err != nil {
@@ -201,6 +202,15 @@ func readUninsRaw() string {
 		return ""
 	}
 	return string(buf[:end])
+}
+
+func readUninsRaw() string {
+	for _, name := range []string{shmNameGlobal, shmNameLocal} {
+		if raw := readUninsRawByName(name); raw != "" {
+			return raw
+		}
+	}
+	return ""
 }
 func parseUnins(raw string) map[string]struct{} {
 	res := make(map[string]struct{})
