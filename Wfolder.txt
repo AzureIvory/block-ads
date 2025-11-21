@@ -67,3 +67,6 @@ OneDrive
 i4Tools9
 qianniu
 quark-cloud-drive
+YOUKU
+NetEase
+pinduoduo

@@ -1244,3 +1244,29 @@ i4Tools9--爱思助手
 Kakao Corp.--播放器
 quark-cloud-drive--夸克云
 qianniu--千牛
+Huawei Technologies Co., Ltd.--华为
+(C) 2018-2025 FirPE Team All Rights Reserved.--FirPE
+上海贝锐信息科技股份有限公司--向日葵远程
+AweSun--向日葵远程
+CNPrintTool--菜鸟打印组件
+Shanghai Reqable Information Technology Co., Ltd.--抓包工具
+Apowersoft Ltd--傲软
+BEIJING QIYI CENTURY SCIENCE&TECHNOLOGY CO.,LTD.--爱奇艺
+IQIYI Video--爱奇艺
+FastStone Corporation--FSCapture
+XMIND LIMITED--xmind思维导图
+pcsuite--vivo办公
+Jiangmen Eyun Network Co., Ltd.--驱动总裁系列
+Advanced Micro Devices Inc.--驱动
+Wagnardsoft--ddu卸载驱动
+DrvCeonw--驱动总裁
+CrystalBit Solutions--geek卸载
+voidtools PTY LTD--everything
+HP Inc.--惠普
+Lenovo (Beijing) Limited--联想
+East Money Information Co., Ltd.--东方财富
+Beijing iQIYI Science & Technology Co., Ltd.--爱奇艺
+NetEase--网易
+NetEase (Hangzhou) Network Co., Ltd--网易
+pinduoduo--拼多多
+上海寻梦信息技术有限公司--拼多多
