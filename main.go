@@ -50,6 +50,11 @@ type blkSet struct {
 var (
 	winDirOnce  sync.Once
 	winDirLower string
+
+	// txt缓存
+	blkMu   sync.RWMutex
+	blkLast time.Time
+	blkData *blkSet
 )
 
 // 签名缓存
@@ -58,6 +63,48 @@ var (
 	signCacheMu  sync.RWMutex
 	signCacheMax = 5000 // 最大缓存条数
 )
+
+// 获取当前规则
+func curBlk() *blkSet {
+	// 读锁：优先缓存
+	blkMu.RLock()
+	if blkData != nil && time.Since(blkLast) < 60*time.Second { // 缓存有效期 60 秒
+		defer blkMu.RUnlock()
+		return blkData
+	}
+	blkMu.RUnlock()
+
+	// 写锁：刷新
+	blkMu.Lock()
+	defer blkMu.Unlock()
+
+	if blkData != nil && time.Since(blkLast) < 3*time.Second {
+		return blkData
+	}
+
+	if appDir == "" {
+		exe, _ := os.Executable()
+		appDir = filepath.Dir(exe)
+	}
+
+	// 读取所有txt
+	bl, err := readBlk(appDir)
+	if err != nil {
+		if blkData != nil {
+			return blkData
+		}
+		return &blkSet{
+			Signers:      map[string]struct{}{},
+			Folders:      map[string]struct{}{},
+			White:        map[string]struct{}{},
+			WhiteSigners: map[string]struct{}{},
+		}
+	}
+
+	blkData = bl
+	blkLast = time.Now()
+	return blkData
+}
 
 // 取签名+缓存
 func getSignC(path string) string {
@@ -440,6 +487,10 @@ func procHit(pid, ppid uint32, fullPath, src string, bl *blkSet, short bool) {
 	if isSysDesk(pid, fullPath) {
 		return
 	}
+
+	//拿缓存
+	bl = curBlk()
+
 	//跳过白名单
 	if inWhite(fullPath, bl.White) {
 		return
@@ -566,6 +617,12 @@ func run() error {
 	if len(bl.WhiteSigners) == 0 {
 		log.Printf("[INFO] Wsign.txt 缺失或为空")
 	}
+
+	// 初始化txt缓存
+	blkMu.Lock()
+	blkData = bl
+	blkLast = time.Now()
+	blkMu.Unlock()
 
 	//并发扫描
 	go scanNow(bl, *fShort, *fWork)
