@@ -15,7 +15,6 @@ import (
 	"sync"
 	"syscall"
 	"time"
-	"unsafe"
 
 	"github.com/bi-zone/etw"
 	"golang.org/x/sys/windows"
@@ -138,120 +137,83 @@ func getSignC(path string) string {
 	return s
 }
 
-// 共享内存
+// 卸载白名单管道
 const (
-	shmNameLocal  = "block-ads-unins"
-	shmNameGlobal = "Global\\block-ads-unins"
-	shmSize       = 4096
-	fileMapRead   = 0x0004
+	pipeName = `\\\\.\\pipe\\block-ads-unins`
+	pipeBuf  = 512
 )
 
 var (
-	k32                  = syscall.NewLazyDLL("kernel32.dll")
-	procOpenFileMappingW = k32.NewProc("OpenFileMappingW")
-	procMapViewOfFile    = k32.NewProc("MapViewOfFile")
-	procUnmapViewOfFile  = k32.NewProc("UnmapViewOfFile")
-
-	// 缓存一份共享内存
 	unMu  sync.RWMutex
 	unSet map[string]struct{}
-	unRaw string
 )
 
-// 从共享内存中读取卸载程序列表的原始文本
-func readUninsRawByName(shmName string) string {
-
-	namePtr, err := syscall.UTF16PtrFromString(shmName)
-	if err != nil {
-		return ""
+func addUn(name string) {
+	name = strings.ToLower(strings.TrimSpace(filepath.Base(name)))
+	if name == "" {
+		return
 	}
-
-	// 打开共享内存
-	h, _, _ := procOpenFileMappingW.Call(
-		uintptr(fileMapRead),
-		0,
-		uintptr(unsafe.Pointer(namePtr)),
-	)
-	if h == 0 {
-		// 没有共享内存就空
-		return ""
+	unMu.Lock()
+	if unSet == nil {
+		unSet = make(map[string]struct{}, 8)
 	}
-	defer syscall.CloseHandle(syscall.Handle(h))
-
-	// 映射视图
-	addr, _, _ := procMapViewOfFile.Call(
-		h,
-		uintptr(fileMapRead),
-		0,
-		0,
-		uintptr(shmSize),
-	)
-	if addr == 0 {
-		return ""
-	}
-	defer procUnmapViewOfFile.Call(addr)
-
-	buf := unsafe.Slice((*byte)(unsafe.Pointer(addr)), shmSize)
-
-	// 找到第一个0字节前的有效数据
-	end := 0
-	for end < len(buf) && buf[end] != 0 {
-		end++
-	}
-	if end == 0 {
-		return ""
-	}
-	return string(buf[:end])
+	unSet[name] = struct{}{}
+	unMu.Unlock()
 }
 
-func readUninsRaw() string {
-	for _, name := range []string{shmNameGlobal, shmNameLocal} {
-		if raw := readUninsRawByName(name); raw != "" {
-			return raw
+func pipeRd(h windows.Handle) {
+	buf := make([]byte, pipeBuf)
+	for {
+		var n uint32
+		err := windows.ReadFile(h, buf, &n, nil)
+		if err != nil {
+			if err == syscall.ERROR_BROKEN_PIPE || err == syscall.ERROR_PIPE_NOT_CONNECTED {
+				return
+			}
+			if err != syscall.ERROR_MORE_DATA {
+				return
+			}
+		}
+		if n == 0 {
+			return
+		}
+		addUn(string(buf[:n]))
+		if err != syscall.ERROR_MORE_DATA {
+			return
 		}
 	}
-	return ""
 }
-func parseUnins(raw string) map[string]struct{} {
-	res := make(map[string]struct{})
-	if raw == "" {
-		return res
-	}
-	for _, ln := range strings.Split(raw, "\n") {
-		ln = strings.ToLower(strings.TrimSpace(ln))
-		if ln == "" {
+
+func pipeSrv() {
+	for {
+		h, err := windows.CreateNamedPipe(
+			windows.StringToUTF16Ptr(pipeName),
+			windows.PIPE_ACCESS_INBOUND,
+			windows.PIPE_TYPE_MESSAGE|windows.PIPE_READMODE_MESSAGE|windows.PIPE_WAIT,
+			windows.PIPE_UNLIMITED_INSTANCES,
+			pipeBuf,
+			pipeBuf,
+			0,
+			nil,
+		)
+		if err != nil {
+			time.Sleep(time.Second)
 			continue
 		}
-		res[ln] = struct{}{}
-	}
-	return res
-}
 
-// 读取,内容变化时刷新缓存
-func getUnins() map[string]struct{} {
-	raw := readUninsRaw()
-	unMu.RLock()
-	if unSet != nil && raw == unRaw {
-		defer unMu.RUnlock()
-		return unSet
-	}
-	unMu.RUnlock()
+		if err = windows.ConnectNamedPipe(h, nil); err != nil && err != syscall.ERROR_PIPE_CONNECTED {
+			windows.CloseHandle(h)
+			continue
+		}
 
-	parsed := parseUnins(raw)
-
-	unMu.Lock()
-	if raw == unRaw && unSet != nil {
-		parsed = unSet
-	} else {
-		unRaw = raw
-		unSet = parsed
+		pipeRd(h)
+		windows.DisconnectNamedPipe(h)
+		windows.CloseHandle(h)
 	}
-	unMu.Unlock()
-	return parsed
 }
 
 // 跳过卸载程序
-func skipUnins(fullPath string) bool {
+func skipUn(fullPath string) bool {
 	if !isExe(fullPath) {
 		return false
 	}
@@ -260,12 +222,9 @@ func skipUnins(fullPath string) bool {
 		return false
 	}
 
-	set := getUnins()
-	if len(set) == 0 {
-		return false
-	}
-
-	_, ok := set[base]
+	unMu.RLock()
+	_, ok := unSet[base]
+	unMu.RUnlock()
 	return ok
 }
 
@@ -620,7 +579,7 @@ func procHit(pid, ppid uint32, fullPath, src string, bl *blkSet, short bool) {
 		return
 	}
 	// UI 发过来的卸载程序在这里直接跳过
-	if skipUnins(fullPath) {
+	if skipUn(fullPath) {
 		return
 	}
 
@@ -760,7 +719,9 @@ func run() error {
 	blkLast = time.Now()
 	blkMu.Unlock()
 
-	//并发扫描
+	go pipeSrv()
+
+	// 并发扫描
 	go scanNow(bl, *fShort, *fWork)
 
 	//runETW
