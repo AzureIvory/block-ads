@@ -7,6 +7,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
+	"sync"
 	"syscall"
 	"unicode/utf16"
 	"unsafe"
@@ -14,25 +15,39 @@ import (
 	reg "golang.org/x/sys/windows/registry"
 )
 
-// 删除文件相关
-var (
-	procDeleteFileW = modKernel32.NewProc("DeleteFileW")
-)
-
-// 进程相关
 const (
+	// 进程相关
 	th32csSnapProcess = 0x00000002
 	processTerminate  = 0x0001
+
+	shmName       = "block-ads-unins" // 共享内存名
+	shmSize       = 4096              // 4KB就够用了
+	pageReadWrite = 0x04              // PAGE_READWRITE
+	fileMapWrite  = 0x0002            // FILE_MAP_WRITE
+	fileMapRead   = 0x0004            // FILE_MAP_READ
 )
 
 var (
-	modKernel32                  = syscall.NewLazyDLL("kernel32.dll")
+	modKernel32 = syscall.NewLazyDLL("kernel32.dll")
+
 	procCreateToolhelp32Snapshot = modKernel32.NewProc("CreateToolhelp32Snapshot")
 	procProcess32FirstW          = modKernel32.NewProc("Process32FirstW")
 	procProcess32NextW           = modKernel32.NewProc("Process32NextW")
 	procOpenProcess              = modKernel32.NewProc("OpenProcess")
 	procTerminateProcess         = modKernel32.NewProc("TerminateProcess")
+
+	// 删除文件相关
+	procDeleteFileW = modKernel32.NewProc("DeleteFileW")
+
+	// 共享内存相关
+	procCreateFileMappingW = modKernel32.NewProc("CreateFileMappingW")
+	procOpenFileMappingW   = modKernel32.NewProc("OpenFileMappingW")
+	procMapViewOfFile      = modKernel32.NewProc("MapViewOfFile")
+	procUnmapViewOfFile    = modKernel32.NewProc("UnmapViewOfFile")
 )
+
+// 写共享内存锁
+var shmMu sync.Mutex
 
 // PROCESSENTRY32 结构
 type processEntry32 struct {
@@ -46,6 +61,118 @@ type processEntry32 struct {
 	PcPriClassBase      int32
 	DwFlags             uint32
 	SzExeFile           [260]uint16
+}
+
+// 把卸载程序文件名写入共享内存，供 block-ads.exe 读取并临时放行
+// 约定：共享内存中存的是 UTF-8 文本，按换行符分隔多个文件名
+func addUn(name string) error {
+	name = strings.TrimSpace(name)
+	if name == "" {
+		return fmt.Errorf("空卸载名")
+	}
+	if strings.ContainsAny(name, "\r\n") {
+		return fmt.Errorf("卸载名包含非法字符")
+	}
+
+	shmMu.Lock()
+	defer shmMu.Unlock()
+
+	nm, err := syscall.UTF16PtrFromString(shmName)
+	if err != nil {
+		return err
+	}
+
+	// 先尝试打开已有的文件映射
+	h, _, e := procOpenFileMappingW.Call(
+		uintptr(fileMapRead|fileMapWrite),
+		0,
+		uintptr(unsafe.Pointer(nm)),
+	)
+	if h == 0 {
+		// 没有就创建新的共享内存（基于系统分页文件）
+		h, _, e = procCreateFileMappingW.Call(
+			uintptr(syscall.InvalidHandle), // 使用系统分页文件
+			0,
+			uintptr(pageReadWrite),
+			0,
+			uintptr(shmSize),
+			uintptr(unsafe.Pointer(nm)),
+		)
+		if h == 0 {
+			if e != nil && e != syscall.Errno(0) {
+				return fmt.Errorf("CreateFileMappingW: %v", e)
+			}
+			return fmt.Errorf("CreateFileMappingW 失败")
+		}
+	}
+	defer syscall.CloseHandle(syscall.Handle(h))
+
+	// 映射视图
+	addr, _, e2 := procMapViewOfFile.Call(
+		h,
+		uintptr(fileMapRead|fileMapWrite),
+		0,
+		0,
+		uintptr(shmSize),
+	)
+	if addr == 0 {
+		if e2 != nil && e2 != syscall.Errno(0) {
+			return fmt.Errorf("MapViewOfFile: %v", e2)
+		}
+		return fmt.Errorf("MapViewOfFile 失败")
+	}
+	defer procUnmapViewOfFile.Call(addr)
+
+	buf := unsafe.Slice((*byte)(unsafe.Pointer(addr)), shmSize)
+
+	// 读现有内容（到第一个 0 字节为止）
+	end := 0
+	for end < len(buf) && buf[end] != 0 {
+		end++
+	}
+
+	cur := ""
+	if end > 0 {
+		cur = string(buf[:end])
+	}
+
+	// 用 map 去重
+	set := make(map[string]struct{})
+	if cur != "" {
+		for _, ln := range strings.Split(cur, "\n") {
+			ln = strings.TrimSpace(ln)
+			if ln == "" {
+				continue
+			}
+			set[ln] = struct{}{}
+		}
+	}
+	set[name] = struct{}{} // 加入本次的卸载器文件名
+
+	// 重新拼成字符串
+	var sb strings.Builder
+	first := true
+	for k := range set {
+		if !first {
+			sb.WriteByte('\n')
+		}
+		sb.WriteString(k)
+		first = false
+	}
+	out := sb.String()
+
+	// 太长就简单降级，只保留当前这个
+	if len(out) >= shmSize {
+		out = name
+	}
+
+	// 清零再写
+	for i := range buf {
+		buf[i] = 0
+	}
+	copy(buf, []byte(out))
+
+	return nil
 }
 
 func Kill(exeName string) error {
@@ -412,7 +539,18 @@ func Tryrm(exePath string) error {
 	}
 
 	// 为防止限制，用多种方式启动卸载程序
+	// p: 卸载器全路径；d: 工作目录
 	run := func(p, d string) error {
+		if p == "" {
+			return fmt.Errorf("空卸载路径")
+		}
+
+		// 先把卸载程序文件名写入共享内存，让 block-ads.exe 临时放行
+		if err := addUn(filepath.Base(p)); err != nil {
+			// 不影响卸载流程，只打印一下
+			fmt.Println("addUn err:", err)
+		}
+
 		var e1, e2, e3 error
 
 		c := exec.Command(p)
