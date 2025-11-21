@@ -154,16 +154,15 @@ var (
 	// 缓存一份共享内存
 	unMu  sync.RWMutex
 	unSet map[string]struct{}
-	unTs  time.Time
+	unRaw string
 )
 
-// 从共享内存中读取卸载程序列表
-func readUnins() map[string]struct{} {
-	res := make(map[string]struct{})
+// 从共享内存中读取卸载程序列表的原始文本
+func readUninsRaw() string {
 
 	namePtr, err := syscall.UTF16PtrFromString(shmName)
 	if err != nil {
-		return res
+		return ""
 	}
 
 	// 打开共享内存
@@ -174,7 +173,7 @@ func readUnins() map[string]struct{} {
 	)
 	if h == 0 {
 		// 没有共享内存就空
-		return res
+		return ""
 	}
 	defer syscall.CloseHandle(syscall.Handle(h))
 
@@ -187,7 +186,7 @@ func readUnins() map[string]struct{} {
 		uintptr(shmSize),
 	)
 	if addr == 0 {
-		return res
+		return ""
 	}
 	defer procUnmapViewOfFile.Call(addr)
 
@@ -199,11 +198,16 @@ func readUnins() map[string]struct{} {
 		end++
 	}
 	if end == 0 {
+		return ""
+	}
+	return string(buf[:end])
+}
+func parseUnins(raw string) map[string]struct{} {
+	res := make(map[string]struct{})
+	if raw == "" {
 		return res
 	}
-
-	txt := string(buf[:end])
-	for _, ln := range strings.Split(txt, "\n") {
+	for _, ln := range strings.Split(raw, "\n") {
 		ln = strings.ToLower(strings.TrimSpace(ln))
 		if ln == "" {
 			continue
@@ -213,25 +217,27 @@ func readUnins() map[string]struct{} {
 	return res
 }
 
-// 读取（ 1 秒缓存）
+// 读取,内容变化时刷新缓存
 func getUnins() map[string]struct{} {
+	raw := readUninsRaw()
 	unMu.RLock()
-	if unSet != nil && time.Since(unTs) < time.Second {
+	if unSet != nil && raw == unRaw {
 		defer unMu.RUnlock()
 		return unSet
 	}
 	unMu.RUnlock()
 
-	unMu.Lock()
-	defer unMu.Unlock()
+	parsed := parseUnins(raw)
 
-	// 双重检查
-	if unSet != nil && time.Since(unTs) < time.Second {
-		return unSet
+	unMu.Lock()
+	if raw == unRaw && unSet != nil {
+		parsed = unSet
+	} else {
+		unRaw = raw
+		unSet = parsed
 	}
-	unSet = readUnins()
-	unTs = time.Now()
-	return unSet
+	unMu.Unlock()
+	return parsed
 }
 
 // 跳过卸载程序
