@@ -137,81 +137,6 @@ func getSignC(path string) string {
 	return s
 }
 
-// 卸载白名单管道
-const (
-	pipeName = `\\\\.\\pipe\\block-ads-unins`
-	pipeBuf  = 512
-)
-
-var (
-	unMu  sync.RWMutex
-	unSet map[string]struct{}
-)
-
-func addUn(name string) {
-	name = strings.ToLower(strings.TrimSpace(filepath.Base(name)))
-	if name == "" {
-		return
-	}
-	unMu.Lock()
-	if unSet == nil {
-		unSet = make(map[string]struct{}, 8)
-	}
-	unSet[name] = struct{}{}
-	unMu.Unlock()
-}
-
-func pipeRd(h windows.Handle) {
-	buf := make([]byte, pipeBuf)
-	for {
-		var n uint32
-		err := windows.ReadFile(h, buf, &n, nil)
-		if err != nil {
-			if err == syscall.ERROR_BROKEN_PIPE || err == syscall.ERROR_PIPE_NOT_CONNECTED {
-				return
-			}
-			if err != syscall.ERROR_MORE_DATA {
-				return
-			}
-		}
-		if n == 0 {
-			return
-		}
-		addUn(string(buf[:n]))
-		if err != syscall.ERROR_MORE_DATA {
-			return
-		}
-	}
-}
-
-func pipeSrv() {
-	for {
-		h, err := windows.CreateNamedPipe(
-			windows.StringToUTF16Ptr(pipeName),
-			windows.PIPE_ACCESS_INBOUND,
-			windows.PIPE_TYPE_MESSAGE|windows.PIPE_READMODE_MESSAGE|windows.PIPE_WAIT,
-			windows.PIPE_UNLIMITED_INSTANCES,
-			pipeBuf,
-			pipeBuf,
-			0,
-			nil,
-		)
-		if err != nil {
-			time.Sleep(time.Second)
-			continue
-		}
-
-		if err = windows.ConnectNamedPipe(h, nil); err != nil && err != syscall.ERROR_PIPE_CONNECTED {
-			windows.CloseHandle(h)
-			continue
-		}
-
-		pipeRd(h)
-		windows.DisconnectNamedPipe(h)
-		windows.CloseHandle(h)
-	}
-}
-
 // 跳过卸载程序
 func skipUn(fullPath string) bool {
 	if !isExe(fullPath) {
@@ -222,10 +147,145 @@ func skipUn(fullPath string) bool {
 		return false
 	}
 
-	unMu.RLock()
-	_, ok := unSet[base]
-	unMu.RUnlock()
-	return ok
+	// 常见卸载程序
+	uns := []string{
+		"uninstall.exe",
+		"uninstaller.exe",
+		"uninst.exe",
+		"unins000.exe",
+		"unins001.exe",
+		"unins002.exe",
+		"unins003.exe",
+		"unins004.exe",
+		"remove.exe",
+		"uninstall64.exe",
+		"uninstall_x64.exe",
+	}
+	for _, n := range uns {
+		if base == n {
+			return true
+		}
+	}
+
+	// 模糊匹配
+	if strings.Contains(base, "unins") || strings.Contains(base, "uninst") {
+		return true
+	}
+
+	// 结合安装目录关键字再找一圈
+	dir := filepath.Dir(fullPath)
+	if dir == "" || dir == "." {
+		return false
+	}
+
+	type dirNode struct {
+		dir   string
+		depth int
+	}
+
+	walk := func(root string, maxDepth int) bool {
+		ents, err := os.ReadDir(root)
+		if err != nil {
+			return false
+		}
+
+		q := make([]dirNode, 0, 32)
+		for _, e := range ents {
+			if !e.IsDir() {
+				continue
+			}
+			q = append(q, dirNode{dir: filepath.Join(root, e.Name()), depth: 1})
+		}
+
+		for len(q) > 0 {
+			n := q[0]
+			q = q[1:]
+
+			ents2, err := os.ReadDir(n.dir)
+			if err != nil {
+				continue
+			}
+			for _, e := range ents2 {
+				if e.IsDir() {
+					if n.depth < maxDepth {
+						q = append(q, dirNode{dir: filepath.Join(n.dir, e.Name()), depth: n.depth + 1})
+					}
+					continue
+				}
+				low := strings.ToLower(e.Name())
+				for _, u := range uns {
+					if low == u {
+						return true
+					}
+				}
+				if strings.Contains(low, "unins") || strings.Contains(low, "uninst") {
+					return true
+				}
+			}
+		}
+		return false
+	}
+
+	// folder.txt 关键字定位
+	self, err := os.Executable()
+	if err != nil {
+		return false
+	}
+	fdir := filepath.Dir(self)
+	ff := filepath.Join(fdir, "folder.txt")
+	dat, err := os.ReadFile(ff)
+	if err != nil {
+		return false
+	}
+
+	var kws []string
+	for _, ln := range strings.Split(string(dat), "\n") {
+		ln = strings.TrimSpace(ln)
+		if ln == "" {
+			continue
+		}
+		if strings.HasPrefix(ln, "#") || strings.HasPrefix(ln, ";") {
+			continue
+		}
+		kws = append(kws, strings.ToLower(ln))
+	}
+	if len(kws) == 0 {
+		return false
+	}
+
+	// 从进程目录往上找关键字目录
+	root := dir
+	var hit string
+	for {
+		b := filepath.Base(root)
+		lb := strings.ToLower(b)
+		match := false
+		for _, kw := range kws {
+			if lb == kw || strings.Contains(lb, kw) {
+				match = true
+				break
+			}
+		}
+		if match {
+			hit = root
+			break
+		}
+		p := filepath.Dir(root)
+		if p == root {
+			break
+		}
+		root = p
+	}
+	if hit == "" {
+		return false
+	}
+
+	if walk(hit, 4) {
+		return true
+	}
+
+	// 在当前目录再扫一圈
+	return walk(dir, 1)
 }
 
 func readBlk(baseDir string) (*blkSet, error) {
@@ -718,8 +778,6 @@ func run() error {
 	blkData = bl
 	blkLast = time.Now()
 	blkMu.Unlock()
-
-	go pipeSrv()
 
 	// 并发扫描
 	go scanNow(bl, *fShort, *fWork)

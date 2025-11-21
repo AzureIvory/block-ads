@@ -19,8 +19,6 @@ const (
 	// 进程相关
 	th32csSnapProcess = 0x00000002
 	processTerminate  = 0x0001
-
-	pipeName = `\\\\.\\pipe\\block-ads-unins`
 )
 
 var (
@@ -48,44 +46,6 @@ type processEntry32 struct {
 	PcPriClassBase      int32
 	DwFlags             uint32
 	SzExeFile           [260]uint16
-}
-
-func sndUn(name string) error {
-	name = strings.TrimSpace(name)
-	if name == "" {
-		return fmt.Errorf("空卸载名")
-	}
-	name = filepath.Base(name)
-	if name == "." || name == "" {
-		return fmt.Errorf("空卸载名")
-	}
-	if strings.ContainsAny(name, "\r\n") {
-		return fmt.Errorf("卸载名包含非法字符")
-	}
-
-	h, err := syscall.CreateFile(
-		syscall.StringToUTF16Ptr(pipeName),
-		syscall.GENERIC_WRITE,
-		0,
-		nil,
-		syscall.OPEN_EXISTING,
-		0,
-		0,
-	)
-	if err != nil {
-		return err
-	}
-	defer syscall.CloseHandle(h)
-
-	b := []byte(strings.ToLower(name))
-	var n uint32
-	if err = syscall.WriteFile(h, b, &n, nil); err != nil {
-		return err
-	}
-	if int(n) != len(b) {
-		return fmt.Errorf("写入不完整")
-	}
-	return nil
 }
 
 func Kill(exeName string) error {
@@ -267,6 +227,24 @@ func delcmd(path string) error {
 	return cmd.Run()
 }
 
+// 弹窗
+func PopMsg(tit, msg string, btn, ico uint32) int {
+	u32 := syscall.NewLazyDLL("user32.dll")
+	mb := u32.NewProc("MessageBoxW")
+
+	tPtr, _ := syscall.UTF16PtrFromString(msg)
+	cPtr, _ := syscall.UTF16PtrFromString(tit)
+
+	ret, _, _ := mb.Call(
+		0,
+		uintptr(unsafe.Pointer(tPtr)),
+		uintptr(unsafe.Pointer(cPtr)),
+		uintptr(btn|ico),
+	)
+
+	return int(ret)
+}
+
 // 简单判断系统是否有WebView2
 func HasWV2() bool {
 	const gu = `{F3017226-FE2A-4295-8BDF-00C3A9A7E4C5}`
@@ -282,21 +260,7 @@ func HasWV2() bool {
 		"是：安装运行库\n" +
 		"否：退出\n" +
 		"取消：继续运行"
-	cap := "提示"
-
-	u32 := syscall.NewLazyDLL("user32.dll")
-	mb := u32.NewProc("MessageBoxW")
-
-	tPtr, _ := syscall.UTF16PtrFromString(msg)
-	cPtr, _ := syscall.UTF16PtrFromString(cap)
-
-	// MB_YESNOCANCEL(0x3) | MB_ICONWARNING(0x30)
-	ret, _, _ := mb.Call(
-		0,
-		uintptr(unsafe.Pointer(tPtr)),
-		uintptr(unsafe.Pointer(cPtr)),
-		uintptr(0x00000003|0x00000030),
-	)
+	ret := PopMsg("提示", msg, 0x00000003, 0x00000030)
 
 	switch ret {
 	case 6: //是
@@ -341,11 +305,11 @@ func chkKey_pv(root reg.Key, sub string) bool {
 	return false
 }
 
-// 在程序目录找到常见卸载程序然后执行
-func Tryrm(exePath string) error {
+// 在程序目录找到常见卸载程序
+func FindUn(exePath string) (string, string, error) {
 	exePath = filepath.Clean(exePath)
 	if exePath == "" {
-		return errors.New("exe 空")
+		return "", "", errors.New("exe 空")
 	}
 
 	uns := []string{
@@ -451,72 +415,25 @@ func Tryrm(exePath string) error {
 		return "", errors.New("no uns")
 	}
 
-	// 为防止限制，用多种方式启动卸载程序
-	// p: 卸载器全路径；d: 工作目录
-	run := func(p, d string) error {
-		if p == "" {
-			return fmt.Errorf("空卸载路径")
-		}
-
-		if err := sndUn(filepath.Base(p)); err != nil {
-			fmt.Println("sndUn err:", err)
-		}
-		time.Sleep(500 * time.Millisecond)
-
-		var e1, e2, e3 error
-
-		c := exec.Command(p)
-		c.SysProcAttr = &syscall.SysProcAttr{
-			HideWindow: true,
-		}
-		c.Dir = d
-		e1 = c.Start()
-		if e1 == nil {
-			return nil
-		}
-
-		c = exec.Command("cmd", "/C", p)
-		c.SysProcAttr = &syscall.SysProcAttr{
-			HideWindow: true,
-		}
-		c.Dir = d
-		e2 = c.Start()
-		if e2 == nil {
-			return nil
-		}
-
-		c = exec.Command("rundll32", "shell32.dll,ShellExec_RunDLL", p)
-		c.SysProcAttr = &syscall.SysProcAttr{
-			HideWindow: true,
-		}
-		c.Dir = d
-		e3 = c.Start()
-		if e3 == nil {
-			return nil
-		}
-
-		return fmt.Errorf("run err: %v | %v | %v", e1, e2, e3)
-	}
-
 	// 先在 exe 目录找
 	edir := filepath.Dir(exePath)
 	edir = filepath.Clean(edir)
 
 	if up, err := fin(edir); err == nil {
 		// 设置工作目录为卸载程序所在目录
-		return run(up, filepath.Dir(up))
+		return up, filepath.Dir(up), nil
 	}
 
 	// 用 folder.txt 获取安装目录
 	self, e2 := os.Executable()
 	if e2 != nil {
-		return fmt.Errorf("get exe err: %w", e2)
+		return "", "", fmt.Errorf("get exe err: %w", e2)
 	}
 	sdir := filepath.Dir(self)
 	ff := filepath.Join(sdir, "folder.txt")
 	dat, e3 := os.ReadFile(ff)
 	if e3 != nil {
-		return fmt.Errorf("read folder.txt err: %w", e3)
+		return "", "", fmt.Errorf("read folder.txt err: %w", e3)
 	}
 
 	var kws []string
@@ -531,7 +448,7 @@ func Tryrm(exePath string) error {
 		kws = append(kws, strings.ToLower(ln))
 	}
 	if len(kws) == 0 {
-		return errors.New("no kw")
+		return "", "", errors.New("no kw")
 	}
 
 	// 从 exe 所在目录往上爬，用关键字找安装根目录
@@ -559,19 +476,71 @@ func Tryrm(exePath string) error {
 	}
 
 	if id == "" {
-		return errors.New("no dir")
+		return "", "", errors.New("no dir")
 	}
 
 	// 在安装目录扫一圈
 	if up, err := fin(id); err == nil {
-		return run(up, filepath.Dir(up))
+		return up, filepath.Dir(up), nil
 	}
 
 	// 向下搜索4层
 	up, err := finDeep(id, 4)
 	if err != nil {
-		return fmt.Errorf("no uns in %s: %w", id, err)
+		return "", "", fmt.Errorf("no uns in %s: %w", id, err)
 	}
 
-	return run(up, filepath.Dir(up))
+	return up, filepath.Dir(up), nil
+}
+
+// 为防止限制，用多种方式启动卸载程序
+func RunUn(p, d string) error {
+	if p == "" {
+		return fmt.Errorf("空卸载路径")
+	}
+
+	time.Sleep(200 * time.Millisecond)
+
+	var e1, e2, e3 error
+
+	c := exec.Command(p)
+	c.SysProcAttr = &syscall.SysProcAttr{
+		HideWindow: true,
+	}
+	c.Dir = d
+	e1 = c.Start()
+	if e1 == nil {
+		return nil
+	}
+
+	c = exec.Command("cmd", "/C", p)
+	c.SysProcAttr = &syscall.SysProcAttr{
+		HideWindow: true,
+	}
+	c.Dir = d
+	e2 = c.Start()
+	if e2 == nil {
+		return nil
+	}
+
+	c = exec.Command("rundll32", "shell32.dll,ShellExec_RunDLL", p)
+	c.SysProcAttr = &syscall.SysProcAttr{
+		HideWindow: true,
+	}
+	c.Dir = d
+	e3 = c.Start()
+	if e3 == nil {
+		return nil
+	}
+
+	return fmt.Errorf("run err: %v | %v | %v", e1, e2, e3)
+}
+
+// 兼容调用：找到后直接执行
+func Tryrm(exePath string) error {
+	p, d, err := FindUn(exePath)
+	if err != nil {
+		return err
+	}
+	return RunUn(p, d)
 }
