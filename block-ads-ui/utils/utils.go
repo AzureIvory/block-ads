@@ -536,7 +536,7 @@ func RunUn(p, d string) error {
 	return fmt.Errorf("run err: %v | %v | %v", e1, e2, e3)
 }
 
-// 兼容调用：找到后直接执行
+// 尝试卸载
 func Tryrm(exePath string) error {
 	p, d, err := FindUn(exePath)
 	if err != nil {

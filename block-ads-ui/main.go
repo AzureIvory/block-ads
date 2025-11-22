@@ -47,7 +47,7 @@ type uiSta struct {
 
 func stopAd(dir string) error {
 	if err := utils.Kill("block-ads.exe"); err != nil {
-		return err
+		fmt.Println("结束 block-ads.exe 失败:", err)
 	}
 	if err := etw.KillSession("blockads-ProcMon-ETW"); err != nil {
 		fmt.Println("结束ETW会话失败:", err)

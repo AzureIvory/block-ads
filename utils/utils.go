@@ -312,6 +312,74 @@ func Listpid() []uint32 {
 	return out
 }
 
+// 是否是 exe 文件
+func IsExe(p string) bool {
+	return strings.HasSuffix(strings.ToLower(strings.TrimSpace(p)), ".exe")
+}
+
+func GetU32(props map[string]interface{}, keys ...string) (uint32, bool) {
+	for _, k := range keys {
+		if v, ok := props[k]; ok && v != nil {
+			switch t := v.(type) {
+			case uint32:
+				return t, true
+			case uint64:
+				return uint32(t), true
+			case int:
+				return uint32(t), true
+			case int32:
+				return uint32(t), true
+			case int64:
+				return uint32(t), true
+			case float64:
+				return uint32(t), true
+			case string:
+				if n, err := strconv.ParseUint(strings.TrimSpace(t), 10, 32); err == nil {
+					return uint32(n), true
+				}
+			case []byte:
+				if n, err := strconv.ParseUint(strings.TrimSpace(string(t)), 10, 32); err == nil {
+					return uint32(n), true
+				}
+			}
+		}
+	}
+	return 0, false
+}
+
+func SplitPath(p string) []string {
+	p = strings.ReplaceAll(p, "/", `\`)
+	p = strings.Trim(p, " \t\r\n\\")
+	if p == "" {
+		return nil
+	}
+	segs := strings.Split(p, `\`)
+	out := make([]string, 0, len(segs))
+	for _, s := range segs {
+		s = strings.TrimSpace(s)
+		if s != "" {
+			out = append(out, s)
+		}
+	}
+	return out
+}
+
+// 根据 PID 获取进程路径
+func ProcPath(pid uint32) (string, error) {
+	h, err := windows.OpenProcess(windows.PROCESS_QUERY_LIMITED_INFORMATION, false, pid)
+	if err != nil {
+		return "", err
+	}
+	defer windows.CloseHandle(h)
+
+	buf := make([]uint16, 32768)
+	size := uint32(len(buf))
+	if err := windows.QueryFullProcessImageName(h, 0, &buf[0], &size); err != nil {
+		return "", err
+	}
+	return windows.UTF16ToString(buf[:size]), nil
+}
+
 // 缓存 NT 路径与常规win路径的映射
 func NTPathC() {
 	ntPathCacheOnce.Do(func() {

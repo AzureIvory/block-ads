@@ -10,7 +10,6 @@ import (
 	"os/signal"
 	"path/filepath"
 	"runtime"
-	"strconv"
 	"strings"
 	"sync"
 	"syscall"
@@ -139,9 +138,11 @@ func getSignC(path string) string {
 
 // 跳过卸载程序
 func skipUn(fullPath string) bool {
-	if !isExe(fullPath) {
+	// 只处理 .exe
+	if !utils.IsExe(fullPath) {
 		return false
 	}
+
 	base := strings.ToLower(strings.TrimSpace(filepath.Base(fullPath)))
 	if base == "" {
 		return false
@@ -172,120 +173,7 @@ func skipUn(fullPath string) bool {
 		return true
 	}
 
-	// 结合安装目录关键字再找一圈
-	dir := filepath.Dir(fullPath)
-	if dir == "" || dir == "." {
-		return false
-	}
-
-	type dirNode struct {
-		dir   string
-		depth int
-	}
-
-	walk := func(root string, maxDepth int) bool {
-		ents, err := os.ReadDir(root)
-		if err != nil {
-			return false
-		}
-
-		q := make([]dirNode, 0, 32)
-		for _, e := range ents {
-			if !e.IsDir() {
-				continue
-			}
-			q = append(q, dirNode{dir: filepath.Join(root, e.Name()), depth: 1})
-		}
-
-		for len(q) > 0 {
-			n := q[0]
-			q = q[1:]
-
-			ents2, err := os.ReadDir(n.dir)
-			if err != nil {
-				continue
-			}
-			for _, e := range ents2 {
-				if e.IsDir() {
-					if n.depth < maxDepth {
-						q = append(q, dirNode{dir: filepath.Join(n.dir, e.Name()), depth: n.depth + 1})
-					}
-					continue
-				}
-				low := strings.ToLower(e.Name())
-				for _, u := range uns {
-					if low == u {
-						return true
-					}
-				}
-				if strings.Contains(low, "unins") || strings.Contains(low, "uninst") {
-					return true
-				}
-			}
-		}
-		return false
-	}
-
-	// folder.txt 关键字定位
-	self, err := os.Executable()
-	if err != nil {
-		return false
-	}
-	fdir := filepath.Dir(self)
-	ff := filepath.Join(fdir, "folder.txt")
-	dat, err := os.ReadFile(ff)
-	if err != nil {
-		return false
-	}
-
-	var kws []string
-	for _, ln := range strings.Split(string(dat), "\n") {
-		ln = strings.TrimSpace(ln)
-		if ln == "" {
-			continue
-		}
-		if strings.HasPrefix(ln, "#") || strings.HasPrefix(ln, ";") {
-			continue
-		}
-		kws = append(kws, strings.ToLower(ln))
-	}
-	if len(kws) == 0 {
-		return false
-	}
-
-	// 从进程目录往上找关键字目录
-	root := dir
-	var hit string
-	for {
-		b := filepath.Base(root)
-		lb := strings.ToLower(b)
-		match := false
-		for _, kw := range kws {
-			if lb == kw || strings.Contains(lb, kw) {
-				match = true
-				break
-			}
-		}
-		if match {
-			hit = root
-			break
-		}
-		p := filepath.Dir(root)
-		if p == root {
-			break
-		}
-		root = p
-	}
-	if hit == "" {
-		return false
-	}
-
-	if walk(hit, 4) {
-		return true
-	}
-
-	// 在当前目录再扫一圈
-	return walk(dir, 1)
+	return false
 }
 
 func readBlk(baseDir string) (*blkSet, error) {
@@ -388,29 +276,12 @@ func isSysDesk(pid uint32, fullPath string) bool {
 	return strings.HasPrefix(lp, windowsDirLower()+`\\`) || lp == windowsDirLower()
 }
 
-func splitPath(p string) []string {
-	p = strings.ReplaceAll(p, "/", `\`)
-	p = strings.Trim(p, " \t\r\n\\")
-	if p == "" {
-		return nil
-	}
-	segs := strings.Split(p, `\`)
-	out := make([]string, 0, len(segs))
-	for _, s := range segs {
-		s = strings.TrimSpace(s)
-		if s != "" {
-			out = append(out, s)
-		}
-	}
-	return out
-}
-
 // 目录黑名单
 func hitFolder(fullPath string, folderSet map[string]struct{}) (bool, string) {
 	if len(folderSet) == 0 {
 		return false, ""
 	}
-	for _, seg := range splitPath(fullPath) {
+	for _, seg := range utils.SplitPath(fullPath) {
 		if _, ok := folderSet[seg]; ok {
 			return true, seg
 		}
@@ -439,7 +310,7 @@ func inWhite(fullPath string, white map[string]struct{}) bool {
 		return false
 	}
 	dir := filepath.Dir(fullPath)
-	for _, seg := range splitPath(dir) {
+	for _, seg := range utils.SplitPath(dir) {
 		if _, ok := white[seg]; ok {
 			return true
 		}
@@ -454,29 +325,10 @@ func fixPath(pid uint32, maybePath string) string {
 	if strings.Contains(lp, ":\\") && strings.HasSuffix(lp, ".exe") {
 		return translated
 	}
-	if p, err := procPath(pid); err == nil && p != "" {
+	if p, err := utils.ProcPath(pid); err == nil && p != "" {
 		return utils.NToWin(p)
 	}
 	return translated
-}
-
-func procPath(pid uint32) (string, error) {
-	h, err := windows.OpenProcess(windows.PROCESS_QUERY_LIMITED_INFORMATION, false, pid)
-	if err != nil {
-		return "", err
-	}
-	defer windows.CloseHandle(h)
-
-	buf := make([]uint16, 32768)
-	size := uint32(len(buf))
-	if err := windows.QueryFullProcessImageName(h, 0, &buf[0], &size); err != nil {
-		return "", err
-	}
-	return windows.UTF16ToString(buf[:size]), nil
-}
-
-func isExe(p string) bool {
-	return strings.HasSuffix(strings.ToLower(strings.TrimSpace(p)), ".exe")
 }
 
 func pickImg(props map[string]interface{}) string {
@@ -494,36 +346,6 @@ func pickImg(props map[string]interface{}) string {
 		}
 	}
 	return ""
-}
-
-func getU32(props map[string]interface{}, keys ...string) (uint32, bool) {
-	for _, k := range keys {
-		if v, ok := props[k]; ok && v != nil {
-			switch t := v.(type) {
-			case uint32:
-				return t, true
-			case uint64:
-				return uint32(t), true
-			case int:
-				return uint32(t), true
-			case int32:
-				return uint32(t), true
-			case int64:
-				return uint32(t), true
-			case float64:
-				return uint32(t), true
-			case string:
-				if n, err := strconv.ParseUint(strings.TrimSpace(t), 10, 32); err == nil {
-					return uint32(n), true
-				}
-			case []byte:
-				if n, err := strconv.ParseUint(strings.TrimSpace(string(t)), 10, 32); err == nil {
-					return uint32(n), true
-				}
-			}
-		}
-	}
-	return 0, false
 }
 
 type hitInfo struct {
@@ -634,7 +456,7 @@ func fuck(pid, ppid uint32, img, signer string, hits []hitInfo, src string) {
 
 func procHit(pid, ppid uint32, fullPath, src string, bl *blkSet, short bool) {
 	fullPath = utils.NToWin(fullPath)
-	if !isExe(fullPath) {
+	if !utils.IsExe(fullPath) {
 		return
 	}
 	if isSysDesk(pid, fullPath) {
@@ -678,7 +500,7 @@ func scanNow(bl *blkSet, short bool, workers int) {
 			if pid == 0 || pid == 4 || pid == self {
 				continue
 			}
-			fullPath, err := procPath(pid)
+			fullPath, err := utils.ProcPath(pid)
 			if err != nil || fullPath == "" {
 				continue
 			}
@@ -730,11 +552,11 @@ func runETW(bl *blkSet, short bool) (*etw.Session, *sync.WaitGroup, error) {
 		}
 
 		//从payload取PID，不行再header
-		pid, ok := getU32(props, "ProcessID", "ProcessId", "PID")
+		pid, ok := utils.GetU32(props, "ProcessID", "ProcessId", "PID")
 		if !ok {
 			pid = e.Header.ProcessID
 		}
-		ppid, _ := getU32(props, "ParentProcessID", "ParentProcessId", "ParentId", "ParentID")
+		ppid, _ := utils.GetU32(props, "ParentProcessID", "ParentProcessId", "ParentId", "ParentID")
 
 		img := fixPath(pid, pickImg(props))
 		if img == "" {
