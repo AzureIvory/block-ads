@@ -1,0 +1,4 @@
+#include <windows.h>
+100 ICON "icon.ico"
+32512 ICON "icon.ico"
+1 RT_MANIFEST "main.manifest"
