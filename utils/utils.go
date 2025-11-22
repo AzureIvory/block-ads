@@ -5,6 +5,8 @@ import (
 	"os"
 	"os/exec"
 	"strconv"
+	"strings"
+	"sync"
 	"syscall"
 	"unsafe"
 
@@ -106,6 +108,11 @@ const (
 
 var (
 	modCrypt32 = syscall.NewLazyDLL("crypt32.dll")
+
+	// NT路径缓存
+	ntPathCache     map[string]string
+	ntPathCacheOnce sync.Once
+	ntPathCacheMu   sync.RWMutex
 
 	procCryptQueryObject           = modCrypt32.NewProc("CryptQueryObject")
 	procCryptMsgGetParam           = modCrypt32.NewProc("CryptMsgGetParam")
@@ -303,4 +310,79 @@ func Listpid() []uint32 {
 		}
 	}
 	return out
+}
+
+// 缓存 NT 路径与常规win路径的映射
+func NTPathC() {
+	ntPathCacheOnce.Do(func() {
+		cache := make(map[string]string)
+
+		buf := make([]uint16, 254)
+		n, err := windows.GetLogicalDriveStrings(uint32(len(buf)), &buf[0])
+		if err != nil || n == 0 {
+			ntPathCacheMu.Lock()
+			ntPathCache = cache
+			ntPathCacheMu.Unlock()
+			return
+		}
+
+		drives := strings.Split(strings.TrimRight(windows.UTF16ToString(buf[:n]), "\x00"), "\x00")
+		for _, drive := range drives {
+			d := strings.TrimSuffix(drive, "\\")
+			if d == "" {
+				continue
+			}
+
+			var devBuf [1024]uint16
+			if m, err := windows.QueryDosDevice(syscall.StringToUTF16Ptr(d), &devBuf[0], uint32(len(devBuf))); err == nil && m > 0 {
+				device := windows.UTF16ToString(devBuf[:m])
+				if device != "" {
+					cache[strings.ToLower(device)] = d + "\\"
+				}
+			}
+		}
+
+		ntPathCacheMu.Lock()
+		ntPathCache = cache
+		ntPathCacheMu.Unlock()
+	})
+}
+
+// 将NT路径转换为win路径，失败就返回原路径
+func NToWin(ntPath string) string {
+	if ntPath == "" {
+		return ntPath
+	}
+
+	if strings.Contains(ntPath, ":\\") {
+		return ntPath
+	}
+
+	NTPathC()
+
+	ntPathLower := strings.ToLower(ntPath)
+	ntPathCacheMu.RLock()
+	defer ntPathCacheMu.RUnlock()
+
+	var (
+		matchedDev   string
+		matchedDrive string
+	)
+
+	for dev, drive := range ntPathCache {
+		if strings.HasPrefix(ntPathLower, dev) && len(dev) > len(matchedDev) {
+			matchedDev = dev
+			matchedDrive = drive
+		}
+	}
+
+	if matchedDev == "" {
+		return ntPath
+	}
+
+	suffix := strings.TrimPrefix(ntPath[len(matchedDev):], "\\")
+	if strings.HasSuffix(matchedDrive, "\\") {
+		return matchedDrive + suffix
+	}
+	return matchedDrive + "\\" + suffix
 }

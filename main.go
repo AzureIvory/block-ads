@@ -449,14 +449,15 @@ func inWhite(fullPath string, white map[string]struct{}) bool {
 
 // 处理NT路径
 func fixPath(pid uint32, maybePath string) string {
-	lp := strings.ToLower(maybePath)
+	translated := utils.NToWin(maybePath)
+	lp := strings.ToLower(translated)
 	if strings.Contains(lp, ":\\") && strings.HasSuffix(lp, ".exe") {
-		return maybePath
+		return translated
 	}
 	if p, err := procPath(pid); err == nil && p != "" {
-		return p
+		return utils.NToWin(p)
 	}
-	return maybePath
+	return translated
 }
 
 func procPath(pid uint32) (string, error) {
@@ -632,13 +633,14 @@ func fuck(pid, ppid uint32, img, signer string, hits []hitInfo, src string) {
 }
 
 func procHit(pid, ppid uint32, fullPath, src string, bl *blkSet, short bool) {
+	fullPath = utils.NToWin(fullPath)
 	if !isExe(fullPath) {
 		return
 	}
 	if isSysDesk(pid, fullPath) {
 		return
 	}
-	// UI 发过来的卸载程序在这里直接跳过
+
 	if skipUn(fullPath) {
 		return
 	}
