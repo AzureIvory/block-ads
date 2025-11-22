@@ -510,6 +510,15 @@ function swTab(key) {
 
   rend();
 }
+// 定时刷新运行状态
+async function refSta() {
+  try {
+    const s = await stChk();
+    updSta(s);
+  } catch (e) {
+    console.error("状态检查失败", e);
+  }
+}
 
 // 启动流程
 async function boot() {
@@ -529,7 +538,9 @@ async function boot() {
     rendLog();
     setMsg("", false);
     // 定时刷新日志
-    setInterval(refLog, 10000);
+    setInterval(refLog, 5000);
+    // 定时刷新运行状态
+    setInterval(refSta, 4000);
   } catch (e) {
     console.error(e);
     setMsg("加载失败: " + e, true);
