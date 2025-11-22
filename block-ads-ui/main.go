@@ -21,7 +21,7 @@ import (
 var lstMap = map[string]string{
 	"sign":      "sign.txt",
 	"folder":    "folder.txt",
-	"whitelist": "Wfoler.txt",
+	"whitelist": "Wfolder.txt",
 	"signWhite": "Wsign.txt",
 }
 
@@ -262,9 +262,8 @@ func (d *appDat) addWsign(sign string) (bool, error) {
 	return true, nil
 }
 
-// folder 模式：从路径各级目录中找出与 folder.txt 行一致的名字，加入Wfoler.txt
+// folder 模式：从路径各级目录中找出与 folder.txt 行一致的名字，加入Wfolder.txt
 // - 第一段和最后一段不匹配
-// - 中间各级目录如果和 folder.txt 中某行相同（忽略大小写），加入白名单
 func (d *appDat) addWfolder(path string) (bool, error) {
 	if path == "" {
 		return false, os.ErrInvalid
