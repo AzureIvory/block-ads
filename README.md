@@ -1,5 +1,5 @@
 # 禁止广告运行
-> 自用工具,千万不要到[蓝奏云](https://bluered.lanzouo.com/iHxdj3bhxjti)和[Release](https://github.com/AzureIvory/block-ads/releases/tag/Release)下载
+> 自用工具,千万不要到[蓝奏云](https://bluered.lanzouo.com/iUDUv3bu73rc)和[Release](https://github.com/AzureIvory/block-ads/releases/tag/Release)下载
 #### folder.txt
 >目录黑名单：在该名单内的目录运行的程序将会结束
 #### sign.txt
