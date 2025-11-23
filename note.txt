@@ -1270,3 +1270,9 @@ NetEase--网易
 NetEase (Hangzhou) Network Co., Ltd--网易
 pinduoduo--拼多多
 上海寻梦信息技术有限公司--拼多多
+Chrome--谷歌内核浏览器
+360ChromeX--360极速浏览器
+360Chrome--360极速浏览器x
+360se6--360安全浏览器
+360se--360安全浏览器
+2345Explorer--2345加速浏览器

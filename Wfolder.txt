@@ -70,3 +70,9 @@ quark-cloud-drive
 YOUKU
 NetEase
 pinduoduo
+Chrome
+360ChromeX
+360Chrome
+360se6
+360se
+2345Explorer
