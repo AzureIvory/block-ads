@@ -25,6 +25,7 @@ Realtek Semiconductor Corp.
 Tomasz Moń
 Microsoft Windows Publisher
 .NET
+360.cn
 Underwriters Laboratories Inc.
 Free Time Software Technology Co., Ltd.
 The Qt Company Oy

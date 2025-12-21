@@ -17,6 +17,7 @@ BaiduNetdisk
 VirtualBox
 Oray
 123pan
+360Safe
 VMware
 Xmind
 JetBrains
@@ -28,6 +29,7 @@ Bandicam
 HiSuite
 block-ads
 360zip
+360
 WPS Office
 Git
 Huorong

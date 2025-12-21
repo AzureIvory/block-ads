@@ -18,8 +18,6 @@ PCjiami
 2345PCSafe
 2345SafeCenter
 2345AvScan
-360huobao
-360Safe
 LuDaShi
 SoftMgr_2345
 WinAssist
@@ -27,7 +25,6 @@ BirdWallpaper
 kingsoft
 DriveTheLife
 DTLSoft
-360bizhi
 365SpeedImage
 55Viewer
 66bizhi
