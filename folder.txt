@@ -1,7 +1,11 @@
 XFQDXTool
+ProZip
 NetPowerZipBingTwo
+WinOptimize
 Adobe Installers
+bizhigame
 DLL错误修复工具
+DllFix
 LocalHuaiCaiSoftOff
 3DMRepairMaster
 jinzhousoft
