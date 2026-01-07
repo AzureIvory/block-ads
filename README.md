@@ -63,8 +63,11 @@
 ## 浏览器侧的广告治理建议
 >#### 第一步浏览器下载安装油猴
 >[油猴官网](https://www.tampermonkey.net/index.php)
+
 >[油猴crx下载（适用于谷歌等特殊浏览器）](https://bluered.lanzouo.com/i1jfd3b90kfe)
+
 >[本地crx插件安装教程]("https://blog.csdn.net/chouchoubuchou/article/details/146294436")
+
 >#### 第二步安装这个脚本
 >[AC-baidu-重定向优化百度搜狗谷歌必应搜索](https://openuserjs.org/scripts/inDarkness/AC-baidu-%E9%87%8D%E5%AE%9A%E5%90%91%E4%BC%98%E5%8C%96%E7%99%BE%E5%BA%A6%E6%90%9C%E7%8B%97%E8%B0%B7%E6%AD%8C%E5%BF%85%E5%BA%94%E6%90%9C%E7%B4%A2_favicon_%E5%8F%8C%E5%88%97)
 
@@ -84,7 +87,3 @@
 
 # 致谢
 [SoftCnKiller](https://github.com/SiHaiYiYeQiu/SoftCnKiller)
-
-## Star History
-
-[![Star History Chart](https://api.star-history.com/svg?repos=AzureIvory/block-ads&type=Date)](https://star-history.com/#AzureIvory/block-ads&Date)
