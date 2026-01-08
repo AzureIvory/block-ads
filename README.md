@@ -6,7 +6,7 @@
 > [蓝奏云](https://bluered.lanzouo.com/iUDUv3bu73rc)
 > [Release](https://github.com/AzureIvory/block-ads/releases/tag/Release)
 
-## 文件与目录说明
+## 文件说明
 
 | 文件 | 作用 |
 |---|---|
@@ -16,6 +16,7 @@
 | **`Wsign.txt`** | 签名白名单：匹配数字签名信息的程序将被放行 |
 | **`note.txt`** | 注释：用于给条目添加说明 |
 | **`UI.exe`** | 图形化界面：用于管理名单、查看拦截记录、启动/停止核心功能 |
+| **`Code.exe`** | 伪装程序：用于伪装特定人群 |
 | **`block-ads.exe`** | 核心拦截程序 |
 ---
 
@@ -32,7 +33,7 @@
 
 ## 使用说明
 ### 运行环境
-- Windows 7/10/11
+- Windows 7以上
 - 需要安装 **WebView2 Runtime**
 
 ### 快速开始
@@ -66,7 +67,7 @@
 
 >[油猴crx下载（适用于谷歌等特殊浏览器）](https://bluered.lanzouo.com/i1jfd3b90kfe)
 
->[本地crx插件安装教程]("https://blog.csdn.net/chouchoubuchou/article/details/146294436")
+>[本地crx插件安装教程](https://blog.csdn.net/chouchoubuchou/article/details/146294436)
 
 >#### 第二步安装这个脚本
 >[AC-baidu-重定向优化百度搜狗谷歌必应搜索](https://openuserjs.org/scripts/inDarkness/AC-baidu-%E9%87%8D%E5%AE%9A%E5%90%91%E4%BC%98%E5%8C%96%E7%99%BE%E5%BA%A6%E6%90%9C%E7%8B%97%E8%B0%B7%E6%AD%8C%E5%BF%85%E5%BA%94%E6%90%9C%E7%B4%A2_favicon_%E5%8F%8C%E5%88%97)
