@@ -1,0 +1,695 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>软件更新</title>
+  <style>
+    :root{
+      --primary:#2563eb;
+      --primary-700:#1d4ed8;
+      --bg:#f3f4f6;
+      --card:#ffffff;
+      --text:#111827;
+      --muted:#6b7280;
+      --border:#e5e7eb;
+      --shadow: 0 18px 50px rgba(0,0,0,.10);
+      --danger:#ef4444;
+      --danger-700:#dc2626;
+      --chip:#f9fafb;
+      --focus: 0 0 0 4px rgba(37,99,235,.18);
+    }
+
+    *{ box-sizing:border-box; }
+    body{
+      margin:0;
+      font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", Arial, sans-serif;
+      background:var(--bg);
+      color:var(--text);
+      min-height:100vh;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:20px;
+    }
+
+    .dialog{
+      width:100%;
+      max-width:720px;
+      background:var(--card);
+      border:1px solid var(--border);
+      border-radius:16px;
+      box-shadow:var(--shadow);
+      overflow:hidden;
+      display:flex;
+      flex-direction:column;
+    }
+
+    .header{
+      padding:22px 24px 18px;
+      background: linear-gradient(135deg, rgba(37,99,235,.10), rgba(37,99,235,.04));
+      border-bottom:1px solid var(--border);
+    }
+    .header-top{
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:12px;
+    }
+    .title{
+      margin:0;
+      font-size:18px;
+      letter-spacing:.2px;
+      line-height:1.2;
+    }
+    .subtitle{
+      margin:6px 0 0;
+      color:var(--muted);
+      font-size:13px;
+      line-height:1.5;
+    }
+    .version-chip{
+      flex:0 0 auto;
+      font-size:12px;
+      padding:6px 10px;
+      border-radius:999px;
+      background:rgba(37,99,235,.10);
+      border:1px solid rgba(37,99,235,.18);
+      color:var(--primary-700);
+      font-weight:700;
+    }
+
+    .content{
+      padding:0;
+      max-height:62vh;
+      overflow:auto;
+    }
+
+    .section{
+      padding:18px 24px;
+      border-bottom:1px solid var(--border);
+    }
+    .section-head{
+      display:flex;
+      align-items:flex-end;
+      justify-content:space-between;
+      gap:12px;
+      margin-bottom:12px;
+    }
+    .section-title{
+      margin:0;
+      font-size:13px;
+      color:var(--muted);
+      font-weight:800;
+      letter-spacing:.5px;
+      text-transform:uppercase;
+    }
+    .hint{
+      font-size:12px;
+      color:var(--muted);
+    }
+
+    .list{
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+    }
+
+    .item{
+      display:flex;
+      align-items:flex-start;
+      gap:12px;
+      padding:12px 12px;
+      border:1px solid var(--border);
+      border-radius:12px;
+      background:#fff;
+      transition:.18s;
+    }
+    .item:hover{ border-color:rgba(37,99,235,.35); }
+    .item.locked{
+      background:#f9fafb;
+      border-color:#eef2f7;
+      opacity:.92;
+    }
+    .item.locked:hover{ border-color:#eef2f7; }
+
+    .check{
+      margin-top:2px;
+      width:18px;
+      height:18px;
+      accent-color:var(--primary);
+    }
+
+    .meta{ flex:1; min-width:0; }
+    .name{
+      margin:0;
+      font-size:14px;
+      font-weight:700;
+      line-height:1.25;
+      word-break:break-word;
+    }
+    .desc{
+      margin:3px 0 0;
+      font-size:12px;
+      color:var(--muted);
+      line-height:1.5;
+    }
+
+    .badge{
+      margin-left:auto;
+      margin-top:1px;
+      padding:4px 8px;
+      border-radius:999px;
+      font-size:11px;
+      font-weight:800;
+      background:var(--chip);
+      border:1px solid var(--border);
+      color:var(--muted);
+      white-space:nowrap;
+    }
+
+    /* 规则库折叠 */
+    details.rules{
+      border:1px solid var(--border);
+      border-radius:14px;
+      overflow:hidden;
+      background:#fff;
+    }
+    details.rules[open]{
+      box-shadow: 0 10px 30px rgba(0,0,0,.06);
+      border-color: rgba(37,99,235,.25);
+    }
+    .rules summary{
+      list-style:none;
+      cursor:pointer;
+      padding:12px 12px;
+      display:flex;
+      align-items:flex-start;
+      gap:12px;
+    }
+    .rules summary::-webkit-details-marker{ display:none; }
+
+    .caret{
+      margin-left:auto;
+      margin-top:2px;
+      width:10px;
+      height:10px;
+      border-right:2px solid var(--muted);
+      border-bottom:2px solid var(--muted);
+      transform: rotate(-45deg);
+      transition:.18s;
+      flex:0 0 auto;
+    }
+    details.rules[open] .caret{
+      transform: rotate(45deg);
+      margin-top:4px;
+    }
+
+    .sublist{
+      padding: 0 12px 12px;
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+    }
+
+    .subitem{
+      display:flex;
+      align-items:flex-start;
+      gap:12px;
+      padding:10px 10px;
+      border:1px solid var(--border);
+      border-radius:12px;
+      background:#fff;
+      transition:.18s;
+    }
+    .subitem:hover{ border-color:rgba(37,99,235,.35); }
+
+    .toolbar{
+      display:flex;
+      gap:10px;
+      align-items:center;
+      justify-content:space-between;
+      margin-top:10px;
+      flex-wrap:wrap;
+    }
+
+    .search{
+      flex:1 1 260px;
+      display:flex;
+      align-items:center;
+      gap:8px;
+      padding:10px 12px;
+      border:1px solid var(--border);
+      border-radius:12px;
+      background:#fff;
+    }
+    .search input{
+      border:none;
+      outline:none;
+      width:100%;
+      font-size:13px;
+      background:transparent;
+      color:var(--text);
+    }
+    .search:focus-within{
+      border-color:rgba(37,99,235,.55);
+      box-shadow: var(--focus);
+    }
+
+    .note{
+      font-size:12px;
+      color:var(--muted);
+      padding:10px 12px;
+      border-radius:12px;
+      border:1px solid var(--border);
+      background:#fbfdff;
+      flex:1 1 260px;
+    }
+    .note b{ color:var(--text); }
+
+    /* 策略区 */
+    .policy{
+      padding:18px 24px;
+      background:#fcfcfd;
+      border-bottom:1px solid var(--border);
+    }
+    .policy-title{
+      margin:0 0 12px;
+      font-size:14px;
+      font-weight:900;
+    }
+    .policy-grid{
+      display:grid;
+      grid-template-columns: 1fr;
+      gap:10px;
+    }
+    @media (min-width: 680px){
+      .policy-grid{ grid-template-columns: 1fr 1fr 1fr; }
+    }
+
+    .p-card{
+      border:1px solid var(--border);
+      border-radius:14px;
+      padding:12px 12px;
+      background:#fff;
+      display:flex;
+      gap:10px;
+      cursor:pointer;
+      transition:.18s;
+      align-items:flex-start;
+    }
+    .p-card:hover{ border-color:rgba(37,99,235,.35); }
+    .p-card input{ margin-top:3px; accent-color:var(--primary); }
+    .p-main{
+      flex:1;
+      min-width:0;
+    }
+    .p-name{
+      margin:0;
+      font-size:13px;
+      font-weight:900;
+    }
+    .p-desc{
+      margin:4px 0 0;
+      font-size:12px;
+      color:var(--muted);
+      line-height:1.45;
+    }
+    .p-card.danger{
+      border-color: rgba(239,68,68,.25);
+      background: rgba(239,68,68,.04);
+    }
+    .p-card.danger:hover{
+      border-color: rgba(239,68,68,.45);
+    }
+    .p-card.danger .p-name{ color: var(--danger-700); }
+    .p-card.danger .p-desc{ color: var(--danger); }
+
+    /* Footer */
+    .footer{
+      padding:16px 24px;
+      display:flex;
+      justify-content:flex-end;
+      gap:10px;
+      background:#fff;
+    }
+    .btn{
+      border:none;
+      border-radius:12px;
+      padding:11px 16px;
+      font-size:14px;
+      font-weight:900;
+      cursor:pointer;
+      transition:.18s;
+    }
+    .btn:focus{ outline:none; box-shadow:var(--focus); }
+    .btn-ghost{
+      background:#fff;
+      border:1px solid var(--border);
+      color:var(--text);
+    }
+    .btn-ghost:hover{ background:#f9fafb; }
+    .btn-primary{
+      background:var(--primary);
+      color:#fff;
+    }
+    .btn-primary:hover{ background:var(--primary-700); }
+    .btn-danger{
+      background:var(--danger);
+      color:#fff;
+    }
+    .btn-danger:hover{ background:var(--danger-700); }
+
+    /* 禁用态 */
+    .disabled .section,
+    .disabled details.rules{
+      opacity:.55;
+      pointer-events:none;
+    }
+
+    /* 可访问性：键盘可见 */
+    summary:focus-visible,
+    label:focus-visible{
+      outline:none;
+      box-shadow:var(--focus);
+      border-radius:12px;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="dialog" id="updateWindow" role="dialog" aria-modal="true" aria-label="软件更新窗口">
+    <div class="header">
+      <div class="header-top">
+        <div>
+          <h1 class="title">发现新版本</h1>
+          <p class="subtitle">核心组件与安全规则库更新。可选项仅在您勾选后更新。</p>
+        </div>
+        <div class="version-chip">v2.5</div>
+      </div>
+    </div>
+
+    <div class="content">
+      <!-- 核心组件 -->
+      <div class="section">
+        <div class="section-head">
+          <p class="section-title">核心组件（必选）</p>
+          <span class="hint">锁定更新，确保可用性</span>
+        </div>
+
+        <div class="list">
+          <div class="item locked">
+            <input class="check" type="checkbox" checked disabled />
+            <div class="meta">
+              <p class="name">Main.exe / UI.exe / Code.exe</p>
+              <p class="desc">系统运行所必需的核心程序</p>
+            </div>
+            <span class="badge">锁定</span>
+          </div>
+
+          <div class="item locked">
+            <input class="check" type="checkbox" checked disabled />
+            <div class="meta">
+              <p class="name">index.html / js / css</p>
+              <p class="desc">界面与交互逻辑更新</p>
+            </div>
+            <span class="badge">锁定</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 可选项 -->
+      <div class="section" id="optionalSection">
+        <div class="section-head">
+          <p class="section-title">数据与配置（可选）</p>
+          <span class="hint" id="optionalHint">按需选择，减少覆盖风险</span>
+        </div>
+
+        <div class="toolbar">
+          <div class="search" title="搜索可选项（支持模糊匹配）">
+            <span style="color:var(--muted);font-size:12px;">🔎</span>
+            <input id="filterInput" type="text" placeholder="搜索：目录黑名单 / 签名白名单 / 注释文本 …" />
+          </div>
+          <div class="note">
+            <b>提示：</b> 规则库更新会覆盖本地规则文件（如有本地改动请先备份）。
+          </div>
+        </div>
+
+        <div style="height:12px"></div>
+
+        <!-- 规则库：分离成四个文件 -->
+        <details class="rules" id="rulesDetails" open>
+          <summary>
+            <input class="check" id="rulesAll" type="checkbox" />
+            <div class="meta">
+              <p class="name">黑白名单库（Rules Library）</p>
+              <p class="desc">可分别更新：目录黑/白名单、签名黑/白名单（更细粒度控制覆盖范围）</p>
+            </div>
+            <span class="caret" aria-hidden="true"></span>
+          </summary>
+
+          <div class="sublist" id="rulesSublist">
+            <label class="subitem optional-item" data-keywords="目录 黑名单 folder directory blacklist">
+              <input class="check rules-item" type="checkbox" name="optional_files" value="rules_dir_blacklist" />
+              <div class="meta">
+                <p class="name">目录黑名单（Directory Blacklist）</p>
+                <p class="desc">拦截指定目录路径（会覆盖本地同名规则）</p>
+              </div>
+            </label>
+
+            <label class="subitem optional-item" data-keywords="目录 白名单 folder directory whitelist">
+              <input class="check rules-item" type="checkbox" name="optional_files" value="rules_dir_whitelist" />
+              <div class="meta">
+                <p class="name">目录白名单（Directory Whitelist）</p>
+                <p class="desc">放行指定目录路径（会覆盖本地同名规则）</p>
+              </div>
+            </label>
+
+            <label class="subitem optional-item" data-keywords="签名 黑名单 signature hash cert blacklist">
+              <input class="check rules-item" type="checkbox" name="optional_files" value="rules_sig_blacklist" />
+              <div class="meta">
+                <p class="name">签名黑名单（Signature Blacklist）</p>
+                <p class="desc">拦截指定签名/证书/哈希（会覆盖本地同名规则）</p>
+              </div>
+            </label>
+
+            <label class="subitem optional-item" data-keywords="签名 白名单 signature hash cert whitelist">
+              <input class="check rules-item" type="checkbox" name="optional_files" value="rules_sig_whitelist" />
+              <div class="meta">
+                <p class="name">签名白名单（Signature Whitelist）</p>
+                <p class="desc">放行指定签名/证书/哈希（会覆盖本地同名规则）</p>
+              </div>
+            </label>
+          </div>
+        </details>
+
+        <div style="height:10px"></div>
+
+        <!-- 其他可选项 -->
+        <div class="list">
+          <label class="item optional-item" data-keywords="注释 文本 comments remark note">
+            <input class="check" type="checkbox" name="optional_files" value="comments" />
+            <div class="meta">
+              <p class="name">注释文本（Comments）</p>
+              <p class="desc">更新备注说明文件</p>
+            </div>
+            <span class="badge">可选</span>
+          </label>
+        </div>
+      </div>
+
+      <!-- 更新策略 -->
+      <div class="policy">
+        <p class="policy-title">未来的更新策略</p>
+
+        <div class="policy-grid" role="radiogroup" aria-label="未来的更新策略">
+          <label class="p-card">
+            <input type="radio" name="policy" value="auto_selected" checked />
+            <div class="p-main">
+              <p class="p-name">以后自动更新已勾选的项目</p>
+              <p class="p-desc">下次更新时：核心文件 + 您勾选的可选项自动更新，其余保持不变。</p>
+            </div>
+          </label>
+
+          <label class="p-card">
+            <input type="radio" name="policy" value="auto_all" />
+            <div class="p-main">
+              <p class="p-name">以后都自动更新所有文件</p>
+              <p class="p-desc">省心模式：默认勾选并锁定所有可选项（会覆盖本地规则）。</p>
+            </div>
+          </label>
+
+          <label class="p-card danger">
+            <input type="radio" name="policy" value="never" />
+            <div class="p-main">
+              <p class="p-name">以后都不更新（包括核心文件）</p>
+              <p class="p-desc">⚠️ 风险：可能错过修复/规则更新，导致功能缺失或不兼容。</p>
+            </div>
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer">
+      <button class="btn btn-ghost" onclick="closeWindow()">取消</button>
+      <button class="btn btn-primary" id="confirmBtn" onclick="submitUpdate()">立即更新</button>
+    </div>
+  </div>
+
+  <script>
+    // —— 状态缓存：从 auto_all 切回 auto_selected 时恢复手动选择 ——
+    let manualChecked = new Set();
+
+    const win = document.getElementById("updateWindow");
+    const btn = document.getElementById("confirmBtn");
+    const optionalHint = document.getElementById("optionalHint");
+    const filterInput = document.getElementById("filterInput");
+
+    const rulesAll = document.getElementById("rulesAll");
+    const rulesItems = () => Array.from(document.querySelectorAll(".rules-item"));
+    const optionalCheckboxes = () => Array.from(document.querySelectorAll('input[name="optional_files"]'));
+
+    // —— 规则库：全选/半选逻辑 ——
+    function updateRulesAllState() {
+      const items = rulesItems();
+      const checkedCount = items.filter(i => i.checked).length;
+
+      rulesAll.indeterminate = checkedCount > 0 && checkedCount < items.length;
+      rulesAll.checked = checkedCount === items.length;
+    }
+
+    function setRulesAll(checked) {
+      rulesItems().forEach(i => i.checked = checked);
+      updateRulesAllState();
+    }
+
+    rulesAll.addEventListener("change", (e) => {
+      setRulesAll(e.target.checked);
+      cacheManualSelection();
+    });
+
+    document.addEventListener("change", (e) => {
+      if (e.target.classList.contains("rules-item")) {
+        updateRulesAllState();
+        cacheManualSelection();
+      }
+      if (e.target.name === "optional_files" && !e.target.classList.contains("rules-item")) {
+        cacheManualSelection();
+      }
+      if (e.target.name === "policy") {
+        applyPolicy(e.target.value);
+      }
+    });
+
+    // —— 搜索过滤（对可选项生效） ——
+    filterInput.addEventListener("input", () => {
+      const q = filterInput.value.trim().toLowerCase();
+      const nodes = Array.from(document.querySelectorAll(".optional-item"));
+      nodes.forEach(node => {
+        const kw = (node.getAttribute("data-keywords") || "").toLowerCase();
+        const txt = node.innerText.toLowerCase();
+        const hit = !q || kw.includes(q) || txt.includes(q);
+        node.style.display = hit ? "" : "none";
+      });
+    });
+
+    // —— 策略联动 ——
+    function setOptionalLock(locked) {
+      optionalCheckboxes().forEach(cb => cb.disabled = locked);
+      rulesAll.disabled = locked;
+    }
+
+    function setAllOptionals(checked) {
+      optionalCheckboxes().forEach(cb => cb.checked = checked);
+      updateRulesAllState();
+    }
+
+    function cacheManualSelection() {
+      // 仅在 auto_selected 模式下记录“手动选择”
+      const policy = getPolicy();
+      if (policy !== "auto_selected") return;
+
+      manualChecked = new Set(
+        optionalCheckboxes()
+          .filter(cb => cb.checked)
+          .map(cb => cb.value)
+      );
+    }
+
+    function restoreManualSelection() {
+      optionalCheckboxes().forEach(cb => cb.checked = manualChecked.has(cb.value));
+      updateRulesAllState();
+    }
+
+    function getPolicy() {
+      const el = document.querySelector('input[name="policy"]:checked');
+      return el ? el.value : "auto_selected";
+    }
+
+    function applyPolicy(policy) {
+      if (policy === "never") {
+        btn.textContent = "确认关闭更新";
+        btn.classList.remove("btn-primary");
+        btn.classList.add("btn-danger");
+        win.classList.add("disabled");
+        optionalHint.textContent = "已选择永不更新：可选项无需设置";
+        return;
+      }
+
+      // 非 never：恢复可选区
+      btn.textContent = "立即更新";
+      btn.classList.remove("btn-danger");
+      btn.classList.add("btn-primary");
+      win.classList.remove("disabled");
+
+      if (policy === "auto_all") {
+        optionalHint.textContent = "自动全更：已勾选并锁定全部可选项";
+        setAllOptionals(true);
+        setOptionalLock(true);
+      } else {
+        // auto_selected
+        optionalHint.textContent = "按需选择：只更新您勾选的可选项";
+        setOptionalLock(false);
+        restoreManualSelection();
+      }
+    }
+
+    // 初始：同步一次状态
+    (function init() {
+      // 默认给一个更“实用”的初始建议：规则库默认不全选，避免覆盖风险
+      updateRulesAllState();
+      cacheManualSelection();
+      applyPolicy(getPolicy());
+    })();
+
+    // —— 交互按钮 ——
+    function closeWindow() {
+      console.log("User cancelled");
+    }
+
+    function submitUpdate() {
+      const policy = getPolicy();
+
+      const selectedOptionals = optionalCheckboxes()
+        .filter(cb => cb.checked)
+        .map(cb => cb.value);
+
+      const result = {
+        policy,
+        optionalFiles: selectedOptionals,
+        // 也可以让后端更好处理：把规则库拆成结构化字段（可选）
+        rulesLibrary: {
+          dirBlacklist: selectedOptionals.includes("rules_dir_blacklist"),
+          dirWhitelist: selectedOptionals.includes("rules_dir_whitelist"),
+          sigBlacklist: selectedOptionals.includes("rules_sig_blacklist"),
+          sigWhitelist: selectedOptionals.includes("rules_sig_whitelist"),
+        },
+        timestamp: new Date().toISOString()
+      };
+
+      alert("发送给后台的数据:\n" + JSON.stringify(result, null, 2));
+      // window.chrome.webview.postMessage(result);
+    }
+  </script>
+</body>
+</html>
