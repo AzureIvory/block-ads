@@ -2,6 +2,7 @@ package main
 
 import (
 	"block-ads-ui/utils"
+	"encoding/json"
 	"fmt"
 	"os"
 	"os/exec"
@@ -26,9 +27,11 @@ var lstMap = map[string]string{
 }
 
 const (
-	noteFile = "note.txt"
-	exeName  = "block-ads.exe"
-	runName  = "BlockAds"
+	noteFile    = "note.txt"
+	exeName     = "block-ads.exe"
+	runName     = "BlockAds"
+	codeExeName = "Code.exe"
+	runNameCode = "BlockAdsCode"
 )
 
 type appDat struct {
@@ -367,6 +370,10 @@ func chkRun() bool {
 
 // 检查开机自启
 func hasBoot(exe string) bool {
+	return hasBootKey(runName, exe)
+}
+
+func hasBootKey(key, exe string) bool {
 	k, err := reg.OpenKey(reg.CURRENT_USER,
 		`Software\Microsoft\Windows\CurrentVersion\Run`,
 		reg.QUERY_VALUE)
@@ -375,7 +382,7 @@ func hasBoot(exe string) bool {
 	}
 	defer k.Close()
 
-	val, _, err := k.GetStringValue(runName)
+	val, _, err := k.GetStringValue(key)
 	if err != nil {
 		return false
 	}
@@ -386,6 +393,10 @@ func hasBoot(exe string) bool {
 
 // 设置开机自启
 func setBoot(exe string, on bool) error {
+	return setBootKey(runName, exe, on)
+}
+
+func setBootKey(key, exe string, on bool) error {
 	k, _, err := reg.CreateKey(reg.CURRENT_USER,
 		`Software\Microsoft\Windows\CurrentVersion\Run`,
 		reg.SET_VALUE|reg.QUERY_VALUE)
@@ -396,10 +407,10 @@ func setBoot(exe string, on bool) error {
 
 	if on {
 		val := `"` + exe + `"`
-		return k.SetStringValue(runName, val)
+		return k.SetStringValue(key, val)
 	}
 
-	err = k.DeleteValue(runName)
+	err = k.DeleteValue(key)
 	if err == reg.ErrNotExist {
 		return nil
 	}
@@ -613,7 +624,14 @@ func dw1(k reg.Key, name string) error {
 }
 
 func main() {
-	utils.HasWV2() // 检查webview2运行时
+	if len(os.Args) >= 3 && os.Args[1] == "--apply-update" {
+		if err := AppPend(os.Args[2]); err != nil {
+			fmt.Println("apply update failed:", err)
+		}
+		return
+	}
+
+	utils.HasWV2()
 	dir, err := os.Getwd()
 	if err != nil {
 		panic(err)
@@ -625,7 +643,7 @@ func main() {
 	w := webview.New(false)
 	defer w.Destroy()
 
-	w.SetSize(690, 540, webview.HintNone)
+	w.SetSize(710, 540, webview.HintNone)
 	w.SetTitle("拦截管理")
 
 	_ = w.Bind("getAll", func() (map[string][]string, error) {
@@ -663,12 +681,14 @@ func main() {
 		return utils.RunUn(up, wd)
 	})
 
+	codeExe := filepath.Join(dir, codeExeName)
+
 	// 状态检查
 	_ = w.Bind("stChk", func() (uiSta, error) {
 		st := uiSta{
 			Adm:  chkAdm(),
 			Run:  chkRun(),
-			Boot: hasBoot(exe),
+			Boot: hasBootKey(runName, exe) && hasBootKey(runNameCode, codeExe),
 		}
 		t := "名单管理"
 		if st.Run {
@@ -700,10 +720,81 @@ func main() {
 		return true, nil
 	})
 	_ = w.Bind("setAut", func(on bool) (bool, error) {
-		if err := setBoot(exe, on); err != nil {
+		if err := setBootKey(runName, exe, on); err != nil {
 			return false, err
 		}
-		return hasBoot(exe), nil
+		if err := setBootKey(runNameCode, codeExe, on); err != nil {
+			return false, err
+		}
+		return hasBootKey(runName, exe) && hasBootKey(runNameCode, codeExe), nil
+	})
+
+	// 更新 / 同步
+	_ = w.Bind("chkUpd", func() (UpdateInfo, error) {
+		return dat.ChkUpd()
+	})
+	_ = w.Bind("doUpd", func() (bool, error) {
+		return dat.DoUpd(w)
+	})
+	_ = w.Bind("chkSync", func() (SyncInfo, error) {
+		return dat.ChkSyn()
+	})
+	_ = w.Bind("doSync", func(req map[string]interface{}) (bool, error) {
+		return dat.DoSyn(req)
+	})
+	// 异步：检测更新/同步（后台 goroutine 执行，完成后回调 JS，避免卡 UI）
+	_ = w.Bind("chkUpdAsync", func() (bool, error) {
+		go func() {
+			info, err := dat.ChkUpd()
+
+			payload := map[string]interface{}{
+				"ok":   err == nil,
+				"info": info,
+				"err":  "",
+			}
+			if err != nil {
+				payload["info"] = nil
+				payload["err"] = err.Error()
+			}
+
+			b, _ := json.Marshal(payload)
+			js := fmt.Sprintf(
+				`(function(){ if (typeof window.__onChkUpd === "function") { window.__onChkUpd(%s); } })();`,
+				string(b),
+			)
+
+			w.Dispatch(func() {
+				w.Eval(js)
+			})
+		}()
+		return true, nil
+	})
+
+	_ = w.Bind("chkSyncAsync", func() (bool, error) {
+		go func() {
+			info, err := dat.ChkSyn()
+
+			payload := map[string]interface{}{
+				"ok":   err == nil,
+				"info": info,
+				"err":  "",
+			}
+			if err != nil {
+				payload["info"] = nil
+				payload["err"] = err.Error()
+			}
+
+			b, _ := json.Marshal(payload)
+			js := fmt.Sprintf(
+				`(function(){ if (typeof window.__onChkSync === "function") { window.__onChkSync(%s); } })();`,
+				string(b),
+			)
+
+			w.Dispatch(func() {
+				w.Eval(js)
+			})
+		}()
+		return true, nil
 	})
 	_ = w.Bind("doHel", func() (bool, error) {
 		//打开使用指南

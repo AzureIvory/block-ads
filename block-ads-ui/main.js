@@ -1,20 +1,28 @@
 // 禁止进入调试模式
 function banDev() {
-  document.addEventListener("contextmenu", function (e) {
-    e.preventDefault();
-  }, true);
-  document.addEventListener("keydown", function (e) {
-    if (e.key === "F12") {
+  document.addEventListener(
+    "contextmenu",
+    function (e) {
       e.preventDefault();
-      return;
-    }
-    if (e.ctrlKey && e.shiftKey) {
-      const k = e.key.toUpperCase();
-      if (k === "I" || k === "J" || k === "C" || k === "K") {
+    },
+    true
+  );
+  document.addEventListener(
+    "keydown",
+    function (e) {
+      if (e.key === "F12") {
         e.preventDefault();
+        return;
       }
-    }
-  }, true);
+      if (e.ctrlKey && e.shiftKey) {
+        const k = e.key.toUpperCase();
+        if (k === "I" || k === "J" || k === "C" || k === "K") {
+          e.preventDefault();
+        }
+      }
+    },
+    true
+  );
 }
 
 const st = {
@@ -31,10 +39,399 @@ const st = {
   ctx: null,
 };
 
+async function callMaybe(fn, ...args) {
+  try {
+    if (typeof window[fn] !== "function") return null;
+    return await window[fn](...args);
+  } catch (e) {
+    throw e;
+  }
+}
+
+function lsGet(k, def) {
+  try {
+    const v = localStorage.getItem(k);
+    return v == null ? def : v;
+  } catch (_) {
+    return def;
+  }
+}
+function lsSet(k, v) {
+  try { localStorage.setItem(k, v); } catch (_) {}
+}
+
+function modalShow(id) {
+  const m = document.getElementById(id);
+  if (!m) return;
+  m.classList.add("show");
+  m.setAttribute("aria-hidden", "false");
+}
+function modalHide(id) {
+  const m = document.getElementById(id);
+  if (!m) return;
+  m.classList.remove("show");
+  m.setAttribute("aria-hidden", "true");
+}
+
+function esc(s) {
+  return (s || "").replace(/[&<>"']/g, (c) => ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]));
+}
+
+function fmtSizeTextFromKB(kb) {
+  const n = Number(kb || 0);
+  if (!isFinite(n) || n <= 0) return "-";
+  if (n > 1024) return (n / 1024).toFixed(2) + " MB";
+  return Math.round(n) + " KB";
+}
+
+let lastUpdInfo = null;
+let lastSyncInfo = null;
+
+let pendingUpdShowMsg = false;
+let pendingSyncShowMsg = false;
+
+window.__onChkUpd = function (res) {
+  const ok = !!(res && res.ok);
+  if (ok) {
+    renderUpd(res.info);
+    if (pendingUpdShowMsg)
+      setMsg(res.info && res.info.has_update ? "发现新版本。" : "已是最新版本。", false);
+  } else {
+    if (pendingUpdShowMsg)
+      setMsg("检测更新失败: " + (res && res.err ? res.err : "unknown"), true);
+  }
+  pendingUpdShowMsg = false;
+};
+
+window.__onChkSync = function (res) {
+  const ok = !!(res && res.ok);
+  if (ok) {
+    renderSync(res.info);
+    if (pendingSyncShowMsg) setMsg("已检查同步。", false);
+  } else {
+    if (pendingSyncShowMsg)
+      setMsg("检查同步失败: " + (res && res.err ? res.err : "unknown"), true);
+  }
+  pendingSyncShowMsg = false;
+};
+
+function renderUpd(info) {
+  lastUpdInfo = info || null;
+  const ver = document.getElementById("updVer");
+  const at = document.getElementById("updAt");
+  const notes = document.getElementById("updNotes");
+  const list = document.getElementById("updList");
+  const mand = document.getElementById("updMandatory");
+  const sub = document.getElementById("updSub");
+
+  if (!info) {
+    if (ver) ver.textContent = "v-";
+    if (at) at.textContent = "未检测";
+    if (notes) notes.textContent = "";
+    if (list) list.innerHTML = "";
+    if (mand) mand.style.display = "none";
+    if (sub) sub.textContent = "检测新版本并更新程序文件";
+    return;
+  }
+
+  const sv = info.server_version || "-";
+  const lv = info.local_version || "-";
+  if (ver) ver.textContent = "v" + sv;
+  if (at) at.textContent = (info.updated_at ? ("更新日期：" + info.updated_at) : "") + (info.has_update ? " · 有新版本" : " · 已是最新");
+  if (sub) sub.textContent = "本地 v" + lv + " → 在线 v" + sv;
+  if (mand) {
+    mand.style.display = info.mandatory ? "inline-flex" : "none";
+  }
+  if (notes) {
+    const nt = info.notes || "";
+    notes.textContent = nt ? ("更新说明：\n" + nt) : "更新说明：无";
+  }
+  if (list) {
+    const items = Array.isArray(info.items) ? info.items : [];
+    if (!items.length) {
+      list.innerHTML = `<div class="u-notes">暂无文件列表</div>`;
+    } else {
+      list.innerHTML = items
+        .map((it) => {
+          const need = !!it.need;
+          const sz = it.size_text || fmtSizeTextFromKB(it.size_kb);
+          const run = it.run ? "更新后执行" : "";
+          const tag = need ? `<span class="u-chip bad">需要更新</span>` : `<span class="u-chip good">已是最新</span>`;
+          const p = it.path || it.name || "";
+          return `
+            <div class="u-item ${need ? "" : "locked"}">
+              <input class="u-check" type="checkbox" ${need ? "checked" : ""} disabled />
+              <div class="u-main">
+                <p class="u-name">${esc(it.name || p)}</p>
+                <p class="u-desc">路径：${esc(p)} · 大小：${esc(sz)}${run ? " · " + run : ""}</p>
+              </div>
+              <div class="u-meta">
+                ${tag}
+              </div>
+            </div>`;
+        })
+        .join("");
+    }
+  }
+}
+
+function renderSync(info) {
+  lastSyncInfo = info || null;
+  const at = document.getElementById("syncAt");
+  const notes = document.getElementById("syncNotes");
+  const list = document.getElementById("syncList");
+  if (!info) {
+    if (at) at.textContent = "未检查";
+    if (notes) notes.textContent = "";
+    if (list) list.innerHTML = "";
+    return;
+  }
+  if (at) at.textContent = info.updated_at ? ("同步日期：" + info.updated_at) : "";
+  if (notes) notes.textContent = (info.notes ? ("同步说明：\n" + info.notes) : "同步说明：无");
+  if (list) {
+    const items = Array.isArray(info.items) ? info.items : [];
+    const selected = new Set(JSON.parse(lsGet("syncSelected", "[]") || "[]"));
+    list.innerHTML = items
+      .map((it) => {
+        const need = !!it.need;
+        const id = it.name || "";
+        const checked = selected.has(id);
+        const sz = it.size_text || fmtSizeTextFromKB(it.size_kb);
+        const cnt = it.count ? (" · 行数：" + it.count) : "";
+        const tag = need ? `<span class="u-chip bad">需同步</span>` : `<span class="u-chip good">已同步</span>`;
+        return `
+          <label class="u-item">
+            <input class="u-check sync-item" type="checkbox" data-id="${esc(id)}" ${checked ? "checked" : ""} />
+            <div class="u-main">
+              <p class="u-name">${esc(it.name || "")}</p>
+              <p class="u-desc">大小：${esc(sz)}${cnt}</p>
+            </div>
+            <div class="u-meta">${tag}</div>
+          </label>`;
+      })
+      .join("");
+  }
+
+  // 根据策略勾选
+  applySyncPolicyUI();
+}
+
+function syncFilterApply() {
+  const inp = document.getElementById("syncFilter");
+  const q = ((inp && inp.value) || "").trim().toLowerCase();
+  document.querySelectorAll("#syncList .u-item").forEach((el) => {
+    const txt = el.innerText.toLowerCase();
+    el.style.display = !q || txt.includes(q) ? "" : "none";
+  });
+}
+
+function syncSelectedCacheFromUI() {
+  const ids = Array.from(document.querySelectorAll(".sync-item"))
+    .filter((cb) => cb.checked)
+    .map((cb) => cb.dataset.id)
+    .filter(Boolean);
+  lsSet("syncSelected", JSON.stringify(ids));
+}
+
+function getUpdPolicy() {
+  return lsGet("updPolicy", "prompt");
+}
+function setUpdPolicy(v) {
+  lsSet("updPolicy", v);
+  document.querySelectorAll('input[name="updPolicy"]').forEach((r) => {
+    r.checked = r.value === v;
+  });
+}
+function getSyncPolicy() {
+  return lsGet("syncPolicy", "auto_selected");
+}
+function setSyncPolicy(v) {
+  lsSet("syncPolicy", v);
+  document.querySelectorAll('input[name="syncPolicy"]').forEach((r) => {
+    r.checked = r.value === v;
+  });
+}
+
+function getSyncSelectedSet() {
+  try {
+    const raw = lsGet("syncSelected", "[]");
+    const arr = JSON.parse(raw);
+    const s = new Set();
+    (Array.isArray(arr) ? arr : []).forEach((x) => s.add(String(x)));
+    return s;
+  } catch (_) {
+    return new Set();
+  }
+}
+
+function restoreSyncSelectedToUI() {
+  const set = getSyncSelectedSet();
+  document.querySelectorAll(".sync-item").forEach((cb) => {
+    const id = cb.dataset.id;
+    if (id) cb.checked = set.has(id);
+  });
+}
+
+function applySyncPolicyUI() {
+  const p = getSyncPolicy();
+  const cbs = Array.from(document.querySelectorAll(".sync-item"));
+
+  if (p === "never") {
+    cbs.forEach((cb) => {
+      cb.checked = false;
+      cb.disabled = true;
+    });
+    return;
+  }
+
+  if (p === "auto_all") {
+    cbs.forEach((cb) => {
+      cb.checked = true;
+      cb.disabled = true;
+    });
+    syncSelectedCacheFromUI();
+    return;
+  }
+
+  // auto_selected
+  cbs.forEach((cb) => (cb.disabled = false));
+  restoreSyncSelectedToUI();
+}
+
+async function checkUpdate(showMsg) {
+  const p = getUpdPolicy();
+  if (p === "never") {
+    renderUpd({ local_version: "-", server_version: "-", has_update: false, notes: "已关闭更新。", items: [] });
+    return null;
+  }
+  try {
+    //异步
+    if (typeof window.chkUpdAsync === "function") {
+      pendingUpdShowMsg = !!showMsg;
+      if (showMsg) setMsg("检测更新中...", false);
+      callMaybe("chkUpdAsync");
+      return null;
+    }
+
+    // 同步
+    const info = await callMaybe("chkUpd");
+    renderUpd(info);
+    if (showMsg) setMsg(info && info.has_update ? "发现新版本。" : "已是最新版本。", false);
+    return info;
+  } catch (e) {
+    console.error(e);
+    if (showMsg) setMsg("检测更新失败: " + e, true);
+    return null;
+  }
+}
+
+async function doUpdateNow(force) {
+  const p = getUpdPolicy();
+  if (p === "never") {
+    setMsg("已关闭更新。", true);
+    return;
+  }
+  if (!lastUpdInfo || !lastUpdInfo.has_update) {
+    setMsg("未发现可更新内容。", false);
+    return;
+  }
+  if (!force) {
+    if (!confirm("确认开始更新吗？更新过程中可能会短暂关闭界面。")) return;
+  }
+  try {
+    setMsg("更新中...", false);
+    const ok = await callMaybe("doUpd");
+    if (ok) {
+      setMsg("已启动更新流程。", false);
+    } else {
+      setMsg("未执行更新（可能已是最新）。", false);
+    }
+  } catch (e) {
+    console.error(e);
+    setMsg("更新失败: " + e, true);
+  }
+}
+
+async function checkSync(showMsg) {
+  const p = getSyncPolicy();
+  if (p === "never") {
+    renderSync({ updated_at: "-", notes: "已关闭同步。", items: [] });
+    return null;
+  }
+  try {
+    // 异步
+    if (typeof window.chkSyncAsync === "function") {
+      pendingSyncShowMsg = !!showMsg;
+      if (showMsg) setMsg("检查同步中...", false);
+      callMaybe("chkSyncAsync");
+      return null;
+    }
+
+    // 同步
+    const info = await callMaybe("chkSync");
+    renderSync(info);
+    if (showMsg) setMsg("已检查同步。", false);
+    return info;
+  } catch (e) {
+    console.error(e);
+    if (showMsg) setMsg("检查同步失败: " + e, true);
+    return null;
+  }
+}
+
+async function doSyncNow() {
+  const p = getSyncPolicy();
+  if (p === "never") {
+    setMsg("已关闭同步。", true);
+    return;
+  }
+  syncSelectedCacheFromUI();
+  const selected = JSON.parse(lsGet("syncSelected", "[]") || "[]");
+  const payload = {
+    policy: p,
+    selected: selected,
+  };
+  try {
+    setMsg("同步中...", false);
+    const ok = await callMaybe("doSync", payload);
+    setMsg(ok ? "同步完成。" : "未执行同步。", !ok);
+    await checkSync(false);
+  } catch (e) {
+    console.error(e);
+    setMsg("同步失败: " + e, true);
+  }
+}
+
 function setMsg(t, err) {
   const el = document.getElementById("msg");
+  if (!el) return;
   el.textContent = t || "";
   el.style.color = err ? "#b91c1c" : "#6b7280";
+}
+
+// 侧边栏计数
+function updCounts() {
+  const ids = [
+    ["sign", "cnt-sign"],
+    ["folder", "cnt-folder"],
+    ["whitelist", "cnt-whitelist"],
+    ["signWhite", "cnt-signWhite"],
+  ];
+  ids.forEach(function (it) {
+    const k = it[0];
+    const id = it[1];
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.textContent = String((st.dat[k] || []).length);
+  });
+}
+
+// 当前列表数量
+function updListHead() {
+  const el = document.getElementById("lstCnt");
+  if (!el) return;
+  const n = (st.dat[st.key] || []).length;
+  el.textContent = "(" + n + ")";
 }
 
 // 更新状态
@@ -44,62 +441,115 @@ function updSta(s) {
   st.run = !!s.run;
   st.boot = !!s.boot;
 
-  const admEl = document.getElementById("admTxt");
-  const runEl = document.getElementById("runTxt");
-  const btnRun = document.getElementById("btnRun");
-  const btnStop = document.getElementById("btnStop");
   const chkBoot = document.getElementById("chkBoot");
+  if (chkBoot) chkBoot.checked = !!st.boot;
 
-  admEl.textContent = st.adm ? "管理员" : "非管理员";
-  admEl.style.color = st.adm ? "#16a34a" : "#b91c1c";
+  const admEl = document.getElementById("admTxt");
+  if (admEl) {
+    admEl.textContent = st.adm ? "管理员" : "非管理员";
+    admEl.style.color = st.adm ? "#16a34a" : "#b91c1c";
+  }
 
-  runEl.textContent = st.run ? "已运行" : "未运行";
-  runEl.style.color = st.run ? "#16a34a" : "#6b7280";
+  const runEl = document.getElementById("runTxt");
+  if (runEl) {
+    runEl.textContent = st.run ? "已运行" : "未运行";
+    runEl.style.color = st.run ? "#16a34a" : "#6b7280";
+  }
 
-  // 只根据运行状态控制按钮，不再限制非管理员
-  btnRun.disabled = st.run;
-  btnStop.disabled = !st.run;
+  const svc = document.getElementById("svcSta");
+  if (svc) {
+    svc.textContent = st.run ? "运行中" : "未运行";
+  }
+  const mode = document.getElementById("modeTxt");
+  if (mode) {
+    mode.textContent = st.adm ? "Admin Mode" : "User Mode";
+  }
 
-  chkBoot.checked = !!st.boot;
+  // 顶部主按钮
+  const btn = document.getElementById("btnRun");
+  if (btn) {
+    if (st.run) {
+      btn.classList.remove("btn-primary");
+      btn.classList.add("btn-danger");
+      btn.innerHTML = `<span class="ico-play">■</span>停止`;
+    } else {
+      btn.classList.remove("btn-danger");
+      btn.classList.add("btn-primary");
+      btn.innerHTML = `<span class="ico-play">▶</span>启动`;
+    }
+  }
+
+  const btnStop = document.getElementById("btnStop");
+  if (btnStop) {
+    btnStop.disabled = !st.run;
+  }
 }
 
-// 渲染列表
+// 渲染规则列表
 function rend() {
   const ul = document.getElementById("lst");
+  if (!ul) return;
   ul.innerHTML = "";
+
   const list = st.dat[st.key] || [];
   const f = (st.filt || "").toLowerCase();
 
-  list.forEach((line, idx) => {
+  updCounts();
+  updListHead();
+
+  list.forEach(function (line, idx) {
     const note = st.note[line] || "";
     const t1 = (line || "").toLowerCase();
     const t2 = (note || "").toLowerCase();
-
-    if (f && t1.indexOf(f) === -1 && t2.indexOf(f) === -1) {
-      return;
-    }
+    if (f && t1.indexOf(f) === -1 && t2.indexOf(f) === -1) return;
 
     const li = document.createElement("li");
-    li.dataset.idx = idx;
+    li.className = "rule-row";
+    li.dataset.idx = String(idx);
 
-    const d1 = document.createElement("div");
-    d1.className = "ln-txt";
-    d1.textContent = line;
+    const cb = document.createElement("label");
+    cb.className = "cb";
+    const cbi = document.createElement("input");
+    cbi.type = "checkbox";
+    cbi.checked = idx === st.sel;
+    cbi.addEventListener("click", function (e) {
+      e.stopPropagation();
+      selIdx(idx);
+    });
+    const cbs = document.createElement("span");
+    cb.appendChild(cbi);
+    cb.appendChild(cbs);
 
-    const d2 = document.createElement("div");
-    d2.className = "ln-note";
-    d2.textContent = note || "无注释";
+    const main = document.createElement("div");
+    main.className = "rule-main";
+    const title = document.createElement("div");
+    title.className = "rule-title";
+    title.textContent = line;
+    const sub = document.createElement("div");
+    sub.className = "rule-sub";
+    if (st.key === "sign" || st.key === "signWhite") {
+      sub.textContent = "Sign 规则";
+    } else {
+      sub.textContent = "Path 规则";
+    }
+    main.appendChild(title);
+    main.appendChild(sub);
 
-    li.appendChild(d1);
-    li.appendChild(d2);
+    const noteEl = document.createElement("div");
+    noteEl.className = "rule-note" + (note ? "" : " muted");
+    noteEl.textContent = note || "无注释";
+
+    li.appendChild(cb);
+    li.appendChild(main);
+    li.appendChild(noteEl);
 
     if (idx === st.sel) {
       li.classList.add("sel");
+      cb.classList.add("cb-on");
     }
     li.addEventListener("click", function () {
       selIdx(idx);
     });
-
     ul.appendChild(li);
   });
 }
@@ -108,10 +558,16 @@ function selIdx(idx) {
   st.sel = idx;
   document.querySelectorAll("#lst li").forEach(function (li) {
     const v = parseInt(li.dataset.idx, 10);
+    const cb = li.querySelector(".cb");
+    const cbi = li.querySelector("input[type=checkbox]");
     if (v === idx) {
       li.classList.add("sel");
+      if (cb) cb.classList.add("cb-on");
+      if (cbi) cbi.checked = true;
     } else {
       li.classList.remove("sel");
+      if (cb) cb.classList.remove("cb-on");
+      if (cbi) cbi.checked = false;
     }
   });
 }
@@ -119,9 +575,7 @@ function selIdx(idx) {
 // 解析日志
 function pLog(line) {
   const ps = (line || "").split("--");
-  if (ps.length < 5) {
-    return null;
-  }
+  if (ps.length < 5) return null;
   return {
     t: ps[0],
     k: ps[1],
@@ -144,14 +598,12 @@ function logOpen(p) {
   });
 }
 
-// 隐藏右键菜单
+// 右键菜单
 function hideCtx() {
   const m = document.getElementById("logMenu");
   if (!m) return;
   m.style.display = "none";
 }
-
-// 显示右键菜单
 function showCtx(x, y) {
   const m = document.getElementById("logMenu");
   if (!m) return;
@@ -175,18 +627,20 @@ function showCtx(x, y) {
 function rendLog() {
   const ul = document.getElementById("logLst");
   const info = document.getElementById("logInfo");
+  if (!ul) return;
   ul.innerHTML = "";
   const list = st.log || [];
 
   if (!list.length) {
-    info.textContent = "今日暂无记录";
+    if (info) info.textContent = "今日暂无记录";
     return;
   }
-  info.textContent = "共 " + list.length + " 条";
+  if (info) info.textContent = "共 " + list.length + " 条";
 
   list.forEach(function (line) {
     const it = pLog(line);
     const li = document.createElement("li");
+    li.className = "log-row";
     li.title = line;
 
     if (!it) {
@@ -195,53 +649,68 @@ function rendLog() {
       return;
     }
 
-    const nt = st.note[it.v] || "";
     li.dataset.path = it.p || "";
-    // 保存类型与值
     li.dataset.kind = it.k || "";
     li.dataset.val = it.v || "";
 
-    const top = document.createElement("div");
-    top.className = "log-top";
-    top.textContent = it.t + "  " + it.k + " / " + it.m;
+    // 判断状态
+    let status = "放行";
+    let dotCls = "dot-amber";
+    const kind = (it.k || "").toLowerCase();
+    const val = it.v || "";
 
-    const mid = document.createElement("div");
-    mid.className = "log-mid";
-
-    const sk = document.createElement("span");
-    sk.className = "log-key";
-    sk.textContent = it.v;
-    mid.appendChild(sk);
-
-    if (nt) {
-      const sn = document.createElement("span");
-      sn.className = "log-note";
-      sn.textContent = "「" + nt + "」";
-      mid.appendChild(sn);
+    if (kind === "sign") {
+      if ((st.dat.sign || []).indexOf(val) !== -1) {
+        status = "黑名单命中";
+        dotCls = "dot-red";
+      } else if ((st.dat.signWhite || []).indexOf(val) !== -1) {
+        status = "白名单放行";
+        dotCls = "dot-green";
+      }
+    } else if (kind === "folder") {
+      if ((st.dat.folder || []).indexOf(val) !== -1) {
+        status = "黑名单命中";
+        dotCls = "dot-red";
+      } else if ((st.dat.whitelist || []).indexOf(val) !== -1) {
+        status = "白名单放行";
+        dotCls = "dot-green";
+      }
     }
 
-    const bot = document.createElement("div");
-    bot.className = "log-path";
-    bot.textContent = it.p;
+    const dot = document.createElement("div");
+    dot.className = "dot " + dotCls;
 
-    li.appendChild(top);
-    li.appendChild(mid);
-    li.appendChild(bot);
+    const tm = document.createElement("div");
+    tm.className = "log-time";
+    tm.textContent = "[" + (it.t || "") + "]";
 
-    // 双击定位文件
+    const proc = document.createElement("div");
+    proc.className = "log-proc";
+    proc.textContent = it.m || (it.k || "");
+
+    const path = document.createElement("div");
+    path.className = "log-path";
+    path.textContent = it.p || it.v || "";
+
+    const stx = document.createElement("div");
+    stx.className = "log-status";
+    stx.textContent = "- " + status;
+
+    li.appendChild(dot);
+    li.appendChild(tm);
+    li.appendChild(proc);
+    li.appendChild(path);
+    li.appendChild(stx);
+
     li.addEventListener("dblclick", function () {
       const p = this.dataset.path || "";
-      if (!p) return;
-      logOpen(p);
+      if (p) logOpen(p);
     });
-
-    // 右键弹出菜单
     li.addEventListener("contextmenu", function (e) {
       e.preventDefault();
       const p = this.dataset.path || "";
       if (!p) return;
       st.ctxp = p;
-      // 记录当前行上下文
       st.ctx = {
         k: this.dataset.kind || "",
         v: this.dataset.val || "",
@@ -253,9 +722,41 @@ function rendLog() {
     ul.appendChild(li);
   });
 }
+
+function openAddModal() {
+  const m = document.getElementById("mdlAdd");
+  if (!m) return;
+  m.classList.add("show");
+  m.setAttribute("aria-hidden", "false");
+  const hint = document.getElementById("addHint");
+  if (hint) {
+    const map = {
+      sign: "签名黑名单",
+      folder: "目录黑名单",
+      whitelist: "目录白名单",
+      signWhite: "签名白名单",
+    };
+    hint.textContent = "当前：" + (map[st.key] || st.key);
+  }
+  const inp = document.getElementById("newL");
+  if (inp) {
+    inp.value = "";
+    setTimeout(function () {
+      inp.focus();
+    }, 0);
+  }
+}
+
+function closeAddModal() {
+  const m = document.getElementById("mdlAdd");
+  if (!m) return;
+  m.classList.remove("show");
+  m.setAttribute("aria-hidden", "true");
+}
+
 async function onAdd() {
   const inp = document.getElementById("newL");
-  const txt = (inp.value || "").trim();
+  const txt = ((inp && inp.value) || "").trim();
   if (!txt) {
     setMsg("内容为空。", true);
     return;
@@ -265,8 +766,10 @@ async function onAdd() {
     st.dat[st.key] = v || [];
     st.sel = st.dat[st.key].length - 1;
     st.filt = "";
-    document.getElementById("srch").value = "";
-    inp.value = "";
+    const sr = document.getElementById("srch");
+    if (sr) sr.value = "";
+    if (inp) inp.value = "";
+    closeAddModal();
     rend();
     setMsg("已添加。", false);
   } catch (e) {
@@ -274,6 +777,7 @@ async function onAdd() {
     setMsg("添加失败: " + e, true);
   }
 }
+
 async function onDel() {
   if (st.sel < 0) {
     setMsg("请先选择一行。", true);
@@ -293,34 +797,43 @@ async function onDel() {
     setMsg("删除失败: " + e, true);
   }
 }
-async function onRun() {
-  if (st.run) return;
-  setMsg("启动中...", false);
+
+let runBusy = false;
+
+async function onToggleRun() {
+  if (runBusy) return;
+  runBusy = true;
   try {
-    const ok = await doRun();
-    if (!ok) {
-      setMsg("启动失败。", true);
+    if (!st.run) {
+      setMsg("启动中...", false);
+      await doRun();
+      const s = await stChk();
+      updSta(s);
+      setMsg(st.run ? "启动成功。" : "已尝试启动。", !st.run);
+    } else {
+      if (!confirm("是否停止拦截进程？")) {
+        return;
+      }
+      setMsg("停止中...", false);
+      await doStop();
+      const s = await stChk();
+      updSta(s);
+      setMsg(!st.run ? "已停止。" : "停止可能未成功。", st.run);
     }
-    const s = await stChk();
-    updSta(s);
-    setMsg("已尝试启动。", false);
   } catch (e) {
     console.error(e);
-    setMsg("启动失败: " + e, true);
+    setMsg("操作失败: " + e, true);
+  } finally {
+    runBusy = false;
   }
 }
+
 async function onStop() {
   if (!st.run) return;
-  const msg = "是否停止拦截进程？";
-  if (!confirm(msg)) {
-    return;
-  }
+  if (!confirm("是否停止拦截进程？")) return;
   setMsg("停止中...", false);
   try {
-    const ok = await doStop();
-    if (!ok) {
-      // ignore
-    }
+    await doStop();
     const s = await stChk();
     updSta(s);
     setMsg("已尝试停止。", false);
@@ -329,13 +842,15 @@ async function onStop() {
     setMsg("停止失败: " + e, true);
   }
 }
+
 async function onBoot(ev) {
   const on = ev.target.checked;
   setMsg("更新启动项...", false);
   try {
     const v = await setAut(on);
     st.boot = !!v;
-    document.getElementById("chkBoot").checked = st.boot;
+    const chk = document.getElementById("chkBoot");
+    if (chk) chk.checked = st.boot;
     setMsg("", false);
   } catch (e) {
     console.error(e);
@@ -343,6 +858,7 @@ async function onBoot(ev) {
     setMsg("设置失败: " + e, true);
   }
 }
+
 async function onHel() {
   try {
     await doHel();
@@ -352,18 +868,26 @@ async function onHel() {
     setMsg("无法打开使用指南: " + e, true);
   }
 }
+
 async function onFak() {
   setMsg("伪装中...", false);
   try {
     const ok = await doFak();
-    if (ok) {
-      setMsg("一键伪装已执行。", false);
-    } else {
-      setMsg("伪装未完全成功。", true);
-    }
+    if (ok) setMsg("一键伪装已执行。", false);
+    else setMsg("伪装未完全成功。", true);
   } catch (e) {
     console.error(e);
     setMsg("伪装失败: " + e, true);
+  }
+}
+
+async function onGit() {
+  try {
+    await doGit();
+    setMsg("", false);
+  } catch (e) {
+    console.error(e);
+    setMsg("无法打开 GitHub: " + e, true);
   }
 }
 
@@ -379,6 +903,7 @@ async function refLog() {
     console.error(e);
   }
 }
+
 // 从日志加入白名单
 async function AddWhite() {
   const ctx = st.ctx || {};
@@ -392,11 +917,9 @@ async function AddWhite() {
   }
 
   try {
-    // 调用Go的addWht
     const ok = await addWht(kind, val, p);
     if (ok) {
       setMsg("已加入白名单。", false);
-      // 再取一次名单
       const all = await getAll();
       if (all) {
         st.dat = all;
@@ -410,15 +933,6 @@ async function AddWhite() {
     setMsg("加入白名单失败: " + e, true);
   }
 }
-async function onGit() {
-  try {
-    await doGit();
-    setMsg("", false);
-  } catch (e) {
-    console.error(e);
-    setMsg("无法打开 GitHub: " + e, true);
-  }
-}
 
 // 初始化
 function initUI() {
@@ -428,27 +942,145 @@ function initUI() {
     });
   });
 
-  document.getElementById("srch").addEventListener("input", function (e) {
-    st.filt = e.target.value || "";
-    rend();
-  });
+  const sr = document.getElementById("srch");
+  if (sr) {
+    sr.addEventListener("input", function (e) {
+      st.filt = e.target.value || "";
+      rend();
+    });
+  }
 
-  document.getElementById("newL").addEventListener("keydown", function (e) {
-    if (e.key === "Enter") {
-      e.preventDefault();
-      onAdd();
+  const btnAdd = document.getElementById("btnAdd");
+  if (btnAdd) btnAdd.addEventListener("click", openAddModal);
+
+  const btnDel = document.getElementById("btnDel");
+  if (btnDel) btnDel.addEventListener("click", onDel);
+
+  const btnRun = document.getElementById("btnRun");
+  if (btnRun) btnRun.addEventListener("click", onToggleRun);
+
+  const btnStop = document.getElementById("btnStop");
+  if (btnStop) btnStop.addEventListener("click", onStop);
+
+  const chkBoot = document.getElementById("chkBoot");
+  if (chkBoot) chkBoot.addEventListener("change", onBoot);
+
+  const btnHelp = document.getElementById("btnHelp");
+  if (btnHelp) btnHelp.addEventListener("click", onHel);
+
+  const btnFake = document.getElementById("btnFake");
+  if (btnFake) btnFake.addEventListener("click", onFak);
+
+  const btnGit = document.getElementById("btnGit");
+  if (btnGit) btnGit.addEventListener("click", onGit);
+
+  const btnAbout = document.getElementById("btnAbout");
+  if (btnAbout) {
+    btnAbout.addEventListener("click", function () {
+      alert(
+        "名单管理\n\n- 双击拦截记录可定位文件\n- 右键拦截记录可卸载/删除/加入白名单\n\n(此窗口仅用于‘关于’说明，不影响软件功能)"
+      );
+    });
+  }
+
+  // 同步 / 更新
+  const btnSync = document.getElementById("btnSync");
+  if (btnSync) {
+    btnSync.addEventListener("click", async function () {
+      setSyncPolicy(getSyncPolicy());
+      modalShow("mdlSync");
+      await checkSync(false);
+    });
+  }
+  const btnUpdate = document.getElementById("btnUpdate");
+  if (btnUpdate) {
+    btnUpdate.addEventListener("click", async function () {
+      setUpdPolicy(getUpdPolicy());
+      modalShow("mdlUpdate");
+      await checkUpdate(false);
+    });
+  }
+
+  // 同步弹窗事件
+  const mdlSync = document.getElementById("mdlSync");
+  if (mdlSync) {
+    mdlSync.addEventListener("click", function (e) {
+      const t = e.target;
+      if (t && t.dataset && t.dataset.act === "close-sync") modalHide("mdlSync");
+    });
+  }
+  const btnSyncClose = document.getElementById("btnSyncClose");
+  if (btnSyncClose) btnSyncClose.addEventListener("click", () => modalHide("mdlSync"));
+  const btnSyncCancel = document.getElementById("btnSyncCancel");
+  if (btnSyncCancel) btnSyncCancel.addEventListener("click", () => modalHide("mdlSync"));
+  const btnSyncCheck = document.getElementById("btnSyncCheck");
+  if (btnSyncCheck) btnSyncCheck.addEventListener("click", () => checkSync(true));
+  const btnSyncGo = document.getElementById("btnSyncGo");
+  if (btnSyncGo) btnSyncGo.addEventListener("click", doSyncNow);
+  const syncFilter = document.getElementById("syncFilter");
+  if (syncFilter) syncFilter.addEventListener("input", syncFilterApply);
+  document.addEventListener("change", function (e) {
+    const t = e.target;
+    if (t && t.name === "syncPolicy") {
+      setSyncPolicy(t.value);
+      applySyncPolicyUI();
+    }
+    if (t && t.classList && t.classList.contains("sync-item")) {
+      syncSelectedCacheFromUI();
     }
   });
 
-  document.getElementById("btnAdd").addEventListener("click", onAdd);
-  document.getElementById("btnDel").addEventListener("click", onDel);
+  // 更新弹窗事件
+  const mdlUpdate = document.getElementById("mdlUpdate");
+  if (mdlUpdate) {
+    mdlUpdate.addEventListener("click", function (e) {
+      const t = e.target;
+      if (t && t.dataset && t.dataset.act === "close-update") modalHide("mdlUpdate");
+    });
+  }
+  const btnUpdClose = document.getElementById("btnUpdClose");
+  if (btnUpdClose) btnUpdClose.addEventListener("click", () => modalHide("mdlUpdate"));
+  const btnUpdCancel = document.getElementById("btnUpdCancel");
+  if (btnUpdCancel) btnUpdCancel.addEventListener("click", () => modalHide("mdlUpdate"));
+  const btnUpdCheck = document.getElementById("btnUpdCheck");
+  if (btnUpdCheck) btnUpdCheck.addEventListener("click", () => checkUpdate(true));
+  const btnUpdGo = document.getElementById("btnUpdGo");
+  if (btnUpdGo) btnUpdGo.addEventListener("click", () => doUpdateNow(false));
+  document.addEventListener("change", function (e) {
+    const t = e.target;
+    if (t && t.name === "updPolicy") {
+      setUpdPolicy(t.value);
+    }
+  });
 
-  document.getElementById("btnRun").addEventListener("click", onRun);
-  document.getElementById("btnStop").addEventListener("click", onStop);
-  document.getElementById("chkBoot").addEventListener("change", onBoot);
-  document.getElementById("btnHelp").addEventListener("click", onHel);
-  document.getElementById("btnFake").addEventListener("click", onFak);
-  document.getElementById("btnGit").addEventListener("click", onGit);
+  const mdl = document.getElementById("mdlAdd");
+  if (mdl) {
+    mdl.addEventListener("click", function (e) {
+      const t = e.target;
+      if (t && t.dataset && t.dataset.act === "close") {
+        closeAddModal();
+      }
+    });
+  }
+  const btnAddOk = document.getElementById("btnAddOk");
+  if (btnAddOk) btnAddOk.addEventListener("click", onAdd);
+  const btnAddCancel = document.getElementById("btnAddCancel");
+  if (btnAddCancel) btnAddCancel.addEventListener("click", closeAddModal);
+  const btnAddClose = document.getElementById("btnAddClose");
+  if (btnAddClose) btnAddClose.addEventListener("click", closeAddModal);
+
+  const newL = document.getElementById("newL");
+  if (newL) {
+    newL.addEventListener("keydown", function (e) {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        onAdd();
+      } else if (e.key === "Escape") {
+        e.preventDefault();
+        closeAddModal();
+      }
+    });
+  }
 
   // 右键菜单
   const menu = document.getElementById("logMenu");
@@ -456,7 +1088,7 @@ function initUI() {
     menu.addEventListener("click", function (e) {
       e.stopPropagation();
       const t = e.target;
-      if (!t || !t.dataset.act) {
+      if (!t || !t.dataset || !t.dataset.act) {
         hideCtx();
         return;
       }
@@ -476,7 +1108,6 @@ function initUI() {
       } else if (t.dataset.act === "del") {
         trydel(p);
       } else if (t.dataset.act === "addWhite") {
-        // 加入白名单
         AddWhite();
       }
     });
@@ -485,31 +1116,32 @@ function initUI() {
   document.addEventListener("click", function () {
     hideCtx();
   });
-  document.addEventListener("scroll", function () {
-    hideCtx();
-  }, true);
+  document.addEventListener(
+    "scroll",
+    function () {
+      hideCtx();
+    },
+    true
+  );
 }
 
 // 切换 tab
 function swTab(key) {
-  if (!st.dat[key]) {
-    st.dat[key] = [];
-  }
+  if (!st.dat[key]) st.dat[key] = [];
   st.key = key;
   st.filt = "";
   st.sel = -1;
-  document.getElementById("srch").value = "";
+  const sr = document.getElementById("srch");
+  if (sr) sr.value = "";
 
   document.querySelectorAll(".tab").forEach(function (btn) {
-    if (btn.dataset.key === key) {
-      btn.classList.add("act");
-    } else {
-      btn.classList.remove("act");
-    }
+    if (btn.dataset.key === key) btn.classList.add("act");
+    else btn.classList.remove("act");
   });
 
   rend();
 }
+
 // 定时刷新运行状态
 async function refSta() {
   try {
@@ -533,14 +1165,32 @@ async function boot() {
     if (all) st.dat = all;
     if (note) st.note = note;
     if (lg) st.log = lg;
+
     updSta(s);
     swTab("sign");
     rendLog();
+    updCounts();
+    updListHead();
+
     setMsg("", false);
-    // 定时刷新日志
     setInterval(refLog, 5000);
-    // 定时刷新运行状态
     setInterval(refSta, 4000);
+
+    // 默认有更新时自动打开更新窗口
+    setUpdPolicy(getUpdPolicy());
+    setSyncPolicy(getSyncPolicy());
+    try {
+      const info = await checkUpdate(false);
+      if (info && info.has_update) {
+        const p = getUpdPolicy();
+        if (p === "prompt") {
+          modalShow("mdlUpdate");
+        } else if (p === "auto") {
+          // 自动更新
+          doUpdateNow(true);
+        }
+      }
+    } catch (_) {}
   } catch (e) {
     console.error(e);
     setMsg("加载失败: " + e, true);
