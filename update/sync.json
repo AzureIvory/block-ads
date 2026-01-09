@@ -1,0 +1,36 @@
+{
+    "updated_at":"2026-1-1",
+    "notes":"更新说明",
+    "items":{
+        "folder.txt":{
+            "md5":"",
+            "size":"100",
+            "count":"10",
+            "url":["https://api.xx.com/folder.txt","https://api.xx1.com/folder.txt"]
+        },
+        "sign.txt":{
+            "md5":"",
+            "size":"100",
+            "count":"10",
+            "url":["https://api.xx.com/folder.txt","https://api.xx1.com/folder.txt"]
+        },
+        "Wfolder.txt":{
+            "md5":"",
+            "size":"100",
+            "count":"10",
+            "url":["https://api.xx.com/folder.txt","https://api.xx1.com/folder.txt"]
+        },
+        "Wsign.txt":{
+            "md5":"",
+            "size":"100",
+            "count":"10",
+            "url":["https://api.xx.com/folder.txt","https://api.xx1.com/folder.txt"]
+        },
+        "note.txt":{
+            "md5":"",
+            "size":"100",
+            "count":"10",
+            "url":["https://api.xx.com/folder.txt","https://api.xx1.com/folder.txt"]
+        }
+    }
+}
