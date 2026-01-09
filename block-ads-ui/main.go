@@ -624,6 +624,7 @@ func dw1(k reg.Key, name string) error {
 }
 
 func main() {
+	
 	if len(os.Args) >= 3 && os.Args[1] == "--apply-update" {
 		if err := AppPend(os.Args[2]); err != nil {
 			fmt.Println("apply update failed:", err)
@@ -632,18 +633,17 @@ func main() {
 	}
 
 	utils.HasWV2()
-	dir, err := os.Getwd()
+	exePath, err := os.Executable()
 	if err != nil {
 		panic(err)
 	}
+	dir := filepath.Dir(exePath)
 	dat := newDat(dir)
-
 	exe := filepath.Join(dir, exeName)
-
 	w := webview.New(false)
 	defer w.Destroy()
 
-	w.SetSize(710, 540, webview.HintNone)
+	w.SetSize(715, 540, webview.HintNone)
 	w.SetTitle("拦截管理")
 
 	_ = w.Bind("getAll", func() (map[string][]string, error) {
