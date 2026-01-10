@@ -25,12 +25,12 @@ import (
 
 var (
 	updUrls = []string{
-		"https://raw.githubusercontent.com/AzureIvory/block-ads/refs/heads/main/update/update.json",
 		"https://api.ttraw.com/block-ads/update.json",
+		"https://raw.githubusercontent.com/AzureIvory/block-ads/refs/heads/main/update/update.json",
 	}
 	synUrls = []string{
-		"https://raw.githubusercontent.com/AzureIvory/block-ads/refs/heads/main/update/sync.json",
 		"https://api.ttraw.com/block-ads/sync.json",
+		"https://raw.githubusercontent.com/AzureIvory/block-ads/refs/heads/main/update/sync.json",
 	}
 )
 
@@ -634,8 +634,6 @@ func (d *appDat) DoUpd(wv webview.WebView) (bool, error) {
 	if err := os.WriteFile(pendPth, buf, 0644); err != nil {
 		return false, err
 	}
-	utils.Kill("block-ads.exe")
-	utils.Kill("Code.exe")
 
 	self, err := os.Executable()
 	if err != nil {
@@ -646,7 +644,7 @@ func (d *appDat) DoUpd(wv webview.WebView) (bool, error) {
 		return false, err
 	}
 
-	cmd := exec.Command(updExe, "--apply-update", pendPth)
+	cmd := exec.Command(updExe, "--apply-update", pendPth, "--wait-pid", strconv.Itoa(os.Getpid()))
 	cmd.Dir = d.dir
 	cmd.SysProcAttr = hidAttr()
 	if err := cmd.Start(); err != nil {
@@ -660,7 +658,7 @@ func (d *appDat) DoUpd(wv webview.WebView) (bool, error) {
 	return true, nil
 }
 
-func AppPend(pendPth string) error {
+func AppPend(pendPth string, waitPID int) error {
 	buf, err := os.ReadFile(pendPth)
 	if err != nil {
 		return err
@@ -673,6 +671,20 @@ func AppPend(pendPth string) error {
 	base := filepath.Dir(pendPth)
 	if pend.TmpDir == "" {
 		pend.TmpDir = filepath.Join(base, ".update_tmp")
+	}
+	if rel, err := filepath.Rel(base, pend.TmpDir); err != nil ||
+		rel == ".." || strings.HasPrefix(rel, ".."+string(filepath.Separator)) {
+		pend.TmpDir = filepath.Join(base, ".update_tmp")
+	}
+	defer func() {
+		_ = os.RemoveAll(pend.TmpDir)
+		_ = os.Remove(pendPth)
+		DelSelf()
+	}()
+
+	// 等待 UI 进程退出释放文件锁
+	if waitPID > 0 {
+		waitExit(waitPID, 15*time.Second)
 	}
 
 	for _, it := range pend.Items {
@@ -690,25 +702,17 @@ func AppPend(pendPth string) error {
 		if err := os.MkdirAll(filepath.Dir(tgt), 0755); err != nil {
 			return err
 		}
-		if strings.HasSuffix(strings.ToLower(tgt), ".exe") {
-			utils.Kill(filepath.Base(tgt))
-		}
-		_ = os.Remove(tgt)
-		if err := os.Rename(tmp, tgt); err != nil {
-			if err2 := cpFile(tmp, tgt); err2 != nil {
-				return err
-			}
-			_ = os.Remove(tmp)
+
+		isExe := strings.HasSuffix(strings.ToLower(tgt), ".exe")
+		if err := UpFRetry(tmp, tgt, isExe); err != nil {
+			return err
 		}
 	}
 
-	// save version.json
+	// 写 version.json
 	if len(pend.ManRaw) > 0 {
 		_ = os.WriteFile(filepath.Join(base, "version.json"), pend.ManRaw, 0644)
 	}
-
-	_ = os.RemoveAll(pend.TmpDir)
-	_ = os.Remove(pendPth)
 
 	for _, it := range pend.Items {
 		if !it.Run {
@@ -725,12 +729,62 @@ func AppPend(pendPth string) error {
 			_ = cmd.Start()
 		}
 	}
+	return nil
+}
 
+// 等待指定 PID 退出
+func waitExit(pid int, maxWait time.Duration) {
+	if pid <= 0 {
+		return
+	}
+	h, err := syscall.OpenProcess(syscall.SYNCHRONIZE, false, uint32(pid))
+	if err != nil {
+		return // 可能已退出
+	}
+	defer syscall.CloseHandle(h)
+
+	ms := uint32(maxWait / time.Millisecond)
+	if ms == 0 {
+		ms = 1
+	}
+	_, _ = syscall.WaitForSingleObject(h, ms)
+	time.Sleep(200 * time.Millisecond) // 额外给句柄释放一点时间
+}
+
+func UpFRetry(tmp, tgt string, isExe bool) error {
+	const attempts = 120 // 120 * 100ms = 12s
+
+	var lastErr error
+	for i := 0; i < attempts; i++ {
+		if isExe {
+			utils.Kill(filepath.Base(tgt))
+		}
+		_ = utils.Del(tgt)
+		if err := os.Rename(tmp, tgt); err == nil {
+			return nil
+		} else {
+			if err2 := cpFile(tmp, tgt); err2 == nil {
+				_ = os.Remove(tmp)
+				return nil
+			} else {
+				lastErr = fmt.Errorf("replace %s failed (rename: %v; copy: %v)", tgt, err, err2)
+			}
+		}
+
+		time.Sleep(100 * time.Millisecond)
+	}
+	return lastErr
+}
+
+// 删除自身
+func DelSelf() {
 	self, _ := os.Executable()
+	if self == "" {
+		return
+	}
 	if strings.EqualFold(filepath.Base(self), ".updater_tmp.exe") {
 		cmd := exec.Command("cmd", "/C", "ping 127.0.0.1 -n 2 >NUL & del /F /Q \""+self+"\"")
 		cmd.SysProcAttr = hidAttr()
 		_ = cmd.Start()
 	}
-	return nil
 }

@@ -753,7 +753,19 @@ func dw1(k reg.Key, name string) error {
 func main() {
 
 	if len(os.Args) >= 3 && os.Args[1] == "--apply-update" {
-		if err := AppPend(os.Args[2]); err != nil {
+		pendPth := os.Args[2]
+
+		waitPID := 0
+		for i := 3; i < len(os.Args); i++ {
+			if os.Args[i] == "--wait-pid" && i+1 < len(os.Args) {
+				if v, err := strconv.Atoi(os.Args[i+1]); err == nil {
+					waitPID = v
+				}
+				i++
+			}
+		}
+
+		if err := AppPend(pendPth, waitPID); err != nil {
 			fmt.Println("apply update failed:", err)
 		}
 		return
@@ -931,6 +943,30 @@ func main() {
 			w.Dispatch(func() {
 				w.Eval(js)
 			})
+		}()
+		return true, nil
+	})
+
+	//异步更新
+	_ = w.Bind("doUpdAsync", func() (bool, error) {
+		go func() {
+			started, err := dat.DoUpd(w)
+
+			payload := map[string]interface{}{
+				"ok":      err == nil,
+				"started": started,
+				"err":     "",
+			}
+			if err != nil {
+				payload["err"] = err.Error()
+			}
+
+			b, _ := json.Marshal(payload)
+			js := fmt.Sprintf(
+				`(function(){ if (typeof window.__onDoUpd === "function") { window.__onDoUpd(%s); } })();`,
+				string(b),
+			)
+			w.Dispatch(func() { w.Eval(js) })
 		}()
 		return true, nil
 	})

@@ -405,18 +405,15 @@ body {
 
 /* 等待弹窗关闭按钮 */
 .wait-close {
-  position: absolute;
-  right: 10px;
-  top: 10px;
-  width: 34px;
-  height: 34px;
-  border: 1px solid rgba(148,163,184,.6);
-  background: rgba(255,255,255,.9);
-  border-radius: 10px;
-  cursor: pointer;
-  font-size: 20px;
-  line-height: 32px;
-  color: #334155;
+  border: none;
+  outline: none;
+  box-shadow: none;
+  appearance: none;
+  -webkit-appearance: none;
+  background: rgba(255,255,255,0.9);
 }
-.wait-close:hover { background: #ffffff; }
-.wait-close:active { transform: translateY(1px); }
+.wait-close:focus,
+.wait-close:focus-visible {
+  outline: none;
+  box-shadow: none;
+}

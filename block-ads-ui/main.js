@@ -125,6 +125,14 @@ function waitDone(tok, text, isErr) {
   }
 }
 
+// 仅关闭弹窗，不中断后台任务
+function waitDismiss() {
+  __waitCur = 0;
+  __updWait = 0;
+  __syncWait = 0;
+  waitHide();
+}
+
 function initWaitOverlay() {
   const w = document.getElementById("waitOverlay");
   if (!w) return;
@@ -132,7 +140,7 @@ function initWaitOverlay() {
   w.addEventListener("click", function (e) {
     const t = e.target;
     if (t === w || (t && t.classList && t.classList.contains("wait-mask"))) {
-      waitHide();
+      waitDismiss();
     }
   });
 
@@ -141,7 +149,7 @@ function initWaitOverlay() {
     btn.addEventListener("click", function (e) {
       e.preventDefault();
       e.stopPropagation();
-      waitHide(); // 只隐藏弹窗
+      waitDismiss();
     });
   }
 }
@@ -197,19 +205,18 @@ let pendingSyncShowMsg = false;
 
 let upBusy = false;
 
-window.__onChkUpd = function (res) {
+window.__onDoUpd = function (res) {
   const ok = !!(res && res.ok);
   if (ok) {
-    renderUpd(res.info);
-    const txt = res && res.info && res.info.has_update ? "发现新版本。" : "已是最新版本。";
+    const started = !!(res && res.started);
+    const txt = started ? "已启动更新流程，界面将关闭并更新。" : "未执行更新。";
     if (__updWait) waitDone(__updWait, txt, false);
-    if (pendingUpdShowMsg) setMsg(txt, false);
+    setMsg(txt, false);
   } else {
-    const txt = "检测更新失败: " + (res && res.err ? res.err : "unknown");
+    const txt = "更新失败: " + (res && res.err ? res.err : "unknown");
     if (__updWait) waitDone(__updWait, txt, true);
-    if (pendingUpdShowMsg) setMsg(txt, true);
+    setMsg(txt, true);
   }
-  pendingUpdShowMsg = false;
   __updWait = 0;
 };
 
@@ -503,19 +510,16 @@ async function doUpdateNow(force) {
   }
   try {
     const __tok = waitStart("更新中...");
+    __updWait = __tok;
     await nextFrame();
     setMsg("更新中...", false);
-    const ok = await callMaybe("doUpd");
-    if (ok) {
-      setMsg("已启动更新流程。", false);
-    } else {
-      setMsg("未执行更新（可能已是最新）。", false);
-    }
-    if (__tok === __waitCur) waitHide();
+    await callMaybe("doUpdAsync");
   } catch (e) {
     console.error(e);
-    setMsg("更新失败: " + e, true);
-    if (__tok === __waitCur) waitShow("更新失败: " + (e && e.message ? e.message : String(e)), "error");
+    const txt = "更新失败: " + (e && e.message ? e.message : String(e));
+    setMsg(txt, true);
+    if (__updWait) waitDone(__updWait, txt, true);
+    __updWait = 0;
   }
 }
 
