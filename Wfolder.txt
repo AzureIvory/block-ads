@@ -78,3 +78,6 @@ Chrome
 360se6
 360se
 2345Explorer
+FileZilla FTP Client
+easytshark
+Wireshark

@@ -1,0 +1,821 @@
+\Device\HarddiskVolume1\PostgreSQL\bin\postgres.exe
+\Device\HarddiskVolume4\Program Files\AMD\CNext\CNext\cncmd.exe
+\Device\HarddiskVolume4\Program Files (x86)\Microsoft\Edge\Application\msedge.exe
+\Device\HarddiskVolume1\Program Files\Clash\Clash for Windows\Clash for Windows.exe
+\Device\HarddiskVolume1\Program Files\Clash\Clash for Windows\resources\static\files\clash-win64.exe
+\Device\HarddiskVolume4\Program Files\WinRAR\WinRAR.exe
+D:\PostgreSQL\bin\pg_ctl.exe
+D:\PostgreSQL\bin\postgres.exeC:\Program Files (x86)\edrAgent\edrservice.exe
+C:\Program Files\Common Files\Apple\Mobile Device Support\AppleMobileDeviceService.exe
+C:\Program Files\Microsoft SQL Server\90\Shared\sqlwriter.exe
+C:\Program Files (x86)\WinFsp\bin\launcher-x64.exe
+C:\Program Files (x86)\HiSuite\HandSetService\HuaweiHiSuiteService64.exe
+C:\Program Files\Microsoft SQL Server\MSSQL14.MSSQLSERVER\MSSQL\Binn\sqlceip.exe
+C:\Program Files (x86)\pcsuite\SyncService\vivoSyncService.exe
+C:\Program Files (x86)\pcsuite\vivoesService\x64\vivoesService_x64.exe
+C:\Program Files (x86)\edrAgent\parfait_crash_handler.exe
+C:\Program Files\Microsoft SQL Server\MSSQL14.MSSQLSERVER\MSSQL\Binn\sqlservr.exe
+C:\Program Files (x86)\SogouInput\15.3.0.1781\SGTool.exe
+C:\Program Files (x86)\CloudPrintClient\CloudPrintClient.exe
+C:\Program Files (x86)\CNPrintTool\jre\bin\javaw.exe
+C:\Program Files (x86)\CNPrintTool\CNPrintClient.exe
+C:\Program Files (x86)\CloudPrintClient\parfait_crash_handler.exe
+C:\Program Files (x86)\ByteDance\抖店工作台\1.0.16\doudian.exe
+C:\Users\Administrator\Desktop\PoSend\PoSend.exe
+C:\ProgramData\123SyncCloud\service\MaintenanceService.exe
+C:\Users\Administrator\Desktop\block-ads\Code.exe
+C:\Program Files\Huorong\Sysdiag\bin\HipsTray.exe
+C:\Program Files\Huorong\Sysdiag\bin\HipsDaemon.exe
+C:\Program Files\Windows Media Player\wmprph.exe
+C:\Program Files\block-ads\UI.exe
+C:\Program Files\WinRAR\WinRAR.exe
+C:\Users\Administrator\AppData\Local\Temp\Rar$EXa16100.33566.rartemp\局域网共享精灵企业版.exe
+C:\Program Files (x86)\FormatFactory\FormatFactory.exe
+C:\Program Files (x86)\edrAgent\edrservice.exe
+C:\Program Files (x86)\Microsoft\EdgeUpdate\MicrosoftEdgeUpdate.exe
+C:\Program Files (x86)\SogouInput\SogouExe\SogouExe.exe
+C:\Program Files (x86)\SogouInput\15.3.0.1781\SGBizLauncher.exe
+C:\Program Files (x86)\Google\GoogleUpdater\143.0.7482.0\updater.exe
+\Device\HarddiskVolume3\Program Files (x86)\SogouInput\15.3.0.1781\SGTool.exe
+C:\Program Files\Go\bin\go.exe
+C:\Users\Administrator\go\pkg\mod\golang.org\toolchain@v0.0.1-go1.25.1.windows-amd64\bin\go.exe
+C:\Program Files\Git\cmd\git.exe
+C:\Users\Administrator\go\bin\gopls.exe
+\Device\HarddiskVolume3\Users\Administrator\go\pkg\mod\golang.org\toolchain@v0.0.1-go1.25.1.windows-amd64\bin\go.exe
+\Device\HarddiskVolume3\Users\Administrator\go\bin\gopls.exe
+\Device\HarddiskVolume3\Program Files\Git\cmd\git.exe
+\Device\HarddiskVolume3\Program Files\Go\bin\go.exe
+C:\Users\Administrator\go\pkg\mod\golang.org\toolchain@v0.0.1-go1.25.1.windows-amd64\pkg\tool\windows_amd64\compile.exe
+C:\Users\Administrator\go\pkg\mod\golang.org\toolchain@v0.0.1-go1.25.1.windows-amd64\pkg\tool\windows_amd64\asm.exe
+C:\Users\Administrator\go\pkg\mod\golang.org\toolchain@v0.0.1-go1.25.1.windows-amd64\pkg\tool\windows_amd64\cgo.exe
+C:\Users\Administrator\go\pkg\mod\golang.org\toolchain@v0.0.1-go1.25.1.windows-amd64\pkg\tool\windows_amd64\link.exe
+\Device\HarddiskVolume3\Users\Administrator\go\pkg\mod\golang.org\toolchain@v0.0.1-go1.25.1.windows-amd64\pkg\tool\windows_amd64\compile.exe
+\Device\HarddiskVolume3\Users\Administrator\go\pkg\mod\golang.org\toolchain@v0.0.1-go1.25.1.windows-amd64\pkg\tool\windows_amd64\asm.exe
+\Device\HarddiskVolume3\Users\Administrator\go\pkg\mod\golang.org\toolchain@v0.0.1-go1.25.1.windows-amd64\pkg\tool\windows_amd64\cgo.exe
+\Device\HarddiskVolume3\Users\Administrator\go\pkg\mod\golang.org\toolchain@v0.0.1-go1.25.1.windows-amd64\pkg\tool\windows_amd64\link.exe
+C:\Users\Administrator\Desktop\Clash\Clash for Windows.exe
+C:\Users\Administrator\Desktop\Clash\resources\static\files\win\x64\clash-win64.exe
+C:\Users\Administrator\Desktop\Clash\resources\static\files\win\common\sysproxy.exe
+\Device\HarddiskVolume3\Program Files (x86)\Google\GoogleUpdater\143.0.7482.0\updater.exe
+C:\Program Files\Huorong\Sysdiag\bin\HRUpdate.exe
+C:\Program Files\Huorong\Sysdiag\bin\BugReport.exe
+C:\Users\Administrator\go\bin\staticcheck.exe
+C:\Program Files\Huorong\Sysdiag\bin\SecTask.exe
+\Device\HarddiskVolume3\Users\Administrator\go\bin\staticcheck.exe
+\Device\HarddiskVolume3\Program Files (x86)\Microsoft\EdgeUpdate\MicrosoftEdgeUpdate.exe
+\Device\HarddiskVolume3\Program Files (x86)\ByteDance\抖店工作台\1.0.16\doudian.exe
+\Device\HarddiskVolume3\Users\Administrator\Desktop\Clash\resources\static\files\win\common\sysproxy.exe
+C:\Program Files\nodejs\node.exe
+\Device\HarddiskVolume3\Program Files\Huorong\Sysdiag\bin\HipsTray.exe
+\Device\HarddiskVolume3\Program Files\Huorong\Sysdiag\bin\BugReport.exe
+C:\Users\Administrator\Desktop\block-ads\tools\ResHacker.exe
+C:\Program Files (x86)\FormatFactory\ffmpeg.exe
+C:\Program Files (x86)\IQIYI Video\GeePlayer\5.1.55.4941\GeePlayer.exe
+C:\Users\Administrator\AppData\Roaming\IQIYI Video\GeePlayer\GpUpdate.exe
+C:\Program Files\Git\cmd\git-gui.exe
+\Device\HarddiskVolume3\Program Files\Git\usr\bin\cygpath.exe
+C:\Program Files\Git\git-bash.exe
+C:\Program Files\Git\usr\bin\mintty.exe
+C:\Program Files\Git\usr\bin\cygwin-console-helper.exe
+C:\Program Files\Git\usr\bin\bash.exe
+\Device\HarddiskVolume3\Program Files\Git\usr\bin\bash.exe
+\Device\HarddiskVolume3\Program Files\Git\usr\bin\hostname.exe
+\Device\HarddiskVolume3\Program Files\Git\usr\bin\which.exe
+\Device\HarddiskVolume3\Program Files\Git\usr\bin\cygwin-console-helper.exe
+\Device\HarddiskVolume3\Program Files\Git\cmd\git-gui.exe
+\Device\HarddiskVolume3\Program Files\Git\usr\bin\mintty.exe
+C:\Program Files\Git\usr\bin\ssh-keygen.exe
+C:\Program Files\Git\usr\bin\sh.exe
+\Device\HarddiskVolume3\Program Files\Git\usr\bin\sh.exe
+C:\Program Files\Git\unins000.exe
+C:\Users\Administrator\Downloads\Git-2.51.2-64-bit.exe
+\Device\HarddiskVolume3\Program Files\Git\cmd\scalar.exe
+\Device\HarddiskVolume3\Program Files\Git\usr\bin\ln.exe
+\Device\HarddiskVolume3\Program Files\Git\usr\bin\expr.exe
+\Device\HarddiskVolume3\Program Files\Git\usr\bin\cp.exe
+\Device\HarddiskVolume3\Program Files\Git\usr\bin\rm.exe
+C:\Users\Administrator\Documents\xwechat_files\wxid_vni7mz5wrb6g22_d9cb\msg\file\2025-08\geek.exe
+C:\Users\Administrator\AppData\Local\Temp\geek64.exe
+C:\Program Files (x86)\ByteDance\抖店工作台\抖店工作台.exe
+\Device\HarddiskVolume3\Program Files\Git\usr\bin\nice.exe
+C:\Program Files (x86)\ByteDance\抖店工作台\1.0.16\dump_reporter.exe
+\Device\HarddiskVolume3\Program Files\Git\usr\bin\less.exe
+C:\Program Files\block-ads\Code.exe
+C:\Program Files\Git\usr\bin\nice.exe
+\Device\HarddiskVolume3\Program Files (x86)\Microsoft\EdgeUpdate\Install\{D793A146-4756-4DFF-AB25-1FB8D6236320}\MicrosoftEdge_X64_142.0.3595.90_142.0.3595.80.exe
+\Device\HarddiskVolume3\Program Files (x86)\Microsoft\EdgeUpdate\Install\{D793A146-4756-4DFF-AB25-1FB8D6236320}\EDGEMITMP_B0B9E.tmp\setup.exe
+\Device\HarddiskVolume3\Program Files (x86)\Microsoft\EdgeUpdate\Install\{3C5B0A74-9CC3-4777-99EC-CDCABBCA545F}\MicrosoftEdge_X64_142.0.3595.90_142.0.3595.80.exe
+\Device\HarddiskVolume3\Program Files (x86)\Microsoft\EdgeUpdate\Install\{3C5B0A74-9CC3-4777-99EC-CDCABBCA545F}\EDGEMITMP_8F4C3.tmp\setup.exe
+\Device\HarddiskVolume3\Users\Administrator\Desktop\Clash\Clash for Windows.exe
+C:\Users\Administrator\AppData\Local\app_shell_cache_1215\app_package_3897d26ce5.exe
+C:\Program Files (x86)\ByteDance\抖店工作台\1.0.19\doudian.exe
+C:\Program Files (x86)\ByteDance\抖店工作台\1.0.19\elevation_service.exe
+C:\Program Files (x86)\ByteDance\抖店工作台\1.0.19\app_shell_updater.exe
+C:\Users\Administrator\.vscode\extensions\openai.chatgpt-0.4.46-win32-x64\bin\windows-x86_64\codex.exe
+C:\Program Files\Steam++\Steam++.exe
+C:\Program Files\Steam++\modules\Accelerator\Steam++.Accelerator.exe
+C:\Users\Administrator\Downloads\IQIYIsetup_z43n.exe
+C:\Program Files\IQIYI Video\LStyle\13.11.0.9633\QyFragment.exe
+C:\Program Files\IQIYI Video\LStyle\13.11.0.9633\QiyiDACL.exe
+C:\Program Files\IQIYI Video\LStyle\13.11.0.9633\QyKernel.exe
+C:\Program Files\IQIYI Video\LStyle\13.11.0.9633\QiyiService.exe
+C:\Users\Administrator\AppData\Roaming\IQIYI Video\LStyle\PinToTaskbar.exe
+C:\Users\Administrator\AppData\Roaming\IQIYI Video\LStyle\QyUpdate.exe
+C:\Program Files\IQIYI Video\LStyle\13.11.0.9633\QyClient.exe
+C:\Program Files\IQIYI Video\LStyle\13.11.0.9633\MicrosoftEdgeWebview2Setup.exe
+C:\Program Files (x86)\Microsoft\Temp\EUF3AB.tmp\MicrosoftEdgeUpdate.exe
+\Device\HarddiskVolume3\Program Files\IQIYI Video\LStyle\13.11.0.9633\QyFragment.exe
+C:\Program Files\Common Files\IQIYI Video\LStyle\QyClient.exe
+C:\Program Files\IQIYI Video\LStyle\13.11.0.9633\QyPlayer.exe
+C:\Program Files (x86)\Microsoft\EdgeUpdate\Install\{404BC89F-8434-47E4-AB7B-00B97B094990}\MicrosoftEdge_X64_142.0.3595.94.exe
+C:\Program Files\IQIYI Video\LStyle\13.11.0.9633\QyUninst.exe
+C:\Program Files (x86)\Microsoft\EdgeUpdate\Install\{404BC89F-8434-47E4-AB7B-00B97B094990}\EDGEMITMP_739A7.tmp\setup.exe
+C:\Users\Administrator\AppData\Roaming\IQIYI Video\LStyle\QyUninst.exe
+C:\Program Files\IQIYI Video\LStyle\13.11.0.9633\WebView2Ready.exe
+\Device\HarddiskVolume3\Program Files\IQIYI Video\LStyle\13.11.0.9633\QiyiService.exe
+\Device\HarddiskVolume3\Program Files\IQIYI Video\LStyle\13.11.0.9633\DestopClean.exe
+C:\Users\Administrator\Downloads\QQliveSetup_20_847.exe
+C:\Users\Administrator\AppData\Local\Temp\nsiF5FA.tmp\Statistics.exe
+\Device\HarddiskVolume3\Users\Administrator\AppData\Local\Temp\nsiF5FA.tmp\Statistics.exe
+C:\Users\Administrator\Downloads\youkuclient_setup_9.2.67.1001.exe
+C:\Users\Administrator\Downloads\NeteaseCloudMusic_Music_official_3.1.23.204764_64.exe
+C:\Users\Administrator\Downloads\douyin-downloader-v6.8.1-win32-ia32-douyincold-wid-8ZCMCNbAyzM.exe
+C:\Users\Administrator\Downloads\PddSetup_V3.5.8.3_Build20251116120004_Final.exe
+\Device\HarddiskVolume3\Program Files (x86)\pinduoduo\3.5.8.3\CmdHelper.exe
+C:\Program Files (x86)\pinduoduo\3.5.8.3\GetWinConfigEx.exe
+C:\Program Files (x86)\pinduoduo\3.5.8.3\PddUninstall.exe
+C:\Program Files (x86)\pinduoduo\3.5.8.3\CmdHelper.exe
+C:\Users\Administrator\AppData\Local\Temp\38E33FBB-FBEF-42D6-932B-9D35C8FB595F\DismHost.exe
+C:\Users\Administrator\go\bin\dlv.exe
+C:\Program Files (x86)\Windows Media Player\wmplayer.exe
+\Device\HarddiskVolume3\Users\Administrator\go\bin\dlv.exe
+\Device\HarddiskVolume3\Program Files\Go\pkg\tool\windows_amd64\compile.exe
+\Device\HarddiskVolume3\Program Files\Go\pkg\tool\windows_amd64\asm.exe
+\Device\HarddiskVolume3\Program Files\Go\pkg\tool\windows_amd64\cgo.exe
+C:\Program Files\Go\pkg\tool\windows_amd64\cgo.exe
+\Device\HarddiskVolume3\Program Files\Go\pkg\tool\windows_amd64\link.exe
+C:\Program Files\Go\pkg\tool\windows_amd64\compile.exe
+C:\Program Files\Go\pkg\tool\windows_amd64\asm.exe
+C:\Program Files\Go\pkg\tool\windows_amd64\link.exe
+\Device\HarddiskVolume3\Program Files (x86)\SogouInput\15.3.0.1781\SGBizLauncher.exe
+C:\Users\Administrator\AppData\Local\Temp\8C1CA968-D294-4C6F-9972-065411B08162\DismHost.exe
+C:\google\Chrome\Chrome.exe
+\Device\HarddiskVolume3\google\Chrome\App\chrome.exe
+C:\google\Chrome\App\chrome.exe
+\Device\HarddiskVolume3\Program Files (x86)\Microsoft\EdgeUpdate\Install\{C7337103-CFA9-41AE-B504-B4049886BE5D}\MicrosoftEdge_X64_142.0.3595.94_142.0.3595.90.exe
+\Device\HarddiskVolume3\Program Files (x86)\Microsoft\EdgeUpdate\Install\{C7337103-CFA9-41AE-B504-B4049886BE5D}\EDGEMITMP_5D3F0.tmp\setup.exe
+C:\Users\Administrator\Desktop\block-ads\block-ads-ui\block-ads-ui.exe
+\Device\HarddiskVolume3\Program Files (x86)\ByteDance\抖店工作台\1.0.19\doudian.exe
+\Device\HarddiskVolume3\Program Files\nodejs\node.exe
+C:\Program Files\Git\usr\bin\cygpath.exe
+C:\Users\Administrator\AppData\Local\Temp\Rar$EXa16180.3963.rartemp\局域网共享精灵企业版.exe
+C:\Users\Administrator\Desktop\New folder (2)\block-ads-inst1.1.exe
+C:\Users\Administrator\Desktop\工具箱\block-ads\block-ads-inst1.1.exe
+C:\Users\Administrator\AppData\Roaming\IQIYI Video\GeePlayer\GpUpdate\GeePlayerSetup_update_202408151531.exe
+\Device\HarddiskVolume3\Users\Administrator\Desktop\工具箱\block-ads\WDBak.exe
+\Device\HarddiskVolume3\Users\Administrator\Desktop\WDBak\__debug_bin.exe
+C:\Users\Administrator\Desktop\WDBak\__debug_bin.exe
+C:\Users\Administrator\AppData\Local\Temp\15ED7E2F-5961-4BB2-9854-5A1F271EEDA1\DismHost.exe
+C:\Users\Administrator\Desktop\back\__debug_bin.exe
+C:\Users\Administrator\Desktop\挂载硬盘\安装完打开我.exe
+C:\Users\Administrator\Desktop\挂载硬盘\rclone.exe
+C:\Program Files (x86)\ByteDance\抖店工作台\1.0.19\dump_reporter.exe
+C:\Users\Administrator\Desktop\WDBak\cfg\__debug_bin.exe
+C:\Users\Administrator\AppData\Local\Temp\4E762643-A6DD-43FD-A5A4-3C98593FB3DB\DismHost.exe
+\Device\HarddiskVolume3\Program Files (x86)\Microsoft\EdgeUpdate\Install\{5A8127CB-D8F3-404D-B832-24EBF7ACE0F9}\MicrosoftEdgeUpdateSetup_X86_1.3.209.9.exe
+\Device\HarddiskVolume3\Program Files (x86)\Microsoft\Temp\EU53B4.tmp\MicrosoftEdgeUpdate.exe
+\Device\HarddiskVolume3\Program Files (x86)\Microsoft\EdgeUpdate\1.3.209.9\MicrosoftEdgeUpdateComRegisterShell64.exe
+C:\Users\Administrator\AppData\Local\Temp\F5DCD16B-18BF-44B8-9071-23CAF3473F0C\DismHost.exe
+C:\Users\Administrator\Desktop\WDBak\cfg\cfg.exe
+C:\Users\Administrator\Desktop\WDBak\cfg\WDBak.exe
+\Device\HarddiskVolume3\Users\Administrator\Desktop\WDBak\cfg\WDBak.exe
+\Device\HarddiskVolume3\Program Files\Huorong\Sysdiag\bin\HipsDaemon.exe
+\Device\HarddiskVolume3\Users\Administrator\Desktop\WDBak\WDBak.exe
+C:\Users\Administrator\.vscode\extensions\ms-python.vscode-python-envs-1.12.0-win32-x64\python-env-tools\bin\pet.exe
+C:\ProgramData\chocolatey\bin\python3.14.exe
+\Device\HarddiskVolume3\ProgramData\chocolatey\bin\python3.14.exe
+C:\Program Files\Python311\python.exe
+\Device\HarddiskVolume3\Program Files\Python311\python.exe
+\Device\HarddiskVolume3\Users\Administrator\Desktop\挂载硬盘\rclone.exe
+C:\Users\Administrator\AppData\Local\Temp\0981DC11-91F3-44A3-AE63-C2EBF391F5D0\DismHost.exe
+\Device\HarddiskVolume3\Program Files\Huorong\Sysdiag\bin\SecTask.exe
+C:\Users\Administrator\AppData\Local\Temp\60C90D90-7994-40C5-9746-76C67E6AD592\DismHost.exe
+C:\Users\Administrator\AppData\Local\Temp\3EC33CD8-C7D9-4514-93E6-00A0F12C66B4\DismHost.exe
+C:\Users\Administrator\AppData\Local\Temp\go-build1623016831\b001\exe\main.exe
+C:\Users\Administrator\Desktop\ReSys\__debug_bin.exe
+\Device\HarddiskVolume3\Users\Administrator\Desktop\ReSys\__debug_bin.exe
+C:\Users\Administrator\AppData\Local\123pan-updater\pending\123pan_2.6.2.exe
+C:\ProgramData\123SyncCloud\service\UpgradeService.exe
+C:\Users\Administrator\AppData\Local\Temp\809D1404-63F1-436F-A8C4-4824AE17B83A\DismHost.exe
+C:\Users\Administrator\AppData\Local\Temp\8499127B-5DDE-4987-B933-442EA380FD7F\DismHost.exe
+C:\Users\Administrator\Desktop\wimlib-imagex.exe
+C:\Users\Administrator\Desktop\EasyRCV3一键重装.exe
+C:\ProgramData\EasyRC\wimlib.EXE
+C:\ProgramData\EasyRC\Qiibiosinfo.exe
+\Device\HarddiskVolume3\ProgramData\EasyRC\Qiibiosinfo.exe
+C:\ProgramData\EasyRC\QiiPECMD.exe
+\Device\HarddiskVolume3\ProgramData\EasyRC\cxdir.exe
+C:\ProgramData\EasyRC\cxdir.exe
+\Device\HarddiskVolume3\Program Files (x86)\Microsoft\EdgeUpdate\Install\{8D12A5F5-A811-41DF-8E3F-D99461352E36}\MicrosoftEdgeUpdateSetup_X86_1.3.211.7.exe
+\Device\HarddiskVolume3\Program Files (x86)\Microsoft\Temp\EU9A82.tmp\MicrosoftEdgeUpdate.exe
+\Device\HarddiskVolume3\Program Files (x86)\Microsoft\EdgeUpdate\1.3.211.7\MicrosoftEdgeUpdateComRegisterShell64.exe
+C:\Users\Administrator\AppData\Local\Temp\5E50AC47-C0F5-4B25-9832-7579C9EBBB3E\DismHost.exe
+C:\Users\Administrator\AppData\Local\Temp\15342ACA-0CDA-481F-A9AD-B5928BCC268F\DismHost.exe
+C:\Users\Administrator\AppData\Local\Temp\CCE0BF45-33C4-48DA-BF8A-3E11A18CDDA6\DismHost.exe
+C:\Users\Administrator\AppData\Local\Temp\DB32B80F-C860-429A-824F-C84C04910C97\DismHost.exe
+C:\Users\Administrator\.vscode\extensions\openai.chatgpt-0.4.47-win32-x64\bin\windows-x86_64\codex.exe
+C:\Users\Administrator\Desktop\ui\__debug_bin.exe
+\Device\HarddiskVolume3\Users\Administrator\Desktop\ui\__debug_bin.exe
+C:\Users\Administrator\Desktop\工具箱\界面设计器-3.3.9-(2024-04-25)\炫彩IDE.exe
+\Device\HarddiskVolume3\Users\Administrator\Desktop\工具箱\界面设计器-3.3.9-(2024-04-25)\data\module-sdk\module-sdk.exe
+C:\Program Files\7-Zip\7zFM.exe
+\Device\HarddiskVolume3\Program Files (x86)\Google\GoogleUpdater\144.0.7547.0\updater.exe
+C:\Program Files (x86)\Google\GoogleUpdater\144.0.7547.0\updater.exe
+C:\Users\Administrator\Desktop\ReSys\ui\__debug_bin.exe
+C:\Users\Administrator\Desktop\ReSys\tools\QiiAria2c.exe
+C:\Users\Administrator\AppData\Local\Temp\EDD0F34E-5524-4E64-8BA5-7DB564E7F01D\DismHost.exe
+C:\Users\Administrator\Desktop\ReSys\aria2c.exe
+\Device\HarddiskVolume3\Users\Administrator\Desktop\ReSys\aria2c.exe
+C:\Users\Administrator\AppData\Local\Temp\Rar$EXa9596.20382.rartemp\Gopeed-v1.8.3-windows-amd64.exe
+C:\Users\Administrator\AppData\Local\Programs\gopeed\gopeed.exe
+C:\Users\Administrator\.vscode\extensions\openai.chatgpt-0.4.49-win32-x64\bin\windows-x86_64\codex.exe
+C:\Users\Administrator\Downloads\bt-client-win-1.2.6-x64.exe
+C:\Program Files\bt-client\bt-client.exe
+\Device\HarddiskVolume3\Program Files\bt-client\bt-client.exe
+C:\go-legacy-win7\bin\go.exe
+\Device\HarddiskVolume3\go-legacy-win7\bin\go.exe
+\Device\HarddiskVolume3\Users\Administrator\.vscode\extensions\openai.chatgpt-0.4.49-win32-x64\bin\windows-x86_64\codex.exe
+\Device\HarddiskVolume3\go-legacy-win7\pkg\tool\windows_amd64\compile.exe
+\Device\HarddiskVolume3\go-legacy-win7\pkg\tool\windows_amd64\asm.exe
+\Device\HarddiskVolume3\go-legacy-win7\pkg\tool\windows_amd64\cgo.exe
+C:\go-legacy-win7\pkg\tool\windows_amd64\cgo.exe
+\Device\HarddiskVolume3\go-legacy-win7\pkg\tool\windows_amd64\link.exe
+C:\go-legacy-win7\pkg\tool\windows_amd64\compile.exe
+C:\go-legacy-win7\pkg\tool\windows_amd64\asm.exe
+C:\go-legacy-win7\pkg\tool\windows_amd64\link.exe
+C:\Program Files\Huorong\Sysdiag\bin\HipsMain.exe
+C:\Program Files\WindowsApps\3AD8A913.49937325EFC59_1.0.16.0_x64__j4r74wbqry4cc\BaiduNetdiskService.exe
+C:\Program Files\WindowsApps\3AD8A913.49937325EFC59_1.0.16.0_x64__j4r74wbqry4cc\NotifyExtension\NotifyExtension.exe
+C:\111111\EasyRCV3一键重装.exe
+C:\Users\Administrator\AppData\Local\Temp\53B8EDC7-7F82-4CB7-A56A-557691D1E49F\DismHost.exe
+\Device\HarddiskVolume3\Program Files (x86)\Microsoft\EdgeUpdate\Install\{AD68E395-06D3-468A-AC93-C8D055654996}\MicrosoftEdge_X64_143.0.3650.66_142.0.3595.94.exe
+\Device\HarddiskVolume3\Program Files (x86)\Microsoft\EdgeUpdate\Install\{AD68E395-06D3-468A-AC93-C8D055654996}\EDGEMITMP_DE43E.tmp\setup.exe
+C:\Users\Administrator\Desktop\WeChatLauncher.exe
+C:\Users\Administrator\Downloads\FileZilla_3.66.1 (1).exe
+C:\Program Files\FileZilla FTP Client\filezilla.exe
+C:\Program Files\FileZilla FTP Client\fzsftp.exe
+C:\Program Files (x86)\WinSCP\WinSCP.exe
+C:\Program Files\Git\usr\bin\hostname.exe
+C:\Program Files (x86)\quark-cloud-drive\QuarkCloudDrive.exe
+C:\Program Files (x86)\quark-cloud-drive\app-3.19.0\QuarkCloudDrive.exe
+\Device\HarddiskVolume3\Program Files (x86)\quark-cloud-drive\app-3.19.0\QuarkCloudDrive.exe
+C:\Users\Administrator\Downloads\bt-client-win-1.2.6-x64 (1).exe
+C:\Users\Administrator\AppData\Local\Temp\nsy583D.tmp\old-uninstaller.exe
+C:\Users\Administrator\AppData\Local\Programs\gopeed\unins000.exe
+C:\Users\Administrator\AppData\Local\Temp\~nsuA.tmp\Un_A.exe
+C:\Users\Administrator\AppData\Local\Temp\~nsuA.tmp\Un_B.exe
+C:\Users\Administrator\AppData\Local\Programs\Keyviz\unins000.exe
+C:\Users\Administrator\AppData\Local\Programs\easytshark\Uninstall EasyTshark.exe
+C:\Program Files\SakuraFrpLauncher\unins000.exe
+C:\Program Files\SakuraFrpLauncher\SakuraFrpService.exe
+C:\智语AI客服\unins000.exe
+C:\Program Files (x86)\Apowersoft\ApowerMirror\unins000.exe
+C:\Users\Administrator\AppData\Local\Temp\~nsu3.tmp\Un.exe
+C:\Program Files (x86)\pcsuite\uninst.exe
+C:\Users\Administrator\AppData\Local\Temp\~nsu4.tmp\Un.exe
+\Device\HarddiskVolume3\Program Files (x86)\pcsuite\vivoesService\x64\vivoesService_x64.exe
+\Device\HarddiskVolume3\Program Files (x86)\pcsuite\vivoControl\depends\vivo_remote_watch.exe
+\Device\HarddiskVolume3\Program Files (x86)\pcsuite\SyncService\vivoSyncService.exe
+C:\Program Files (x86)\pcsuite\pcsuite_.exe
+C:\Users\Administrator\Downloads\skprSetup3.0.0.27_ceo.exe
+C:\Program Files (x86)\SysCeo\skpr\Skpr.exe
+C:\Users\Administrator\AppData\Local\Temp\89A09BBF-61A6-4375-8AB1-8CB3FEA2E763\DismHost.exe
+\Device\HarddiskVolume3\Program Files (x86)\SysCeo\skpr\Plugin\dcres\aria2c.exe
+C:\Program Files (x86)\SysCeo\skpr\Plugin\dcres\DcCounter.exe
+C:\Users\Administrator\Downloads\sp165842.exe
+C:\SWSetup\sp165842\Setup.exe
+C:\SWSetup\sp165842\InstallHPSA.exe
+\Device\HarddiskVolume3\SWSetup\sp165842\Fusion\SysInfoCap.exe
+\Device\HarddiskVolume3\SWSetup\sp165842\Fusion\AppHelperCap.exe
+C:\SWSetup\sp165842\Fusion\NetworkCap.exe
+C:\SWSetup\sp165842\Fusion\DiagsCap.exe
+\Device\HarddiskVolume3\Program Files\HP\HP Enabling Services\SysInfoCap.exe
+\Device\HarddiskVolume3\Program Files\HP\HP Enabling Services\AppHelperCap.exe
+\Device\HarddiskVolume3\Program Files\HP\HP Enabling Services\NetworkCap.exe
+\Device\HarddiskVolume3\Program Files\HP\HP Enabling Services\DiagsCap.exe
+C:\Program Files\HP\HP Enabling Services\SysInfoCap.exe
+C:\Program Files\HP\HP Enabling Services\AppHelperCap.exe
+C:\Program Files\HP\HP Enabling Services\NetworkCap.exe
+C:\Program Files\HP\HP Enabling Services\DiagsCap.exe
+\Device\HarddiskVolume3\Program Files\HP\HP Enabling Services\BridgeCommunication.exe
+C:\SWSetup\sp165842\UninstallHPSA.exe
+C:\Users\Administrator\AppData\Local\Temp\F394BB7E-932B-404B-8423-6C32F8A6EA5B\DismHost.exe
+C:\Program Files\HP\HP Enabling Services\BridgeCommunication.exe
+C:\Users\Administrator\AppData\Local\Temp\D87CEA61-E0DC-42B4-AC2C-19AEE9D6EDFF\DismHost.exe
+C:\Users\Administrator\AppData\Local\Temp\D9DF3143-CB96-440F-A8E4-269D2058969E\DismHost.exe
+C:\Users\Administrator\.vscode\extensions\devsense.intelli-php-vscode-0.12.17700-win32-x64\out\server\intelliphp.ls.exe
+C:\Users\Administrator\.vscode\extensions\devsense.phptools-vscode-1.63.18172-win32-x64\out\server\devsense.php.ls.exe
+\Device\HarddiskVolume3\Users\Administrator\Desktop\WeChatLauncher.exe
+\Device\HarddiskVolume3\Program Files\Git\usr\bin\file.exe
+C:\Users\Administrator\AppData\Local\Temp\FD82495F-84DB-4E4C-8498-A4D3F59E4D0A\DismHost.exe
+\Device\HarddiskVolume3\Program Files\WindowsApps\3AD8A913.49937325EFC59_1.0.16.0_x64__j4r74wbqry4cc\NotifyExtension\NotifyExtension.exe
+C:\Users\Administrator\Downloads\ecloud_newf_7.2.0_setup.exe
+C:\Users\Administrator\AppData\Local\Temp\ecloud\ecloud_setup_web.exe
+C:\Program Files\ecloud\VC_redist.x64.exe
+C:\Program Files\ecloud\eCloud.exe
+\Device\HarddiskVolume3\Program Files\ecloud\eCloud.exe
+\Device\HarddiskVolume3\Program Files\WinRAR\WinRAR.exe
+C:\Program Files\WindowsApps\Microsoft.WindowsCalculator_11.2409.0.0_x64__8wekyb3d8bbwe\CalculatorApp.exe
+\Device\HarddiskVolume3\Program Files (x86)\Microsoft\EdgeUpdate\Install\{80B27407-5554-478C-B992-A2DE53056764}\MicrosoftEdge_X64_143.0.3650.75_143.0.3650.66.exe
+\Device\HarddiskVolume3\Program Files (x86)\Microsoft\EdgeUpdate\Install\{80B27407-5554-478C-B992-A2DE53056764}\EDGEMITMP_E558E.tmp\setup.exe
+C:\Users\Administrator\AppData\Local\Temp\1D662E97-7BBE-4C22-A011-34CC766C3592\DismHost.exe
+\Device\HarddiskVolume3\Program Files (x86)\Microsoft\EdgeUpdate\Install\{84017AF9-EAAE-451E-A6AE-9604F0CE0486}\MicrosoftEdge_X64_143.0.3650.80_143.0.3650.75.exe
+\Device\HarddiskVolume3\Program Files (x86)\Microsoft\EdgeUpdate\Install\{84017AF9-EAAE-451E-A6AE-9604F0CE0486}\EDGEMITMP_48410.tmp\setup.exe
+\Device\HarddiskVolume3\Program Files (x86)\Microsoft\EdgeUpdate\Install\{A7CC0DE7-E675-4C97-B3CC-B1919DE644F7}\MicrosoftEdge_X64_143.0.3650.80_142.0.3595.94.exe
+\Device\HarddiskVolume3\Program Files (x86)\Microsoft\EdgeUpdate\Install\{A7CC0DE7-E675-4C97-B3CC-B1919DE644F7}\EDGEMITMP_0555E.tmp\setup.exe
+C:\Users\Administrator\AppData\Local\Temp\5023E53D-70FA-4157-9CCD-B6D7F7A01F0A\DismHost.exe
+C:\Users\Administrator\Desktop\test\__debug_bin.exe
+C:\Users\Administrator\Desktop\WDBak\WDBak.exe
+C:\Users\Administrator\AppData\Local\Temp\235D67CF-AEDA-48AB-B817-A549AF73C018\DismHost.exe
+C:\Program Files (x86)\Microsoft\Edge\Temp\scoped_dir11728_1871326670\old_msedge.exe
+C:\Users\Administrator\Downloads\aDrive-6.9.1.exe
+C:\Users\Administrator\Desktop\自动更新V30.exe
+C:\Users\Administrator\Desktop\New folder (3)\自动更新V30.exe
+C:\Users\Administrator\AppData\Local\Temp\Rar$EXa19828.14456.rartemp\TK助手V1.87.exe
+C:\Users\Administrator\Desktop\New folder (3)\TK助手V1.87.exe
+C:\Users\Administrator\Desktop\BandicamPortable\BandicamPortable.exe
+\Device\HarddiskVolume3\Users\Administrator\AppData\Local\Temp\Bandicam.tmp\bdcam.exe
+C:\Users\Administrator\Desktop\BandicamPortable\App\Bandicam\bdcam.exe
+\Device\HarddiskVolume3\Users\Administrator\Desktop\New folder (3)\TK助手V1.87.exe
+C:\Users\Administrator\Downloads\[如果打不开 PCL 请安装这个运行环境] .NET Framework 4.6.2.exe
+C:\Users\Administrator\Downloads\pcl2启动器.exe
+C:\Program Files\pcl2\打不开点我.exe
+C:\Users\Administrator\AppData\Local\Temp\2C6E2EB6-75B5-4CE9-9368-8345E81742EC\DismHost.exe
+C:\Program Files\Calibre2\calibre.exe
+C:\Program Files\Calibre2\calibre-parallel.exe
+C:\Program Files\Calibre2\app\bin\pdfinfo.exe
+\Device\HarddiskVolume3\Program Files\Calibre2\app\bin\pdfinfo.exe
+C:\Program Files\Calibre2\app\bin\pdftoppm.exe
+C:\Users\Administrator\Downloads\恐龙快打 原版\恐龙快打\nebula.exe
+C:\Program Files\Huorong\Sysdiag\bin\FileShred.exe
+C:\Users\Administrator\Downloads\神雕侠侣\EAGLE\Dosbox.exe
+C:\Program Files\Python311\Scripts\pip.exe
+C:\Users\Administrator\.cargo\bin\rustup.exe
+\Device\HarddiskVolume3\Users\Administrator\.rustup\toolchains\stable-x86_64-pc-windows-msvc\bin\rustc.exe
+\Device\HarddiskVolume3\Users\Administrator\.cargo\bin\rustup.exe
+C:\Program Files\Python311\Scripts\playwright.exe
+C:\Program Files\Python311\Lib\site-packages\playwright\driver\node.exe
+C:\Users\Administrator\AppData\Local\ms-playwright\chromium-1200\chrome-win64\chrome.exe
+\Device\HarddiskVolume3\Users\Administrator\AppData\Local\ms-playwright\chromium-1200\chrome-win64\chrome.exe
+C:\Users\Administrator\AppData\Local\Temp\AC84F2E6-DF64-4C37-AE9C-8ADC0BB99502\DismHost.exe
+C:\Users\Administrator\Desktop\die_win64_portable_3.10_x64\die.exe
+C:\Users\Administrator\Desktop\工具箱\图吧工具箱\图吧工具箱202502\tools\硬盘工具\DiskGenius\DiskGenius.exe
+C:\Users\Administrator\Downloads\ToDesk_4.8.4.0.exe
+C:\Program Files\ToDesk\CoreToolsMgrHelper.exe
+C:\Program Files\ToDesk\ToDesk.exe
+\Device\HarddiskVolume3\Program Files\ToDesk\ToDesk.exe
+C:\Users\Administrator\AppData\Local\Temp\2BBC4728-2CE1-4A6B-817D-B815D8062065\DismHost.exe
+C:\Users\Administrator\Downloads\WePE_32_V1.3.exe
+\Device\HarddiskVolume3\Users\Administrator\AppData\Local\Temp\nssC151.tmp\bcdedit.exe
+C:\Users\Administrator\AppData\Local\Temp\nssC151.tmp\GetDrive.exe
+C:\Users\Administrator\AppData\Local\Temp\nssC151.tmp\oscdimg.exe
+C:\Program Files\7-Zip\7zG.exe
+C:\Users\Administrator\Downloads\Win7离线助手_Lwz56_1.0.2.3_给win7离线注入USB3.0和NVME驱动！~\Win7离线助手\Win7离线助手.exe
+\Device\HarddiskVolume3\Program Files (x86)\Microsoft\EdgeUpdate\Install\{9F0E124B-B4F8-4C71-9A3A-296F2F5DE0F9}\MicrosoftEdgeUpdateSetup_X86_1.3.213.7.exe
+\Device\HarddiskVolume3\Program Files (x86)\Microsoft\Temp\EU6EB5.tmp\MicrosoftEdgeUpdate.exe
+\Device\HarddiskVolume3\Program Files (x86)\Microsoft\EdgeUpdate\1.3.213.7\MicrosoftEdgeUpdateComRegisterShell64.exe
+C:\111111\WePE_64_V1.3.exe
+\Device\HarddiskVolume3\Users\Administrator\AppData\Local\Temp\nstFD0E.tmp\bcdedit.exe
+C:\Users\Administrator\AppData\Local\Temp\nstFD0E.tmp\oscdimg.exe
+\Device\HarddiskVolume3\Users\Administrator\Desktop\test\__debug_bin.exe
+C:\Users\Administrator\AppData\Local\Temp\Rar$EXa19036.37485.rartemp\Dism\Dism++x64.exe
+C:\Users\Administrator\Desktop\ReSys\ReSys.exe
+C:\Users\Administrator\AppData\Local\Temp\nso5DD.tmp\bcdedit.exe
+C:\Users\Administrator\AppData\Local\Temp\Rar$EXa15488.37926.rartemp\UniExtract\UniExtractUpdater_NoAdmin.exe
+C:\Users\Administrator\AppData\Local\Temp\Rar$EXa15488.37926.rartemp\UniExtract\UniExtract.exe
+C:\Users\Administrator\Desktop\UniExtract\UniExtract.exe
+C:\Users\Administrator\Desktop\UniExtract\bin\exeinfope.exe
+\Device\HarddiskVolume3\Users\Administrator\Desktop\UniExtract\bin\x64\7z.exe
+C:\Users\Administrator\Desktop\UniExtract\bin\x64\7z.exe
+C:\Users\Administrator\Desktop\UniExtract\bin\mtee.exe
+\Device\HarddiskVolume3\Users\Administrator\Desktop\UniExtract\UniExtractUpdater_NoAdmin.exe
+\Device\HarddiskVolume3\Users\Administrator\Desktop\UniExtract\bin\PEiD.exe
+C:\Users\Administrator\Desktop\UniExtract\bin\PEiD.exe
+C:\Users\Administrator\Desktop\UniExtract\bin\trid.exe
+\Device\HarddiskVolume3\Program Files\7-Zip\7z.exe
+C:\Program Files\7-Zip\7z.exe
+C:\111111\WePE_64_V2.3.exe
+\Device\HarddiskVolume3\Users\Administrator\AppData\Local\Temp\nstEADC.tmp\bcdedit.exe
+\Device\HarddiskVolume3\Users\Administrator\AppData\Local\Temp\nsd4272.tmp\bcdedit.exe
+\Device\HarddiskVolume3\Users\Administrator\AppData\Local\Temp\nsf6EA2.tmp\bcdedit.exe
+C:\Users\Administrator\Desktop\7za.exe
+\Device\HarddiskVolume3\Users\Administrator\Desktop\7za.exe
+\Device\HarddiskVolume3\Users\Administrator\Desktop\ReSys\7za.exe
+\Device\HarddiskVolume3\111111\7za.exe
+\Device\HarddiskVolume3\Program Files\7-Zip\Uninstall.exe
+C:\Users\Administrator\AppData\Local\Temp\7zF2DE6374\Uninst.exe
+C:\Users\Administrator\Downloads\7z2501.exe
+C:\111111\7z.exe
+C:\Users\Administrator\AppData\Local\Temp\Rar$EXa19120.27520.rartemp\HotPE_Client.exe
+C:\Users\Administrator\Desktop\New folder (4)\HotPE_Client.exe
+C:\Users\Administrator\Desktop\New folder (4)\resources\tools\BOOTICE.exe
+C:\Users\Administrator\Desktop\UPX Shell 6.0.3【UPX_1.2.0-5.0.2】.exe
+C:\Users\Administrator\AppData\Local\Temp\7ZipSfx.000\UPX Shell\UPXShell.exe
+\Device\HarddiskVolume3\Users\Administrator\Desktop\New folder (4)\HotPE_Client.exe
+\Device\HarddiskVolume3\Users\Administrator\AppData\Local\Temp\7ZipSfx.000\UPX Shell\Upx\UPX v1.20.exe
+\Device\HarddiskVolume3\Users\Administrator\AppData\Local\Temp\7ZipSfx.000\UPX Shell\Upx\UPX v3.91.exe
+C:\Users\Administrator\Desktop\Dism++x86.exe
+C:\Users\Administrator\Desktop\Dism++x64.exe
+\Device\HarddiskVolume3\Users\Administrator\Desktop\Dism++x86.exe
+C:\Users\Administrator\Desktop\dism++.exe
+\Device\HarddiskVolume3\Users\Administrator\AppData\Local\Temp\RarSFX4\Dism++x86.exe
+C:\Users\Administrator\AppData\Local\Temp\RarSFX4\Dism++x64.exe
+C:\Program Files\Reqable\Reqable.exe
+C:\Users\Administrator\AppData\Local\Temp\Rar$EXa12956.23248.rartemp\CGI-plus_x86_x64_自适应.exe
+\Device\HarddiskVolume3\Users\Administrator\AppData\Local\Temp\Rar$EXa12956.23248.rartemp\CGI-plus_x86_x64_自适应.exe
+\Device\HarddiskVolume3\Users\Administrator\AppData\Local\Temp\~7042585392072998812\wimlib-imagex.exe
+C:\Users\Administrator\Desktop\工具箱\New folder\新建文件夹\360极速浏览器.exe
+C:\Users\Administrator\Desktop\工具箱\New folder\新建文件夹\360chrome.exe
+\Device\HarddiskVolume3\Users\Administrator\AppData\Local\Temp\7ZipSfx.000\360chrome.exe
+\Device\HarddiskVolume3\Users\Administrator\AppData\Local\Temp\7ZipSfx.001\360chrome.exe
+\Device\HarddiskVolume3\Program Files (x86)\ByteDance\抖店工作台\抖店工作台.exe
+\Device\HarddiskVolume3\Program Files (x86)\Microsoft\EdgeUpdate\Install\{45E352FA-3E39-40B9-826E-1BE9B0CDBF73}\MicrosoftEdge_X64_143.0.3650.96_143.0.3650.80.exe
+\Device\HarddiskVolume3\Program Files (x86)\Microsoft\EdgeUpdate\Install\{45E352FA-3E39-40B9-826E-1BE9B0CDBF73}\EDGEMITMP_0355A.tmp\setup.exe
+\Device\HarddiskVolume3\Program Files (x86)\Microsoft\EdgeUpdate\Install\{B6FB45EA-5DC4-405F-859B-436383EA4B47}\MicrosoftEdge_X64_143.0.3650.96_143.0.3650.80.exe
+\Device\HarddiskVolume3\Program Files (x86)\Microsoft\EdgeUpdate\Install\{B6FB45EA-5DC4-405F-859B-436383EA4B47}\EDGEMITMP_4CDE3.tmp\setup.exe
+C:\Users\Administrator\AppData\Local\Temp\993E0CB7-6BD9-4D1F-97BA-305E02457D90\DismHost.exe
+C:\Users\Administrator\Desktop\工具箱\New folder\ReSys.exe
+C:\Users\Administrator\Desktop\test\test.exe
+\Device\HarddiskVolume3\Users\Administrator\Desktop\test\test.exe
+C:\Program Files (x86)\ByteDance\抖店工作台\1.0.19\tt_crash_reporter.exe
+C:\Users\Administrator\AppData\Local\Temp\8B98E75C-5A08-415A-8BF5-26E496C9E00A\DismHost.exe
+C:\Users\Administrator\Downloads\easytshark_1.0.2_20251123100349_setup.exe
+C:\Program Files\easytshark\easytshark.exe
+C:\Users\Administrator\Downloads\Wireshark-4.6.2-x64.exe
+C:\Program Files\Wireshark\vc_redist.x64.exe
+C:\Program Files\Wireshark\npcap-1.83.exe
+C:\Program Files\Npcap\Uninstall.exe
+C:\Program Files\Npcap\NPFInstall.exe
+\Device\HarddiskVolume3\Program Files\Npcap\NPFInstall.exe
+C:\Users\Administrator\AppData\Local\Temp\nsv2F99.tmp\NPFInstall.exe
+C:\Program Files\Wireshark\USBPcapSetup-1.5.4.0.exe
+\Device\HarddiskVolume3\Program Files\USBPcap\USBPcapCMD.exe
+\Device\HarddiskVolume3\Program Files\easytshark\tshark_server_helper.exe
+C:\Program Files\easytshark\tshark_server.exe
+C:\Users\Administrator\AppData\Local\Temp\054F3A90-C029-48B6-B5F1-5EBD0F36FA57\DismHost.exe
+C:\Program Files\easytshark\tshark_server_helper.exe
+C:\Program Files\Wireshark\tshark.exe
+C:\Program Files\Wireshark\extcap\etwdump.exe
+\Device\HarddiskVolume3\Program Files\Wireshark\extcap\etwdump.exe
+C:\Program Files\Wireshark\dumpcap.exe
+\Device\HarddiskVolume3\Program Files\Wireshark\editcap.exe
+\Device\HarddiskVolume3\Program Files\Wireshark\dumpcap.exe
+\Device\HarddiskVolume3\Program Files\Wireshark\tshark.exe
+\Device\HarddiskVolume3\ProgramData\EasyRC\wimlib.EXE
+\Device\HarddiskVolume3\ProgramData\EasyRC\QiiPECMD.exe
+C:\ProgramData\EasyRC\QiiAria2c.exe
+C:\Program Files\Wireshark\editcap.exe
+C:\Users\Administrator\Downloads\优捷易系统下载工具.exe
+C:\Users\Administrator\Desktop\ReSys\tools\7z.exe
+C:\Program Files (x86)\7-Zip\7zFM.exe
+C:\Users\Administrator\AppData\Local\Temp\3F94F0CE-6E85-4B4D-A131-D9E39D7EEEBA\DismHost.exe
+C:\Users\Administrator\Desktop\ReSys\tools\wimlib-imagex.exe
+C:\Program Files\Git\usr\bin\file.exe
+\Device\HarddiskVolume3\Program Files (x86)\Microsoft\EdgeUpdate\Install\{26149D3F-4FD9-40C1-B651-377CD3825892}\MicrosoftEdgeUpdateSetup_X86_1.3.215.9.exe
+\Device\HarddiskVolume3\Program Files (x86)\Microsoft\Temp\EU77EB.tmp\MicrosoftEdgeUpdate.exe
+\Device\HarddiskVolume3\Program Files (x86)\Microsoft\EdgeUpdate\1.3.215.9\MicrosoftEdgeUpdateComRegisterShell64.exe
+C:\Users\Administrator\AppData\Local\app_shell_cache_1215\app_package_f24cc36f93.exe
+C:\Users\Administrator\AppData\Local\Temp\A16C91C9-B8D0-4BB9-AC31-B9DB32E9E60F\DismHost.exe
+C:\Program Files (x86)\ByteDance\抖店工作台\1.0.20\app_shell_updater.exe
+C:\Program Files (x86)\ByteDance\抖店工作台\1.0.20\elevation_service.exe
+C:\Program Files (x86)\ByteDance\抖店工作台\1.0.20\doudian.exe
+\Device\HarddiskVolume3\Program Files (x86)\ByteDance\抖店工作台\1.0.20\doudian.exe
+\Device\HarddiskVolume3\Users\Administrator\AppData\Local\Temp\nsdA6FC.tmp\bcdedit.exe
+\Device\HarddiskVolume3\Users\Administrator\AppData\Local\Temp\nsn540.tmp\bcdedit.exe
+C:\Users\Administrator\AppData\Local\Temp\nsn540.tmp\oscdimg.exe
+C:\Users\Administrator\Desktop\New folder (2)\WePE\Program Files\DiskGenius\DiskGenius.exe
+C:\Users\Administrator\AppData\Local\Temp\DiskGenius64.exe
+C:\Users\Administrator\AppData\Local\Temp\9DB8138F-5C92-4FDF-94D6-2FE7B4DF79B5\DismHost.exe
+\Device\HarddiskVolume3\Users\Administrator\Desktop\MBR2GPT.EXE
+C:\Users\Administrator\AppData\Local\Temp\Rar$EXa2980.37092.rartemp\傲梅分区助手.exe
+\Device\HarddiskVolume3\Users\Administrator\AppData\Local\Temp\is-A5T88.tmp\aman.exe
+\Device\HarddiskVolume3\Program Files (x86)\AOMEI Partition Assistant\loaddrv.exe
+C:\Program Files (x86)\AOMEI Partition Assistant\PartAssist.exe
+C:\Users\Administrator\AppData\Local\Temp\is-A5T88.tmp\ga4.exe
+C:\Program Files (x86)\AOMEI Partition Assistant\aman.exe
+C:\Program Files (x86)\AOMEI Partition Assistant\amanhlp.exe
+C:\Program Files (x86)\AOMEI Partition Assistant\ga4.exe
+\Device\HarddiskVolume3\Program Files (x86)\AOMEI Partition Assistant\amanhlp.exe
+C:\Users\Administrator\AppData\Local\Temp\Rar$EXa17340.14920.rartemp\sgdisk64.exe
+\Device\HarddiskVolume3\Users\Administrator\Desktop\ReSys\tools\wimlib-imagex.exe
+C:\Users\Administrator\AppData\Local\Temp\40603EB9-6442-4FFC-87E1-0BA9342B0ECD\DismHost.exe
+C:\Users\Administrator\Desktop\工具箱\图吧工具箱\图吧工具箱202502\tools\其他工具\Dism++\Dism++x64.exe
+C:\Users\Administrator\AppData\Local\Temp\8DD28791-ED9E-40CB-865E-1BA48FEEE647\DismHost.exe
+C:\WePE_64_V2.3.exe
+C:\Users\Administrator\AppData\Local\Temp\nsd8030.tmp\bcdedit.exe
+C:\Temp\Program Files\WepeGuide\WepeGuide.exe
+C:\Users\Administrator\Desktop\ReSys\tools\BOOTICE.exe
+C:\Program Files (x86)\HiSuite\HiSuite.exe
+C:\Users\Administrator\AppData\Local\Temp\E0F64089-998F-40F4-BA7C-96BA85A7CC3F\DismHost.exe
+C:\Program Files (x86)\ByteDance\抖店工作台\1.0.20\dump_reporter.exe
+\Device\HarddiskVolume3\Users\Administrator\AppData\Local\Temp\nsh5B66.tmp\bcdedit.exe
+C:\Users\Administrator\AppData\Local\Temp\nsh5B66.tmp\oscdimg.exe
+C:\WePE_32_V2.3.exe
+C:\Users\Administrator\AppData\Local\Temp\nsbA00A.tmp\bcdedit.exe
+C:\Users\Administrator\AppData\Local\Temp\nsbA00A.tmp\oscdimg.exe
+C:\WePE_32_V1.3.exe
+\Device\HarddiskVolume3\Users\Administrator\AppData\Local\Temp\nshF318.tmp\bcdedit.exe
+C:\Users\Administrator\AppData\Local\Temp\nshF318.tmp\oscdimg.exe
+C:\WePE_64_V1.3.exe
+\Device\HarddiskVolume3\Users\Administrator\AppData\Local\Temp\nsj1B88.tmp\bcdedit.exe
+C:\Users\Administrator\AppData\Local\Temp\nsj1B88.tmp\oscdimg.exe
+\Device\HarddiskVolume3\Users\Administrator\AppData\Local\Temp\nsn91D8.tmp\bcdedit.exe
+C:\Users\Administrator\AppData\Local\Temp\nsn91D8.tmp\oscdimg.exe
+C:\Users\Administrator\AppData\Local\Temp\8D35492C-F666-47A8-83DF-7C5B8E766618\DismHost.exe
+C:\Users\Administrator\Downloads\block-ads-inst1.1.exe
+C:\Users\Administrator\Desktop\ReSys\tools\PECMD.EXE
+\Device\HarddiskVolume3\Users\Administrator\Desktop\ReSys\tools\hdd.exe
+\Device\HarddiskVolume3\Users\Administrator\Desktop\ReSys\tools\fbplus.exe
+\Device\HarddiskVolume3\Users\Administrator\Desktop\ReSys\tools\CxDir.exe
+\Device\HarddiskVolume3\Users\Administrator\Desktop\ReSys\tools\BootMode.exe
+C:\Users\Administrator\AppData\Local\Temp\1A96BB3A-CEEA-4839-A7DE-9586A28139BB\DismHost.exe
+C:\Program Files\Internet Explorer\iexplore.exe
+C:\Program Files (x86)\Internet Explorer\iexplore.exe
+C:\Users\Administrator\AppData\Local\Temp\1ADBE8FC-DA5D-4657-A005-5D4C93D89CD3\DismHost.exe
+C:\Users\Administrator\AppData\Local\Temp\7ZipSfx.001\UPX Shell\UPXShell.exe
+C:\Users\Administrator\AppData\Local\Temp\7ZipSfx.001\UPX Shell\Upx\UPX v3.91.exe
+\Device\HarddiskVolume3\Users\Administrator\AppData\Local\Temp\7ZipSfx.001\UPX Shell\Upx\UPX v3.91.exe
+C:\Users\Administrator\Desktop\Windows7Games_for_Windows_11_10_8.exe
+C:\Users\Administrator\AppData\Local\Temp\2376FE3C-A8DF-44E4-A9B8-A8EFEE4C13B4\DismHost.exe
+C:\Users\Administrator\Downloads\PartAssist.6.3.exe
+C:\Users\Administrator\AppData\Local\Temp\PartAssist\PartAssist.exe
+C:\Users\Administrator\Desktop\Bandicam\PartAssist.exe
+C:\Users\Administrator\AppData\Local\Temp\7ZipSfx.001\PartAssist.exe
+C:\Users\Administrator\Desktop\工具箱\New folder\New folder\Defrag.exe
+C:\Users\Administrator\Desktop\工具箱\New folder\New folder\PartAssist.exe
+\Device\HarddiskVolume3\Users\Administrator\Desktop\New folder (4)\7z.exe
+C:\Program Files (x86)\7-Zip\7zG.exe
+C:\Users\Administrator\Downloads\vs_BuildTools.exe
+C:\Users\Administrator\AppData\Local\Temp\64cc04bb79e4b915c142c6b147\vs_bootstrapper_d15\vs_setup_bootstrapper.exe
+C:\Users\Administrator\AppData\Local\Temp\343abf676502bc2c121cc94129\vs_bootstrapper_d15\vs_setup_bootstrapper.exe
+C:\Program Files (x86)\Microsoft Visual Studio\Installer\setup.exe
+\Device\HarddiskVolume3\Program Files (x86)\Microsoft Visual Studio\Installer\vs_installer.windows.exe
+\Device\HarddiskVolume3\ProgramData\Microsoft\VisualStudio\Packages\Microsoft.Build.UnGAC,version=18.0.5.2556406,chip=neutral,language=neutral\Microsoft.Build.UnGAC.exe
+\Device\HarddiskVolume3\ProgramData\Microsoft\VisualStudio\SetupWMI\MofCompiler.exe
+C:\ProgramData\Microsoft\VisualStudio\Packages\Microsoft.VisualCpp.Redist.14,version=14.50.35719,chip=x86\VC_redist.x86.exe
+C:\Program Files (x86)\Proxifier\unins000.exe
+\Device\HarddiskVolume3\Program Files (x86)\Proxifier\SysSettings32.exe
+\Device\HarddiskVolume3\Program Files (x86)\Proxifier\SysSettings64.exe
+C:\ProgramData\Package Cache\{0b5169e3-39da-4313-808e-1f9c0407f3bf}\VC_redist.x86.exe
+C:\ProgramData\Microsoft\VisualStudio\Packages\Microsoft.VisualCpp.Redist.14,version=14.50.35719,chip=x64\VC_redist.x64.exe
+C:\ProgramData\Package Cache\{d8bbe9f9-7c5b-42c6-b715-9ee898a2e515}\VC_redist.x64.exe
+\Device\HarddiskVolume3\ProgramData\Package Cache\{d8bbe9f9-7c5b-42c6-b715-9ee898a2e515}\VC_redist.x64.exe
+C:\ProgramData\Microsoft\VisualStudio\Packages\Win11SDK_10.0.26100,version=10.0.26100.14,productarch=neutral\WinSdkInstaller.exe
+C:\ProgramData\Microsoft\VisualStudio\Packages\Win11SDK_10.0.26100,version=10.0.26100.14,productarch=neutral\winsdksetup.exe
+C:\Program Files (x86)\HiSuite\uninst.exe
+C:\Users\Administrator\AppData\Local\Temp\~nsu5.tmp\Un.exe
+C:\Program Files (x86)\HiSuite\HandSetService\HSService.exe
+\Device\HarddiskVolume3\ProgramData\Microsoft\VisualStudio\Packages\Microsoft.VisualStudio.Initializer,version=18.0.11101.84\VSInitializer.exe
+\Device\HarddiskVolume3\Program Files (x86)\Microsoft Visual Studio\Installer\vswhere.exe
+\Device\HarddiskVolume3\Program Files (x86)\Windows Kits\10\bin\10.0.26100.0\x86\rc.exe
+C:\Program Files (x86)\Microsoft Visual Studio\18\BuildTools\VC\Tools\MSVC\14.50.35717\bin\Hostx86\x86\cl.exe
+C:\Program Files (x86)\Microsoft Visual Studio\18\BuildTools\VC\Tools\MSVC\14.50.35717\bin\Hostx86\x86\vctip.exe
+C:\Program Files (x86)\Microsoft Visual Studio\18\BuildTools\VC\Tools\MSVC\14.50.35717\bin\Hostx86\x86\link.exe
+\Device\HarddiskVolume3\Program Files (x86)\Microsoft Visual Studio\18\BuildTools\VC\Tools\MSVC\14.50.35717\bin\Hostx86\x86\cvtres.exe
+C:\Program Files (x86)\Microsoft Visual Studio\18\BuildTools\VC\Tools\MSVC\14.50.35717\bin\Hostx86\x86\cvtres.exe
+\Device\HarddiskVolume3\Program Files (x86)\Microsoft Visual Studio\18\BuildTools\VC\Tools\MSVC\14.50.35717\bin\Hostx86\x86\link.exe
+C:\Users\Administrator\Desktop\PAWinPE\PartAssist.exe
+C:\Users\Administrator\Downloads\PAWinPE.exe
+C:\Users\Administrator\AppData\Local\Temp\RarSFX5\PAWinPE\StartPartAssist.exe
+C:\Users\Administrator\Desktop\PAWinPE\StartPartAssist64.exe
+C:\Program Files\Huorong\Sysdiag\bin\SecAnalysis.exe
+C:\Program Files\Huorong\Sysdiag\bin\HRConfig.exe
+C:\Users\Administrator\Desktop\工具箱\New folder\PAWinPEx64\StartPartAssist.exe
+\Device\HarddiskVolume3\Users\Administrator\Desktop\StartPartAssist.exe
+\Device\HarddiskVolume3\Program Files\Huorong\Sysdiag\bin\HipsMain.exe
+\Device\HarddiskVolume3\Program Files (x86)\Microsoft Visual Studio\18\BuildTools\VC\Tools\MSVC\14.50.35717\bin\Hostx86\x86\cl.exe
+C:\Users\Administrator\AppData\Local\Temp\Rar$EXa19092.24906.rartemp\DLL函数查看.exe
+C:\Users\Administrator\AppData\Local\Temp\Rar$EXa19092.28946.rartemp\DLL函数查看.exe
+C:\Users\Administrator\AppData\Local\Temp\Rar$EXa19092.42857.rartemp\DLL函数查看.exe
+C:\Users\Administrator\AppData\Local\Temp\Rar$EXa12416.8302.rartemp\DLL函数查看.exe
+C:\Users\Administrator\Downloads\msys2-x86_64-20251213.exe
+C:\msys64\usr\bin\bash.exe
+\Device\HarddiskVolume3\msys64\usr\bin\cygpath.exe
+\Device\HarddiskVolume3\msys64\usr\bin\bash.exe
+\Device\HarddiskVolume3\msys64\usr\bin\uname.exe
+\Device\HarddiskVolume3\msys64\usr\bin\mkdir.exe
+\Device\HarddiskVolume3\msys64\usr\bin\ln.exe
+\Device\HarddiskVolume3\msys64\usr\bin\id.exe
+\Device\HarddiskVolume3\msys64\usr\bin\find.exe
+\Device\HarddiskVolume3\msys64\usr\bin\install.exe
+\Device\HarddiskVolume3\msys64\usr\bin\expr.exe
+\Device\HarddiskVolume3\msys64\usr\bin\cp.exe
+\Device\HarddiskVolume3\msys64\usr\bin\pacman-conf.exe
+\Device\HarddiskVolume3\msys64\usr\bin\env.exe
+\Device\HarddiskVolume3\msys64\usr\bin\touch.exe
+\Device\HarddiskVolume3\msys64\usr\bin\gpg.exe
+\Device\HarddiskVolume3\msys64\usr\bin\chmod.exe
+\Device\HarddiskVolume3\msys64\usr\bin\grep.exe
+\Device\HarddiskVolume3\msys64\usr\bin\awk.exe
+\Device\HarddiskVolume3\msys64\usr\bin\vercmp.exe
+\Device\HarddiskVolume3\msys64\usr\bin\wc.exe
+\Device\HarddiskVolume3\msys64\usr\bin\gpg-agent.exe
+C:\msys64\usr\bin\gpg-agent.exe
+\Device\HarddiskVolume3\msys64\usr\bin\gettext.exe
+C:\msys64\usr\bin\gpg.exe
+C:\msys64\usr\bin\pacman-conf.exe
+\Device\HarddiskVolume3\msys64\usr\bin\ngettext.exe
+C:\msys64\usr\bin\awk.exe
+C:\msys64\usr\bin\dirmngr.exe
+C:\msys64\usr\bin\gpgconf.exe
+\Device\HarddiskVolume3\msys64\usr\bin\gpgconf.exe
+\Device\HarddiskVolume3\msys64\usr\bin\gpg-connect-agent.exe
+\Device\HarddiskVolume3\msys64\usr\bin\hostname.exe
+\Device\HarddiskVolume3\msys64\usr\bin\which.exe
+\Device\HarddiskVolume3\msys64\usr\bin\locale.exe
+\Device\HarddiskVolume3\msys64\usr\bin\tzset.exe
+\Device\HarddiskVolume3\msys64\ucrt64.exe
+\Device\HarddiskVolume3\msys64\usr\bin\mintty.exe
+C:\msys64\usr\bin\mintty.exe
+\Device\HarddiskVolume3\msys64\usr\bin\cygwin-console-helper.exe
+\Device\HarddiskVolume3\msys64\usr\bin\getent.exe
+\Device\HarddiskVolume3\msys64\usr\bin\cut.exe
+C:\msys64\usr\bin\pacman.exe
+\Device\HarddiskVolume3\msys64\usr\bin\pacman.exe
+\Device\HarddiskVolume3\msys64\usr\bin\gpgsm.exe
+\Device\HarddiskVolume3\msys64\msys2.exe
+\Device\HarddiskVolume3\msys64\mingw64.exe
+\Device\HarddiskVolume3\msys64\mingw32\bin\i686-w64-mingw32-gcc.exe
+\Device\HarddiskVolume3\msys64\mingw32\lib\gcc\i686-w64-mingw32\15.2.0\cc1.exe
+\Device\HarddiskVolume3\msys64\mingw32\i686-w64-mingw32\bin\as.exe
+C:\msys64\mingw32\bin\i686-w64-mingw32-gcc.exe
+C:\msys64\mingw32\i686-w64-mingw32\bin\as.exe
+C:\Users\Administrator\AppData\Local\Temp\Rar$EXa5616.18731.rartemp\DependenciesGui.exe
+C:\Users\Administrator\Downloads\Process Monitor 4.0.exe
+C:\Users\Administrator\AppData\Local\Temp\Rar$EXa3956.13636.rartemp\DependenciesGui.exe
+C:\Users\Administrator\Desktop\test\ReSys.exe
+C:\go-legacy-win7\bin\gofmt.exe
+\Device\HarddiskVolume3\go-legacy-win7\bin\gofmt.exe
+C:\Users\Administrator\AppData\Local\Temp\A9D589B2-7A08-47A8-B747-95B78D427259\DismHost.exe
+C:\Users\Administrator\AppData\Local\Temp\0556CA78-A9EE-4234-8EE6-1AE7D3237FF4\DismHost.exe
+C:\Users\Administrator\Downloads\驱动总裁-2.20.0.3免扫码登录-色单文件版.exe
+C:\Users\Administrator\.vscode\extensions\ms-vscode.cpptools-1.29.3-win32-x64\LLVM\bin\clang-format.exe
+C:\llvm-mingw-20251216-msvcrt-x86_64\bin\clang-format.exe
+C:\Users\Administrator\.vscode\extensions\ms-vscode.cpptools-1.29.3-win32-x64\LLVM\bin\clang-tidy.exe
+C:\llvm-mingw-20251216-msvcrt-x86_64\bin\clang-tidy.exe
+C:\Users\Administrator\.vscode\extensions\ms-vscode.cpptools-1.29.3-win32-x64\bin\cpptools.exe
+C:\Users\Administrator\.vscode\extensions\ms-vscode.cpptools-1.29.3-win32-x64\bin\cpptools-srv.exe
+C:\Program Files (x86)\Microsoft Visual Studio\Installer\vswhere.exe
+C:\Program Files (x86)\Microsoft Visual Studio\18\BuildTools\VC\Tools\MSVC\14.50.35717\bin\Hostx64\x64\cl.exe
+C:\Program Files (x86)\Microsoft Visual Studio\18\BuildTools\VC\Tools\MSVC\14.50.35717\bin\Hostx64\x64\vctip.exe
+C:\Program Files (x86)\Microsoft Visual Studio\18\BuildTools\VC\Tools\MSVC\14.50.35717\bin\Hostx64\x64\link.exe
+C:\Temp\Program Files\DiskGenius\DiskGenius.exe
+\Device\HarddiskVolume3\Users\Administrator\.vscode\extensions\ms-vscode.cpptools-1.29.3-win32-x64\LLVM\bin\clang-format.exe
+\Device\HarddiskVolume3\llvm-mingw-20251216-msvcrt-x86_64\bin\clang-format.exe
+\Device\HarddiskVolume3\Users\Administrator\.vscode\extensions\ms-vscode.cpptools-1.29.3-win32-x64\LLVM\bin\clang-tidy.exe
+\Device\HarddiskVolume3\llvm-mingw-20251216-msvcrt-x86_64\bin\clang-tidy.exe
+\Device\HarddiskVolume3\Program Files (x86)\Microsoft Visual Studio\18\BuildTools\VC\Tools\MSVC\14.50.35717\bin\Hostx64\x64\link.exe
+\Device\HarddiskVolume3\Users\Administrator\Desktop\ReSys\disk\DiskTool.exe
+C:\Users\Administrator\Desktop\ReSys\disk\DiskTool.exe
+C:\Program Files (x86)\AOMEI Partition Assistant\unins000.exe
+C:\Users\Administrator\AppData\Local\Temp\is-LHT1H.tmp\ga4.exe
+C:\Users\Administrator\AppData\Local\Temp\is-LHT1H.tmp\aman.exe
+C:\Users\Administrator\AppData\Local\Temp\is-LHT1H.tmp\amanhlp.exe
+C:\Users\Administrator\Desktop\AzureTool\go\mode_test_start.exe
+C:\Users\Administrator\Desktop\AzureTool\go\tools\DrvCeonw\DrvCeo.exe
+C:\Users\Administrator\Desktop\AzureTool\go\tools\HEU_KMS_Activator.exe
+C:\Users\Administrator\AppData\Local\Temp\_temp_heu168yyds\7Z.EXE
+C:\Users\Administrator\Desktop\AzureTool\go\tools\DrvCeonw\Res\DcCounter.exe
+C:\Users\Administrator\AppData\Local\Temp\_temp_heu168yyds\x64\kms_x64.exe
+C:\Users\Administrator\AppData\Local\Temp\_temp_heu168yyds\x86\TSforge.exe
+C:\Program Files\Huorong\Sysdiag\bin\HipsLog.exe
+C:\Users\Administrator\Desktop\工具箱\New folder\DrvCeonw\DrvCeo.exe
+C:\Users\Administrator\Desktop\工具箱\New folder\DrvCeonw\Res\Xunlei\download\MiniThunderPlatform.exe
+C:\111111\4300\显示适配器\c7135822.inf_amd64_b96a9c9c136fd242\B134676\atibtmon.exe
+\Device\HarddiskVolume3\111111\4300\显示适配器\c7135822.inf_amd64_b96a9c9c136fd242\B134676\atiapfxx.exe
+\Device\HarddiskVolume3\Users\Administrator\Desktop\AzureTool\go\tools\360net.exe
+C:\Users\Administrator\Desktop\AzureTool\go\tools\360safe\netmon\360NetRepair.exe
+\Device\HarddiskVolume3\Users\Administrator\AppData\Local\Temp\7ZipSfx.001\UPX Shell\Upx\UPX_v5.02.exe
+\Device\HarddiskVolume3\Users\Administrator\AppData\Local\Temp\7ZipSfx.001\UPX Shell\Upx\UPX_v5.00.exe
+\Device\HarddiskVolume3\Users\Administrator\AppData\Local\Temp\7ZipSfx.001\UPX Shell\Upx\UPX_v4.00.exe
+C:\Users\Administrator\AppData\Local\Temp\7ZipSfx.001\UPX Shell\Upx\UPX_v3.91.exe
+C:\Users\Administrator\Desktop\ReSys\tools\New folder\DrvCeo.exe
+C:\Users\Administrator\Desktop\ReSys\tools\New folder\Res\Xunlei\download\MiniThunderPlatform.exe
+C:\Users\Administrator\Desktop\New folder (2)\ReSys.exe
+C:\Users\Administrator\Desktop\AzureTool\go\__debug_bin.exe
+C:\Users\Administrator\Desktop\AzureTool\go\tools\DrvCeonw\Res\Xunlei\download\MiniThunderPlatform.exe
+\Device\HarddiskVolume3\Users\Administrator\AppData\Local\Temp\_temp_heu168yyds\7Z.EXE
+C:\Users\Administrator\Desktop\AzureTool\go\tools\360net.exe
+C:\Users\Administrator\Desktop\AzureTool\go\tools\SunloginSOS.exe
+C:\Users\Administrator\Desktop\AzureTool\go\tools\蓝屏分析诊断工具V2.52.6001401.exe
+\Device\HarddiskVolume3\Program Files (x86)\IQIYI Video\GeePlayer\5.1.55.4941\GeePlayer.exe
+C:\Users\Administrator\Desktop\AzureTool\go\azuretool.exe
+\Device\HarddiskVolume3\Users\Administrator\AppData\Local\Temp\7ZipSfx.001\UPX Shell\Upx\UPX_v3.91.exe
+C:\Users\Administrator\Desktop\New folder (3)\azuretool.exe
+C:\Users\Administrator\Desktop\New folder (3)\tools\UninstallTool.exe
+\Device\HarddiskVolume3\Users\Administrator\Desktop\New folder (3)\tools\UninstallTool.exe
+C:\Users\Administrator\AppData\Local\Temp\~5487088307438291473\UninstallTool.exe
+C:\Users\Administrator\AppData\Local\Temp\~5487088307438291473\UninstallToolHelper.exe
+C:\Users\Administrator\Desktop\AzureTool\电脑助手\mcp\geek.exe
+C:\Users\Administrator\Desktop\工具箱\geek.exe
+C:\Users\Administrator\Downloads\GeekUninstaller v1.5.1.163 单文件版.exe
+C:\Users\Administrator\Desktop\New folder (3)\tools\ReSys.exe
+C:\Users\Administrator\AppData\Local\Temp\323B8DDE-4081-4679-802F-7DEE0CC8B41B\DismHost.exe
+\Device\HarddiskVolume3\msys64\mingw32\bin\python.exe
+\Device\HarddiskVolume3\msys64\mingw32\bin\python3.12.exe
+\Device\HarddiskVolume3\msys64\mingw32\bin\python3.exe
+C:\Users\Administrator\.rustup\toolchains\stable-x86_64-pc-windows-msvc\bin\rustc.exe
+C:\msys64\mingw32\bin\python.exe
+C:\Users\Administrator\AppData\Local\MCSTools\uninstall.exe
+C:\Users\Administrator\AppData\Local\Package Cache\{1da2e09b-199c-4def-9a99-93a8c1b8ddf2}\python-3.11.9-amd64.exe
+C:\Program Files (x86)\SysCeo\skpr\UninsFile\uninst.exe
+C:\Users\Administrator\AppData\Local\Temp\~skpruninst.exe
+C:\Program Files\Microsoft Games\unwin7games.exe
+C:\Users\Administrator\AppData\Local\Temp\uninst.exe
+C:\Users\Administrator\Downloads\python-3.14.2-amd64.exe
+C:\Program Files\Python314\python.exe
+C:\ProgramData\Package Cache\F2313EA45F8923FBC1863450CC95F1E1E770095A\py.exe
+C:\Program Files\Python314\Scripts\pip.exe
+\Device\HarddiskVolume3\Program Files\Python314\python.exe
+C:\Program Files\Python314\Lib\site-packages\playwright\driver\node.exe
+C:\Program Files\Python314\pythonw.exe
+C:\Program Files (x86)\SogouInput\15.3.0.1781\SGMyInput.exe
+C:\Program Files (x86)\SogouInput\15.3.0.1781\SGWebRender.exe
+\Device\HarddiskVolume3\Program Files (x86)\SogouInput\15.3.0.1781\SGWebRender.exe
+C:\Users\Administrator\AppData\Local\ms-playwright\winldd-1007\PrintDeps.exe
+\Device\HarddiskVolume3\Users\Administrator\AppData\Local\ms-playwright\winldd-1007\PrintDeps.exe
+C:\Users\Administrator\AppData\Local\ms-playwright\chromium_headless_shell-1200\chrome-headless-shell-win64\chrome-headless-shell.exe
+C:\Users\Administrator\AppData\Local\ms-playwright\firefox-1497\firefox\firefox.exe
+\Device\HarddiskVolume3\Users\Administrator\AppData\Local\ms-playwright\firefox-1497\firefox\firefox.exe
+C:\Users\Administrator\AppData\Local\ms-playwright\webkit-2227\Playwright.exe
+C:\Users\Administrator\AppData\Local\ms-playwright\webkit-2227\WebKitNetworkProcess.exe
+C:\Users\Administrator\AppData\Local\ms-playwright\webkit-2227\WebKitGPUProcess.exe
+C:\Users\Administrator\AppData\Local\ms-playwright\webkit-2227\WebKitWebProcess.exe
+C:\Program Files (x86)\ByteDance\抖店工作台\1.0.20\抖店工作台_doctor.exe
+C:\Program Files (x86)\ByteDance\抖店工作台\1.0.20\tt_crash_reporter.exe
+\Device\HarddiskVolume3\Program Files (x86)\ByteDance\抖店工作台\1.0.20\parfait_crash_handler.exe
+\Device\HarddiskVolume3\Program Files (x86)\ByteDance\抖店工作台\1.0.20\dump_reporter.exe
+C:\Program Files (x86)\ByteDance\抖店工作台\1.0.20\resources\elevate.exe
+C:\Program Files (x86)\ByteDance\抖店工作台\1.0.20\resources\app.asar.unpacked\electron\libs\SeraphSetup.exe
+C:\Users\Administrator\AppData\Local\Temp\TmpSec\feige_edragent_setup_5.3.1.359.exe
+\Device\HarddiskVolume3\Program Files (x86)\edrAgent\edrservice.exe
+C:\Program Files (x86)\ByteDance\抖店工作台\1.0.20\resources\app.asar.unpacked\electron\libs\aha-doctor\aha_doctor.exe
+C:\Program Files (x86)\ByteDance\抖店工作台\1.0.20\resources\app.asar.unpacked\electron\libs\aha-doctor\task_host.exe
+C:\Program Files (x86)\ByteDance\抖店工作台\1.0.20\resources\app.asar.unpacked\electron\libs\aha-doctor\xperf.exe
+\Device\HarddiskVolume3\Program Files (x86)\ByteDance\抖店工作台\1.0.20\resources\app.asar.unpacked\electron\libs\aha-doctor\xperf.exe
+C:\Users\Administrator\AppData\Local\Temp\Rar$EXa15808.28738.rartemp\客服助手\客服助手.exe
+C:\Users\Administrator\Desktop\客服助手\客服助手.exe
+C:\Users\Administrator\AppData\Local\Temp\ZipExtractor.exe
+C:\Users\Administrator\Desktop\客服助手\kfzs.exe
+C:\Users\Administrator\Downloads\迅雷精简版.exe
+C:\Users\Administrator\AppData\Local\Temp\7ZipSfx.001\Program\Thunder.exe
+C:\Users\Administrator\AppData\Local\Temp\7ZipSfx.001\Program\SDK\DownloadSDKServer.exe
+C:\Users\Administrator\Desktop\New folder (2)\在线升级.exe
+C:\Users\Administrator\Desktop\New folder (2)\dyStart.exe
+C:\Users\Administrator\Desktop\New folder (2)\DyServer.exe
+C:\Users\Administrator\Desktop\New folder (2)\Libs\CefSharp.BrowserSubprocess.exe
+C:\Users\Administrator\.vscode\extensions\devsense.phptools-vscode-1.64.18270-win32-x64\out\server\devsense.php.ls.exe
+\Device\HarddiskVolume3\Users\Administrator\Desktop\ReSys\wrapper\PartAssist.exe
+C:\Users\Administrator\Desktop\ReSys\wrapper\xx.exe
+C:\Users\Administrator\AppData\Local\Temp\7ZipSfx.002\PartAssist.exe
+C:\Users\Administrator\AppData\Local\Temp\7ZipSfx.002\SetupGreen64.exe
+\Device\HarddiskVolume3\Users\Administrator\AppData\Local\Temp\7ZipSfx.002\LoadDrv_x64.exe
+\Device\HarddiskVolume3\Users\Administrator\AppData\Local\Temp\7ZipSfx.002\SetupGreen64.exe
+C:\Users\Administrator\Desktop\ReSys\wrapper\PartAssist.exe
+C:\Users\Administrator\Desktop\ReSys\wrapper\7z.exe
+C:\Users\Administrator\Desktop\ReSys\wrapper\pa_runtime\PartAssist.exe
+C:\Users\Administrator\Desktop\ReSys\tools\PartAssist.exe
+C:\Users\Administrator\Desktop\ReSys\tools\pa_runtime\PartAssist.exe
+\Device\HarddiskVolume3\Users\Administrator\Desktop\ReSys\tools\7z.exe
+\Device\HarddiskVolume3\Users\Administrator\.vscode\extensions\ms-vscode.cpptools-1.29.3-win32-x64\bin\cpptools.exe
+C:\111111\逍遥笔手写.exe
+C:\Users\Administrator\Downloads\WinSW-x64.exe
+C:\Users\Administrator\AppData\Local\Temp\Rar$EXa10172.28225.rartemp\nssm-2.24\win32\nssm.exe
+C:\Users\Administrator\Desktop\AzureTool\go\updata\updata.exe
+C:\Users\Administrator\Desktop\AzureTool\go\updata\__debug_bin.exe
+C:\Users\Administrator\AppData\Local\Temp\7ZipSfx.002\UPX Shell\UPXShell.exe
+C:\Users\Administrator\Desktop\AzureTool\go\mode_test.exe
+C:\Users\Administrator\AppData\Local\Temp\2F1696F8-EFCC-4D37-98C5-3EE5F1BED42A\DismHost.exe
+\Device\HarddiskVolume3\Program Files\Python314\Lib\site-packages\playwright\driver\node.exe
+C:\Users\Administrator\AppData\Local\Temp\5AEDD23A-EA0B-451D-9CF4-892A56A413D3\DismHost.exe
+C:\Users\Administrator\Downloads\validrive.exe
+C:\Users\Administrator\Desktop\自动回复\chrome\chrome.exe
+\Device\HarddiskVolume3\Users\Administrator\Desktop\自动回复\chrome\chrome.exe
+C:\Users\Administrator\Desktop\自动回复\chrome\143.0.7499.170\os_update_handler.exe
+\Device\HarddiskVolume3\Users\Administrator\Desktop\自动回复\chrome\143.0.7499.170\os_update_handler.exe
+C:\Users\Administrator\AppData\Local\Temp\DF338F0C-2BAE-4667-878D-698ED7B879F8\DismHost.exe
+C:\Users\Administrator\AppData\Local\Temp\6017BB90-3B6D-45E2-8618-89AE4611F801\DismHost.exe
+C:\Program Files\Huorong\Sysdiag\bin\PopBlock.exe
+C:\Users\Administrator\Desktop\New folder (2)\wrapper.exe
+\Device\HarddiskVolume3\Users\Administrator\Desktop\New folder (2)\wrapper.exe
+C:\Users\Administrator\AppData\Local\Temp\30ACE67C-95AE-4695-B32E-3A40E47E9580\DismHost.exe
+C:\Users\Administrator\Desktop\block-ads\block-ads-ui\__debug_bin.exe
+\Device\HarddiskVolume3\Program Files (x86)\Microsoft\EdgeUpdate\Install\{F3DA4DE3-0F9F-4FDC-8051-7171ADDEE14B}\MicrosoftEdge_X64_143.0.3650.139_143.0.3650.96.exe
+\Device\HarddiskVolume3\Program Files (x86)\Microsoft\EdgeUpdate\Install\{F3DA4DE3-0F9F-4FDC-8051-7171ADDEE14B}\EDGEMITMP_A86AB.tmp\setup.exe
+C:\Users\Administrator\AppData\Local\Temp\F53FCC16-9956-48D4-A3F6-B1621E20AE2E\DismHost.exe
+\Device\HarddiskVolume3\php\php.exe
+C:\php\php.exe
+C:\Users\Administrator\AppData\Local\Temp\9B5516AD-C931-4B9F-9621-58163F3FE99B\DismHost.exe
+\Device\HarddiskVolume3\Users\Administrator\AppData\Local\Temp\go-build708916733\b001\exe\createjson.exe
+C:\Users\Administrator\AppData\Local\Temp\7ZipSfx.002\UPX Shell\Upx\UPX_v3.91.exe
+\Device\HarddiskVolume3\Users\Administrator\AppData\Local\Temp\7ZipSfx.002\UPX Shell\Upx\UPX_v3.91.exe

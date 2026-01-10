@@ -26,6 +26,31 @@ var lstMap = map[string]string{
 	"signWhite": "Wsign.txt",
 }
 
+var upUrl = []string{
+	"http://127.0.0.1:8080/upload",
+	"https://api.ttraw.com/block-ads/upload",
+}
+
+type upDat struct {
+	Time  string `json:"time"`
+	Items upItm  `json:"items"`
+}
+type upItm struct {
+	Desk []string `json:"desktop"`
+	Proc []string `json:"process"`
+	Run  upRun    `json:"run"`
+	Un   upUn     `json:"un"`
+	Menu []string `json:"menu"`
+}
+type upRun struct {
+	Usr []string `json:"USER"`
+	Mac []string `json:"MACHINE"`
+}
+type upUn struct {
+	X64 []string `json:"64"`
+	X32 []string `json:"32"`
+}
+
 const (
 	noteFile    = "note.txt"
 	exeName     = "block-ads.exe"
@@ -59,6 +84,108 @@ func stopAd(dir string) error {
 	_ = os.WriteFile(p, []byte{}, 0644)
 
 	return nil
+}
+
+func selMap(req map[string]interface{}) map[string]bool {
+	out := map[string]bool{}
+	if req == nil {
+		return out
+	}
+	v, ok := req["sel"]
+	if !ok {
+		return out
+	}
+	arr, ok := v.([]interface{})
+	if !ok {
+		return out
+	}
+	for _, it := range arr {
+		s, ok := it.(string)
+		if !ok {
+			continue
+		}
+		s = strings.ToLower(strings.TrimSpace(s))
+		if s != "" {
+			out[s] = true
+		}
+	}
+	return out
+}
+
+func getUrl(req map[string]interface{}) []string {
+	if req == nil {
+		return upUrl
+	}
+	v, ok := req["urls"]
+	if !ok {
+		return upUrl
+	}
+	arr, ok := v.([]interface{})
+	if !ok {
+		return upUrl
+	}
+	out := make([]string, 0, len(arr))
+	for _, it := range arr {
+		s, ok := it.(string)
+		if !ok {
+			continue
+		}
+		s = strings.TrimSpace(s)
+		if s != "" {
+			out = append(out, s)
+		}
+	}
+	if len(out) == 0 {
+		return upUrl
+	}
+	return out
+}
+
+func mkUp(sel map[string]bool, kws []string) upDat {
+	tm := strconv.FormatInt(time.Now().Unix(), 10)
+	var wg sync.WaitGroup
+
+	desk := []string{}
+	proc := []string{}
+	menu := []string{}
+	runU := []string{}
+	runM := []string{}
+	un64 := []string{}
+	un32 := []string{}
+
+	if sel["desktop"] {
+		wg.Add(1)
+		go func() { defer wg.Done(); desk = utils.DeskLst() }()
+	}
+	if sel["process"] {
+		wg.Add(1)
+		go func() { defer wg.Done(); proc = utils.ProcLst(kws) }()
+	}
+	if sel["startup"] {
+		wg.Add(1)
+		go func() { defer wg.Done(); runU, runM = utils.RunLst() }()
+	}
+	if sel["uninstall"] {
+		wg.Add(1)
+		go func() { defer wg.Done(); un64, un32 = utils.UnLst() }()
+	}
+	if sel["startmenu"] {
+		wg.Add(1)
+		go func() { defer wg.Done(); menu = utils.MenuLst() }()
+	}
+
+	wg.Wait()
+
+	return upDat{
+		Time: tm,
+		Items: upItm{
+			Desk: desk,
+			Proc: proc,
+			Run:  upRun{Usr: runU, Mac: runM},
+			Un:   upUn{X64: un64, X32: un32},
+			Menu: menu,
+		},
+	}
 }
 
 func newDat(dir string) *appDat {
@@ -624,7 +751,7 @@ func dw1(k reg.Key, name string) error {
 }
 
 func main() {
-	
+
 	if len(os.Args) >= 3 && os.Args[1] == "--apply-update" {
 		if err := AppPend(os.Args[2]); err != nil {
 			fmt.Println("apply update failed:", err)
@@ -742,7 +869,45 @@ func main() {
 	_ = w.Bind("doSync", func(req map[string]interface{}) (bool, error) {
 		return dat.DoSyn(req)
 	})
-	// 异步：检测更新/同步（后台 goroutine 执行，完成后回调 JS，避免卡 UI）
+	_ = w.Bind("doUp", func(req map[string]interface{}) (bool, error) {
+		go func() {
+			sel := selMap(req)
+			if len(sel) == 0 {
+				sel = map[string]bool{
+					"desktop": true, "process": true, "startup": true,
+					"uninstall": true, "startmenu": true,
+				}
+			}
+
+			dat.mu.Lock()
+			kws := append([]string(nil), dat.lst["folder"]...)
+			dat.mu.Unlock()
+
+			up := mkUp(sel, kws)
+			b, err := json.Marshal(up)
+			url := ""
+			if err == nil {
+				url, err = utils.UpPost(getUrl(req), b)
+			}
+			payload := map[string]interface{}{
+				"ok":  err == nil,
+				"err": "",
+				"url": url,
+			}
+			if err != nil {
+				payload["err"] = err.Error()
+			}
+			jb, _ := json.Marshal(payload)
+			js := fmt.Sprintf(
+				`(function(){ if (typeof window.__onUp === "function") { window.__onUp(%s); } })();`,
+				string(jb),
+			)
+			w.Dispatch(func() { w.Eval(js) })
+		}()
+		return true, nil
+	})
+
+	// 检测更新/同步
 	_ = w.Bind("chkUpdAsync", func() (bool, error) {
 		go func() {
 			info, err := dat.ChkUpd()
