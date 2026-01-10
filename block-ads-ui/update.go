@@ -26,11 +26,11 @@ import (
 var (
 	updUrls = []string{
 		"https://raw.githubusercontent.com/AzureIvory/block-ads/refs/heads/main/update/update.json",
-		"https://api.ttraw.com/black-ads/update.json",
+		"https://api.ttraw.com/block-ads/update.json",
 	}
 	synUrls = []string{
 		"https://raw.githubusercontent.com/AzureIvory/block-ads/refs/heads/main/update/sync.json",
-		"https://api.ttraw.com/black-ads/sync.json",
+		"https://api.ttraw.com/block-ads/sync.json",
 	}
 )
 
