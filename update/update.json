@@ -1,0 +1,89 @@
+{
+    "version": "1.2",
+    "updated_at": "2026-1-10",
+    "Msupported_version": "1.0",
+    "mandatory": "False",
+    "notes": "1.2版本\n优化UI\n新增同步/更新功能\n新增上传数据功能",
+    "items": {
+        "Code.exe": {
+            "path": "Code.exe",
+            "md5": "2f5ff2265e9b2620bf9d068a8c9d1ba8",
+            "size": "15",
+            "run": "False",
+            "url": [
+                "https://raw.githubusercontent.com/AzureIvory/block-ads/refs/heads/main/update/update/Code.exe",
+                "https://api.ttraw.com/block-ads/update/Code.exe"
+            ]
+        },
+        "Ui.exe": {
+            "path": "Ui.exe",
+            "md5": "6596ddf2ce9eb1cb32eac68815887793",
+            "size": "2519",
+            "run": "False",
+            "url": [
+                "https://raw.githubusercontent.com/AzureIvory/block-ads/refs/heads/main/update/update/Ui.exe",
+                "https://api.ttraw.com/block-ads/update/Ui.exe"
+            ]
+        },
+        "block-ads.exe": {
+            "path": "block-ads.exe",
+            "md5": "256fba76aec22a9a3fa58deca6d8b334",
+            "size": "2020",
+            "run": "False",
+            "url": [
+                "https://raw.githubusercontent.com/AzureIvory/block-ads/refs/heads/main/update/update/block-ads.exe",
+                "https://api.ttraw.com/block-ads/update/block-ads.exe"
+            ]
+        },
+        "icon.ico": {
+            "path": "icon.ico",
+            "md5": "f5e14c4cd326e9cc696e3dcdc4107b3f",
+            "size": "43",
+            "run": "False",
+            "url": [
+                "https://raw.githubusercontent.com/AzureIvory/block-ads/refs/heads/main/update/update/icon.ico",
+                "https://api.ttraw.com/block-ads/update/icon.ico"
+            ]
+        },
+        "index.html": {
+            "path": "index.html",
+            "md5": "a98d2834d52d5d652456fb8f601b75ec",
+            "size": "16",
+            "run": "False",
+            "url": [
+                "https://raw.githubusercontent.com/AzureIvory/block-ads/refs/heads/main/update/update/index.html",
+                "https://api.ttraw.com/block-ads/update/index.html"
+            ]
+        },
+        "main.js": {
+            "path": "main.js",
+            "md5": "09b9f0c9cb0c24d3dbdf9e93f250a9dc",
+            "size": "42",
+            "run": "False",
+            "url": [
+                "https://raw.githubusercontent.com/AzureIvory/block-ads/refs/heads/main/update/update/main.js",
+                "https://api.ttraw.com/block-ads/update/main.js"
+            ]
+        },
+        "style.css": {
+            "path": "style.css",
+            "md5": "8e84957a96ec928e5543cc3d4f01104f",
+            "size": "16",
+            "run": "False",
+            "url": [
+                "https://raw.githubusercontent.com/AzureIvory/block-ads/refs/heads/main/update/update/style.css",
+                "https://api.ttraw.com/block-ads/update/style.css"
+            ]
+        },
+        "wait.gif": {
+            "path": "wait.gif",
+            "md5": "4cead765e50ad07900242e6733d1c771",
+            "size": "298",
+            "run": "False",
+            "url": [
+                "https://raw.githubusercontent.com/AzureIvory/block-ads/refs/heads/main/update/update/wait.gif",
+                "https://api.ttraw.com/block-ads/update/wait.gif"
+            ]
+        }
+    }
+}
