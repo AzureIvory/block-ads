@@ -3,8 +3,8 @@
 > 本项目用于在 Windows 上基于**目录**与**签名**规则，对特定程序的运行进行拦截或放行，并提供可视化管理界面（WebView2）。
 
 ## 下载地址
-> [蓝奏云](https://bluered.lanzouo.com/iUDUv3bu73rc)
-> [Release](https://github.com/AzureIvory/block-ads/releases/tag/Release)
+> [蓝奏云](https://bluered.lanzouv.com/ih2bc3fug7jg)
+> [Release](https://github.com/AzureIvory/block-ads/releases)
 
 ## 文件说明
 
@@ -28,19 +28,22 @@
 
 ![卸载](tools/uninst.gif)
 
+## UI展示
+
+![UI](tools/UI.PNG)
+
 ---
 
 
 ## 使用说明
 ### 运行环境
-- Windows 7以上
+- Windows 7及以上
 - 需要安装 **WebView2 Runtime**
 
 ### 快速开始
 1. 安装 WebView2 Runtime。
 2. 解压发布包后，运行 `UI.exe`。
-3. 在 UI 中配置黑名单/白名单。
-4. 点击“启动”启用拦截；需要临时放行时可点击“停止”，再将目标程序目录/签名加入白名单后重新启动。
+3. 点击“启动”启用拦截；需要临时放行时可点击“停止”，再将目标程序目录/签名加入白名单后重新启动。
 
 ### 通过拦截记录定位软件
 - 在拦截记录列表中双击条目，可定位对应程序/路径
