@@ -74,11 +74,13 @@ function modalHide(id) {
 }
 
 
-// 全局等待弹窗
+// 全局等待弹窗 
 let __waitTok = 0;
 let __waitCur = 0;
 let __updWait = 0;
 let __syncWait = 0;
+let __staBusy = false;
+let __tmSta = 0, __tmLog = 0;
 
 function waitShow(text, mode) {
   const w = document.getElementById("waitOverlay");
@@ -125,6 +127,14 @@ function waitDone(tok, text, isErr) {
   }
 }
 
+// 仅关闭弹窗，不中断后台任务
+function waitDismiss() {
+  __waitCur = 0;
+  __updWait = 0;
+  __syncWait = 0;
+  waitHide();
+}
+
 function initWaitOverlay() {
   const w = document.getElementById("waitOverlay");
   if (!w) return;
@@ -132,7 +142,7 @@ function initWaitOverlay() {
   w.addEventListener("click", function (e) {
     const t = e.target;
     if (t === w || (t && t.classList && t.classList.contains("wait-mask"))) {
-      waitHide();
+      waitDismiss();
     }
   });
 
@@ -141,7 +151,7 @@ function initWaitOverlay() {
     btn.addEventListener("click", function (e) {
       e.preventDefault();
       e.stopPropagation();
-      waitHide(); // 只隐藏弹窗
+      waitDismiss();
     });
   }
 }
@@ -197,11 +207,32 @@ let pendingSyncShowMsg = false;
 
 let upBusy = false;
 
+window.__onDoUpd = function (res) {
+  const ok = !!(res && res.ok);
+  if (ok) {
+    const started = !!(res && res.started);
+    const txt = started ? "已启动更新流程，界面将关闭并更新。" : "未执行更新。";
+    if (__updWait) waitDone(__updWait, txt, false);
+    setMsg(txt, false);
+  } else {
+    const txt = "更新失败: " + (res && res.err ? res.err : "unknown");
+    if (__updWait) waitDone(__updWait, txt, true);
+    setMsg(txt, true);
+  }
+  __updWait = 0;
+};
+
+// 异步检查更新回调 chkUpdAsync -> window.__onChkUpd
 window.__onChkUpd = function (res) {
   const ok = !!(res && res.ok);
   if (ok) {
     renderUpd(res.info);
-    const txt = res && res.info && res.info.has_update ? "发现新版本。" : "已是最新版本。";
+
+    let txt = "已检查更新。";
+    const info = res && res.info;
+    if (info && info.has_update) txt = "发现新版本。";
+    else txt = "已是最新版本。";
+
     if (__updWait) waitDone(__updWait, txt, false);
     if (pendingUpdShowMsg) setMsg(txt, false);
   } else {
@@ -209,8 +240,14 @@ window.__onChkUpd = function (res) {
     if (__updWait) waitDone(__updWait, txt, true);
     if (pendingUpdShowMsg) setMsg(txt, true);
   }
+
   pendingUpdShowMsg = false;
   __updWait = 0;
+};
+
+window.__onStChk = function (s) {
+  __staBusy = false;
+  if (s) updSta(s);
 };
 
 window.__onChkSync = function (res) {
@@ -351,15 +388,6 @@ function renderSync(info) {
   applySyncPolicyUI();
 }
 
-function syncFilterApply() {
-  const inp = document.getElementById("syncFilter");
-  const q = ((inp && inp.value) || "").trim().toLowerCase();
-  document.querySelectorAll("#syncList .u-item").forEach((el) => {
-    const txt = el.innerText.toLowerCase();
-    el.style.display = !q || txt.includes(q) ? "" : "none";
-  });
-}
-
 function syncSelectedCacheFromUI() {
   const ids = Array.from(document.querySelectorAll(".sync-item"))
     .filter((cb) => cb.checked)
@@ -456,7 +484,7 @@ async function checkUpdate(showMsg) {
 
   try {
     // 异步
-    if (typeof window.chkUpdAsync === "function") {
+    if (typeof window.chkUpdAsync === "function" && typeof window.__onChkUpd === "function") {
       pendingUpdShowMsg = !!showMsg;
       if (shouldPopup) {
         __updWait = waitStart("检测更新");
@@ -503,19 +531,16 @@ async function doUpdateNow(force) {
   }
   try {
     const __tok = waitStart("更新中...");
+    __updWait = __tok;
     await nextFrame();
     setMsg("更新中...", false);
-    const ok = await callMaybe("doUpd");
-    if (ok) {
-      setMsg("已启动更新流程。", false);
-    } else {
-      setMsg("未执行更新（可能已是最新）。", false);
-    }
-    if (__tok === __waitCur) waitHide();
+    await callMaybe("doUpdAsync");
   } catch (e) {
     console.error(e);
-    setMsg("更新失败: " + e, true);
-    if (__tok === __waitCur) waitShow("更新失败: " + (e && e.message ? e.message : String(e)), "error");
+    const txt = "更新失败: " + (e && e.message ? e.message : String(e));
+    setMsg(txt, true);
+    if (__updWait) waitDone(__updWait, txt, true);
+    __updWait = 0;
   }
 }
 
@@ -781,14 +806,30 @@ function selIdx(idx) {
 // 解析日志
 function pLog(line) {
   const ps = (line || "").split("--");
-  if (ps.length < 5) return null;
-  return {
-    t: ps[0],
-    k: ps[1],
-    v: ps[2],
-    m: ps[3],
-    p: ps.slice(4).join("--"),
-  };
+  if (ps.length >= 5) {
+    return {
+      t: ps[0],
+      k: ps[1],
+      v: ps[2],
+      m: ps[3],
+      p: ps.slice(4).join("--"),
+    };
+  }
+  if (ps.length === 4) {
+    return { t: ps[0], k: ps[1], v: ps[2], m: "", p: ps[3] };
+  }
+  if (ps.length === 3) {
+    return { t: ps[0], k: ps[1], v: "", m: "", p: ps[2] };
+  }
+  return null;
+}
+
+//提取文件名
+function baseName(p) {
+  const s = (p || "").trim();
+  if (!s) return "";
+  const ps = s.split(/[/\\]/);
+  return ps[ps.length - 1] || s;
 }
 
 // 定位文件
@@ -798,7 +839,9 @@ function logOpen(p) {
     setMsg("未绑定文件打开函数。", true);
     return;
   }
-  opSel(p).catch(function (e) {
+  opSel(p).then(function (ok) {
+    if (!ok) setMsg("定位失败：文件可能已被删除/隔离。", true);
+  }).catch(function (e) {
     console.error(e);
     setMsg("打开失败: " + e, true);
   });
@@ -847,7 +890,6 @@ function rendLog() {
     const it = pLog(line);
     const li = document.createElement("li");
     li.className = "log-row";
-    li.title = line;
 
     if (!it) {
       li.textContent = line;
@@ -855,7 +897,8 @@ function rendLog() {
       return;
     }
 
-    li.dataset.path = it.p || "";
+    const fullPath = (it.p || it.v || "").trim();
+    li.dataset.path = fullPath;
     li.dataset.kind = it.k || "";
     li.dataset.val = it.v || "";
 
@@ -883,35 +926,47 @@ function rendLog() {
       }
     }
 
+    // 注释
+    const noteMap = st.note || {};
+    const noteTxt = (val && Object.prototype.hasOwnProperty.call(noteMap, val))
+      ? (noteMap[val] || "")
+      : "";
+
     const dot = document.createElement("div");
     dot.className = "dot " + dotCls;
+    dot.title = status;
 
     const tm = document.createElement("div");
     tm.className = "log-time";
     tm.textContent = "[" + (it.t || "") + "]";
 
-    const proc = document.createElement("div");
-    proc.className = "log-proc";
-    proc.textContent = it.m || (it.k || "");
-
     const path = document.createElement("div");
     path.className = "log-path";
-    path.textContent = it.p || it.v || "";
+    path.textContent = baseName(fullPath);
+    path.title = fullPath;
 
-    const stx = document.createElement("div");
-    stx.className = "log-status";
-    stx.textContent = "- " + status;
+    const note = document.createElement("div");
+    note.className = "log-note";
+    if (noteTxt) {
+      note.textContent = noteTxt;
+      note.title = noteTxt;
+    } else {
+      note.textContent = "无注释";
+      note.title = "无注释";
+      note.classList.add("muted");
+    }
 
     li.appendChild(dot);
     li.appendChild(tm);
-    li.appendChild(proc);
     li.appendChild(path);
-    li.appendChild(stx);
+    li.appendChild(note);
 
+    // 双击定位
     li.addEventListener("dblclick", function () {
       const p = this.dataset.path || "";
       if (p) logOpen(p);
     });
+
     li.addEventListener("contextmenu", function (e) {
       e.preventDefault();
       const p = this.dataset.path || "";
@@ -1315,8 +1370,6 @@ function initUI() {
   if (btnSyncCheck) btnSyncCheck.addEventListener("click", () => checkSync(true));
   const btnSyncGo = document.getElementById("btnSyncGo");
   if (btnSyncGo) btnSyncGo.addEventListener("click", doSyncNow);
-  const syncFilter = document.getElementById("syncFilter");
-  if (syncFilter) syncFilter.addEventListener("input", syncFilterApply);
   document.addEventListener("change", function (e) {
     const t = e.target;
     if (t && t.name === "syncPolicy") {
@@ -1443,9 +1496,16 @@ function swTab(key) {
 // 定时刷新运行状态
 async function refSta() {
   try {
-    const s = await stChk();
-    updSta(s);
+    if (typeof window.stChkAsync === "function") {
+      if (__staBusy) return;
+      __staBusy = true;
+      callMaybe("stChkAsync");
+      return;
+  }
+  const s = await stChk();
+  updSta(s);
   } catch (e) {
+    __staBusy = false;
     console.error("状态检查失败", e);
   }
 }
@@ -1471,8 +1531,8 @@ async function boot() {
     updListHead();
 
     setMsg("", false);
-    setInterval(refLog, 5000);
-    setInterval(refSta, 4000);
+    __tmLog = setInterval(refLog, 5000);
+    __tmSta = setInterval(refSta, 4000);
 
     // 默认有更新时自动打开更新窗口
     setUpdPolicy(getUpdPolicy());

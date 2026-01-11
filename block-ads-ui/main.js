@@ -806,14 +806,30 @@ function selIdx(idx) {
 // 解析日志
 function pLog(line) {
   const ps = (line || "").split("--");
-  if (ps.length < 5) return null;
-  return {
-    t: ps[0],
-    k: ps[1],
-    v: ps[2],
-    m: ps[3],
-    p: ps.slice(4).join("--"),
-  };
+  if (ps.length >= 5) {
+    return {
+      t: ps[0],
+      k: ps[1],
+      v: ps[2],
+      m: ps[3],
+      p: ps.slice(4).join("--"),
+    };
+  }
+  if (ps.length === 4) {
+    return { t: ps[0], k: ps[1], v: ps[2], m: "", p: ps[3] };
+  }
+  if (ps.length === 3) {
+    return { t: ps[0], k: ps[1], v: "", m: "", p: ps[2] };
+  }
+  return null;
+}
+
+//提取文件名
+function baseName(p) {
+  const s = (p || "").trim();
+  if (!s) return "";
+  const ps = s.split(/[/\\]/);
+  return ps[ps.length - 1] || s;
 }
 
 // 定位文件
@@ -823,7 +839,9 @@ function logOpen(p) {
     setMsg("未绑定文件打开函数。", true);
     return;
   }
-  opSel(p).catch(function (e) {
+  opSel(p).then(function (ok) {
+    if (!ok) setMsg("定位失败：文件可能已被删除/隔离。", true);
+  }).catch(function (e) {
     console.error(e);
     setMsg("打开失败: " + e, true);
   });
@@ -872,7 +890,6 @@ function rendLog() {
     const it = pLog(line);
     const li = document.createElement("li");
     li.className = "log-row";
-    li.title = line;
 
     if (!it) {
       li.textContent = line;
@@ -880,7 +897,8 @@ function rendLog() {
       return;
     }
 
-    li.dataset.path = it.p || "";
+    const fullPath = (it.p || it.v || "").trim();
+    li.dataset.path = fullPath;
     li.dataset.kind = it.k || "";
     li.dataset.val = it.v || "";
 
@@ -908,35 +926,47 @@ function rendLog() {
       }
     }
 
+    // 注释
+    const noteMap = st.note || {};
+    const noteTxt = (val && Object.prototype.hasOwnProperty.call(noteMap, val))
+      ? (noteMap[val] || "")
+      : "";
+
     const dot = document.createElement("div");
     dot.className = "dot " + dotCls;
+    dot.title = status;
 
     const tm = document.createElement("div");
     tm.className = "log-time";
     tm.textContent = "[" + (it.t || "") + "]";
 
-    const proc = document.createElement("div");
-    proc.className = "log-proc";
-    proc.textContent = it.m || (it.k || "");
-
     const path = document.createElement("div");
     path.className = "log-path";
-    path.textContent = it.p || it.v || "";
+    path.textContent = baseName(fullPath);
+    path.title = fullPath;
 
-    const stx = document.createElement("div");
-    stx.className = "log-status";
-    stx.textContent = "- " + status;
+    const note = document.createElement("div");
+    note.className = "log-note";
+    if (noteTxt) {
+      note.textContent = noteTxt;
+      note.title = noteTxt;
+    } else {
+      note.textContent = "无注释";
+      note.title = "无注释";
+      note.classList.add("muted");
+    }
 
     li.appendChild(dot);
     li.appendChild(tm);
-    li.appendChild(proc);
     li.appendChild(path);
-    li.appendChild(stx);
+    li.appendChild(note);
 
+    // 双击定位
     li.addEventListener("dblclick", function () {
       const p = this.dataset.path || "";
       if (p) logOpen(p);
     });
+
     li.addEventListener("contextmenu", function (e) {
       e.preventDefault();
       const p = this.dataset.path || "";

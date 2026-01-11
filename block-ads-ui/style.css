@@ -225,9 +225,15 @@ body {
 .dot-amber { background: #f59e0b; }
 .dot-green { background: #22c55e; }
 .log-time { color: #64748b; font-variant-numeric: tabular-nums; font-size: 11px; }
-.log-proc { color: #2563eb; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .log-path { color: #0f172a; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.log-status { color: #64748b; text-align: right; white-space: nowrap; }
+.log-note {
+  text-align: right;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: #ef4444;
+}
+.log-note.muted { color: #94a3b8; }
 
 .card-foot {
   display: flex;
@@ -307,7 +313,7 @@ body {
   .btn { padding: 7px 10px; }
   .sidebar { width: 200px; }
   .table-head, .rule-row { grid-template-columns: 34px 1fr 120px; }
-  .log-row { grid-template-columns: 12px 80px 100px 1fr 100px; }
+  .log-row { grid-template-columns: 12px 88px 1fr 160px; }
 }
 
 /* 滚动条美化 */

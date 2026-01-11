@@ -1072,13 +1072,24 @@ func main() {
 	// 打开资源管理器并选中文件
 	_ = w.Bind("opSel", func(p string) (bool, error) {
 		p = strings.TrimSpace(p)
+		p = strings.Trim(p, "\"")
 		if p == "" {
-			return false, nil
+			return false, fmt.Errorf("empty path")
 		}
-		cmd := exec.Command("explorer.exe", "/select,"+p)
-		cmd.SysProcAttr = &syscall.SysProcAttr{
-			HideWindow: true,
+		// Windows 路径格式
+		p = filepath.Clean(filepath.FromSlash(p))
+
+		// 文件不存在：打开父目录并给前端一个提示
+		if _, err := os.Stat(p); err != nil {
+			dir := filepath.Dir(p)
+			if _, derr := os.Stat(dir); derr == nil {
+				_ = exec.Command("explorer.exe", dir).Start()
+				return false, fmt.Errorf("file not found, opened folder: %s", dir)
+			}
+			return false, fmt.Errorf("path not found: %s", p)
 		}
+
+		cmd := exec.Command("explorer.exe", "/select,", p)
 		if err := cmd.Start(); err != nil {
 			return false, err
 		}
