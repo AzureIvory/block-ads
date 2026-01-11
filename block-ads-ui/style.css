@@ -132,7 +132,7 @@ body {
 }
 .search { flex: 1; position: relative; }
 .ico-search { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); opacity: 0.6; font-size: 14px; }
-.inp-search { width: 100%; padding-left: 34px; }
+.inp-search { width: 100%; padding-left: 12px; }
 .toolbar-actions { display: flex; align-items: center; gap: 10px; }
 
 /* 卡片 */
@@ -259,6 +259,26 @@ body {
 }
 .chk-card:hover { background: #eff6ff; border-color: #bfdbfe; }
 .chk-card input { width: 16px; height: 16px; accent-color: var(--primary); cursor: pointer; }
+
+#mdlUpload .upload-tip {
+  font-size: 14px;
+  color: var(--muted);
+}
+
+#mdlUpload .upload-note {
+  background: #f8fafc;
+  padding: 8px;
+  border-radius: 6px;
+  border: 1px solid var(--line2);
+  font-size: 16px;      /* 让“注意”后面的字和“注意”一样大 */
+  line-height: 1.5;
+  color: #64748b;
+}
+
+#mdlUpload .upload-note-title {
+  color: #ef4444;
+  font-weight: 800;
+}
 
 /* 通用弹窗和菜单 */
 .ctx { position: fixed; z-index: 9999; min-width: 140px; background: #ffffff; border-radius: 10px; border: 1px solid var(--line); box-shadow: 0 10px 15px rgba(15,23,42,0.15); padding: 6px 0; display: none; }
@@ -404,14 +424,31 @@ body {
 
 
 /* 等待弹窗关闭按钮 */
+/* 等待弹窗关闭按钮 */
 .wait-close {
-  border: none;
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border-radius: 10px;
+  border: 1px solid var(--line);
   outline: none;
   box-shadow: none;
   appearance: none;
   -webkit-appearance: none;
-  background: rgba(255,255,255,0.9);
+  background: rgba(255, 255, 255, 0.92);
+  color: #64748b;
+  font-size: 22px;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
 }
+.wait-close:hover { background: #f8fafc; color: #0f172a; }
+.wait-close:active { transform: scale(0.98); }
 .wait-close:focus,
 .wait-close:focus-visible {
   outline: none;

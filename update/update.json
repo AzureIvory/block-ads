@@ -1,9 +1,9 @@
 {
     "version": "1.2",
-    "updated_at": "2026-1-10",
+    "updated_at": "2026-1-11",
     "Msupported_version": "1.0",
     "mandatory": "False",
-    "notes": "1.2版本\n优化UI\n新增同步/更新功能\n新增上传数据功能",
+    "notes": "1.2版本\n优化UI\n新增同步/更新功能\n新增上传数据功能。。。。。。。。1111",
     "items": {
         "Code.exe": {
             "path": "Code.exe",
@@ -11,18 +11,18 @@
             "size": "15",
             "run": "False",
             "url": [
-                "https://raw.githubusercontent.com/AzureIvory/block-ads/refs/heads/main/update/update/Code.exe",
-                "https://api.ttraw.com/block-ads/update/Code.exe"
+                "https://api.ttraw.com/block-ads/update/Code.exe",
+                "https://raw.githubusercontent.com/AzureIvory/block-ads/refs/heads/main/update/update/Code.exe"
             ]
         },
         "Ui.exe": {
             "path": "Ui.exe",
-            "md5": "6596ddf2ce9eb1cb32eac68815887793",
-            "size": "2519",
+            "md5": "93d7f768a726e00247d4f06db5214e13",
+            "size": "6734",
             "run": "False",
             "url": [
-                "https://raw.githubusercontent.com/AzureIvory/block-ads/refs/heads/main/update/update/Ui.exe",
-                "https://api.ttraw.com/block-ads/update/Ui.exe"
+                "https://api.ttraw.com/block-ads/update/Ui.exe",
+                "https://raw.githubusercontent.com/AzureIvory/block-ads/refs/heads/main/update/update/Ui.exe"
             ]
         },
         "block-ads.exe": {
@@ -31,8 +31,8 @@
             "size": "2020",
             "run": "False",
             "url": [
-                "https://raw.githubusercontent.com/AzureIvory/block-ads/refs/heads/main/update/update/block-ads.exe",
-                "https://api.ttraw.com/block-ads/update/block-ads.exe"
+                "https://api.ttraw.com/block-ads/update/block-ads.exe",
+                "https://raw.githubusercontent.com/AzureIvory/block-ads/refs/heads/main/update/update/block-ads.exe"
             ]
         },
         "icon.ico": {
@@ -41,8 +41,8 @@
             "size": "43",
             "run": "False",
             "url": [
-                "https://raw.githubusercontent.com/AzureIvory/block-ads/refs/heads/main/update/update/icon.ico",
-                "https://api.ttraw.com/block-ads/update/icon.ico"
+                "https://api.ttraw.com/block-ads/update/icon.ico",
+                "https://raw.githubusercontent.com/AzureIvory/block-ads/refs/heads/main/update/update/icon.ico"
             ]
         },
         "index.html": {
@@ -51,8 +51,8 @@
             "size": "16",
             "run": "False",
             "url": [
-                "https://raw.githubusercontent.com/AzureIvory/block-ads/refs/heads/main/update/update/index.html",
-                "https://api.ttraw.com/block-ads/update/index.html"
+                "https://api.ttraw.com/block-ads/update/index.html",
+                "https://raw.githubusercontent.com/AzureIvory/block-ads/refs/heads/main/update/update/index.html"
             ]
         },
         "main.js": {
@@ -61,8 +61,8 @@
             "size": "42",
             "run": "False",
             "url": [
-                "https://raw.githubusercontent.com/AzureIvory/block-ads/refs/heads/main/update/update/main.js",
-                "https://api.ttraw.com/block-ads/update/main.js"
+                "https://api.ttraw.com/block-ads/update/main.js",
+                "https://raw.githubusercontent.com/AzureIvory/block-ads/refs/heads/main/update/update/main.js"
             ]
         },
         "style.css": {
@@ -71,8 +71,8 @@
             "size": "16",
             "run": "False",
             "url": [
-                "https://raw.githubusercontent.com/AzureIvory/block-ads/refs/heads/main/update/update/style.css",
-                "https://api.ttraw.com/block-ads/update/style.css"
+                "https://api.ttraw.com/block-ads/update/style.css",
+                "https://raw.githubusercontent.com/AzureIvory/block-ads/refs/heads/main/update/update/style.css"
             ]
         },
         "wait.gif": {
@@ -81,8 +81,8 @@
             "size": "298",
             "run": "False",
             "url": [
-                "https://raw.githubusercontent.com/AzureIvory/block-ads/refs/heads/main/update/update/wait.gif",
-                "https://api.ttraw.com/block-ads/update/wait.gif"
+                "https://api.ttraw.com/block-ads/update/wait.gif",
+                "https://raw.githubusercontent.com/AzureIvory/block-ads/refs/heads/main/update/update/wait.gif"
             ]
         }
     }

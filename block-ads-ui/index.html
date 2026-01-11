@@ -71,7 +71,6 @@
     <main class="content">
       <div class="toolbar">
         <div class="search">
-          <span class="ico-search">搜</span>
           <input id="srch" class="inp inp-search" type="text" placeholder="搜索...">
         </div>
 
@@ -146,7 +145,7 @@
       </div>
       <div class="modal-body">
         <div style="display:flex; justify-content:space-between; align-items:center;">
-          <div class="muted">请选择需要上传的本地信息：</div>
+          <div class="upload-tip">如果发现还有流氓软件没能结束，可以将本地信息上传至服务器分析：</div>
           <label class="chk-box">
             <input type="checkbox" id="chkUpAll">
             <span>全选</span>
@@ -156,28 +155,29 @@
         <div class="chk-list-grid">
             <label class="chk-card">
                 <input type="checkbox" class="chk-upload" value="desktop">
-                <span>桌面文件名称列表</span>
+                <span>桌面文件名称列表：搜集桌面.lnk结尾的快捷方式文件名称</span>
             </label>
             <label class="chk-card">
                 <input type="checkbox" class="chk-upload" value="process">
-                <span>进程名称列表</span>
+                <span>进程名称列表：搜集非系统进程且未在名单库的进程名称</span>
             </label>
             <label class="chk-card">
                 <input type="checkbox" class="chk-upload" value="startup">
-                <span>注册表启动项列表</span>
+                <span>注册表启动项列表：搜集启动项文件名称</span>
             </label>
             <label class="chk-card">
                 <input type="checkbox" class="chk-upload" value="startmenu">
-                <span>开始菜单名称列表</span>
+                <span>开始菜单名称列表：搜集开始菜单相对路径文件夹和文件名称</span>
             </label>
             <label class="chk-card">
                 <input type="checkbox" class="chk-upload" value="uninstall">
-                <span>注册表可卸载程序列表</span>
+                <span>注册表可卸载程序列表：搜集写入注册表卸载项的文件名称</span>
             </label>
         </div>
 
-        <div class="muted" style="background:#f8fafc; padding:8px; border-radius:6px; font-size:11px; line-height:1.4; color:#64748b;">
-          <strong style="color:#ef4444; font-size:16px;">注意：</strong> 此处不会收集您的个人资料和敏感信息，仅用于完善名单库以优化拦截效果。
+        <div class="upload-note">
+          <span class="upload-note-title">注意：</span>
+          此处仅用于完善名单库以优化拦截效果，不会上传您的文件
         </div>
       </div>
       <div class="modal-foot">
@@ -199,7 +199,7 @@
           <img src="icon.ico" class="about-logo" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMjU2M2ViIiBzdHJva2Utd2lkdGg9IjIiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCI+PHBhdGggZD0iTTEyIDJMMiA3bDEwIDUgMTAtNS0xMC01ek0yIDE3bDEwIDUgMTAtNS0xMC01LTEwIDV6bTAgNWwxMCA1IDEwLTUtMTAtNS0xMCA1eiIvPjwvc3ZnPg=='">
           <div class="about-title">block-ads</div>
           <div class="about-desc">
-            简单、高效的流氓软件拦截工具。
+            简单、高效的流氓软件拦截工具
           </div>
           <div class="about-links">
             <button class="link-item" id="btnAboutGit">
@@ -238,19 +238,11 @@
           </div>
         </div>
         <div class="u-notes" id="syncNotes"></div>
-
-        <div class="u-toolbar">
-          <div class="search u-search">
-            <span class="ico-search">搜索</span>
-            <input id="syncFilter" class="inp inp-search" type="text" placeholder="搜索同步项...">
-          </div>
-        </div>
-
         <div class="u-list" id="syncList"></div>
 
         <div class="u-policy">
-          <div class="u-policy-title">未来的同步策略</div>
-          <div class="u-policy-grid" role="radiogroup" aria-label="未来的同步策略">
+          <div class="u-policy-title">同步策略</div>
+          <div class="u-policy-grid" role="radiogroup" aria-label="同步策略">
             <label class="p-card">
               <input type="radio" name="syncPolicy" value="auto_selected" checked>
               <div class="p-main">

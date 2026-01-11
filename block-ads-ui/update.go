@@ -2,6 +2,7 @@ package main
 
 import (
 	"block-ads-ui/utils"
+	"context"
 	"crypto/md5"
 	"crypto/tls"
 	"encoding/hex"
@@ -17,6 +18,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"syscall"
 	"time"
 
@@ -289,71 +291,139 @@ func getJSON(urls []string, val any) ([]byte, string, error) {
 }
 
 func dlTo(urls []string, outPth string, expMD5 string) (string, error) {
-	var lstErr error
-	for _, url := range urls {
-		if url == "" {
+	const rpt = 2
+	const stl = 10 * time.Second
+
+	if err := os.MkdirAll(filepath.Dir(outPth), 0755); err != nil {
+		return "", err
+	}
+
+	part := outPth + ".part"
+	var lst error
+
+	for _, u := range urls {
+		if u == "" {
 			continue
 		}
-		if err := os.MkdirAll(filepath.Dir(outPth), 0755); err != nil {
-			return "", err
-		}
-		part := outPth + ".part"
-		_ = os.Remove(part)
-		f, err := os.Create(part)
-		if err != nil {
-			lstErr = err
-			continue
-		}
-		h := md5.New()
-		req, err := http.NewRequest("GET", url, nil)
-		if err != nil {
-			f.Close()
-			lstErr = err
-			continue
-		}
-		req.Header.Set("User-Agent", "block-ads-ui")
-		res, err := httpCli.Do(req)
-		if err != nil {
-			f.Close()
-			lstErr = err
-			continue
-		}
-		if res.StatusCode < 200 || res.StatusCode >= 300 {
-			res.Body.Close()
-			f.Close()
-			lstErr = fmt.Errorf("http %d", res.StatusCode)
-			continue
-		}
-		_, err = io.Copy(io.MultiWriter(f, h), res.Body)
-		res.Body.Close()
-		f.Close()
-		if err != nil {
-			lstErr = err
+
+		for i := 0; i < rpt; i++ {
 			_ = os.Remove(part)
-			continue
-		}
-		got := hex.EncodeToString(h.Sum(nil))
-		if expMD5 != "" && !strings.EqualFold(strings.TrimSpace(got), strings.TrimSpace(expMD5)) {
-			lstErr = fmt.Errorf("md5 mismatch for %s", url)
-			_ = os.Remove(part)
-			continue
-		}
-		_ = os.Remove(outPth)
-		if err := os.Rename(part, outPth); err != nil {
-			// fallback to copy
-			if err2 := cpFile(part, outPth); err2 != nil {
-				lstErr = err
+
+			got, err := dl1(u, part, stl)
+			if err != nil {
+				lst = fmt.Errorf("%s: %w", u, err)
 				_ = os.Remove(part)
 				continue
 			}
-			_ = os.Remove(part)
+
+			if expMD5 != "" && !strings.EqualFold(strings.TrimSpace(got), strings.TrimSpace(expMD5)) {
+				lst = fmt.Errorf("%s: md5 mismatch", u)
+				_ = os.Remove(part)
+				continue
+			}
+
+			_ = os.Remove(outPth)
+			if err := os.Rename(part, outPth); err != nil {
+				if err2 := cpFile(part, outPth); err2 != nil {
+					lst = err
+					_ = os.Remove(part)
+					continue
+				}
+				_ = os.Remove(part)
+			}
+
+			return u, nil
 		}
-		return url, nil
 	}
-	if lstErr == nil {
-		lstErr = errors.New("download failed")
+
+	if lst == nil {
+		lst = errors.New("download failed")
 	}
-	return "", lstErr
+	return "", lst
+}
+
+func dl1(u, part string, stl time.Duration) (string, error) {
+	f, err := os.Create(part)
+	if err != nil {
+		return "", err
+	}
+	defer f.Close()
+
+	var n int64
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	req, err := http.NewRequestWithContext(ctx, "GET", u, nil)
+	if err != nil {
+		return "", err
+	}
+	req.Header.Set("User-Agent", "block-ads-ui")
+
+	res, err := httpCli.Do(req)
+	if err != nil {
+		if errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded) {
+			return "", errors.New("stall")
+		}
+		return "", err
+	}
+	defer res.Body.Close()
+
+	if res.StatusCode < 200 || res.StatusCode >= 300 {
+		return "", fmt.Errorf("http %d", res.StatusCode)
+	}
+
+	done := make(chan struct{})
+	go watch(done, &n, stl, cancel)
+	defer close(done)
+
+	h := md5.New()
+	mw := io.MultiWriter(f, h)
+	buf := make([]byte, 32*1024)
+
+	for {
+		r, er := res.Body.Read(buf)
+		if r > 0 {
+			if _, ew := mw.Write(buf[:r]); ew != nil {
+				return "", ew
+			}
+			atomic.AddInt64(&n, int64(r))
+		}
+		if er != nil {
+			if er == io.EOF {
+				return hex.EncodeToString(h.Sum(nil)), nil
+			}
+			if errors.Is(er, context.Canceled) || errors.Is(er, context.DeadlineExceeded) {
+				return "", errors.New("stall")
+			}
+			return "", er
+		}
+	}
+}
+
+func watch(done <-chan struct{}, n *int64, stl time.Duration, cancel context.CancelFunc) {
+	t := time.NewTicker(time.Second)
+	defer t.Stop()
+
+	last := atomic.LoadInt64(n)
+	lastT := time.Now()
+
+	for {
+		select {
+		case <-done:
+			return
+		case <-t.C:
+			cur := atomic.LoadInt64(n)
+			if cur != last {
+				last = cur
+				lastT = time.Now()
+				continue
+			}
+			if time.Since(lastT) >= stl {
+				cancel()
+				return
+			}
+		}
+	}
 }
 
 func cpFile(src, dst string) error {
@@ -653,7 +723,9 @@ func (d *appDat) DoUpd(wv webview.WebView) (bool, error) {
 
 	go func() {
 		time.Sleep(150 * time.Millisecond)
-		wv.Terminate()
+		wv.Dispatch(func() {
+			wv.Terminate()
+		})
 	}()
 	return true, nil
 }

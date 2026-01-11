@@ -777,6 +777,7 @@ func main() {
 		panic(err)
 	}
 	dir := filepath.Dir(exePath)
+	_ = os.Remove(filepath.Join(dir, ".updater_tmp.exe"))
 	dat := newDat(dir)
 	exe := filepath.Join(dir, exeName)
 	w := webview.New(false)
@@ -822,7 +823,37 @@ func main() {
 
 	codeExe := filepath.Join(dir, codeExeName)
 
-	// 状态检查
+	// 异步状态检查
+	_ = w.Bind("stChkAsync", func() (bool, error) {
+		go func() {
+			st := uiSta{
+				Adm:  chkAdm(),
+				Run:  chkRun(),
+				Boot: hasBootKey(runName, exe) && hasBootKey(runNameCode, codeExe),
+			}
+
+			t := "名单管理"
+			if st.Run {
+				t += " - 已运行"
+			} else {
+				t += " - 未运行"
+			}
+
+			b, _ := json.Marshal(st)
+			js := fmt.Sprintf(
+				`(function(){ if (typeof window.__onStChk === "function") { window.__onStChk(%s); } })();`,
+				string(b),
+			)
+
+			w.Dispatch(func() {
+				w.SetTitle(t)
+				w.Eval(js)
+			})
+		}()
+		return true, nil
+	})
+
+	// 同步状态检查
 	_ = w.Bind("stChk", func() (uiSta, error) {
 		st := uiSta{
 			Adm:  chkAdm(),

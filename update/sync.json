@@ -1,14 +1,14 @@
 {
-    "updated_at": "2026-1-10",
-    "notes": "1.2版本\n优化UI\n新增同步/更新功能\n新增上传数据功能",
+    "updated_at": "2026-1-11",
+    "notes": "1.2版本\n优化UI\n新增同步/更新功能\n新增上传数据功能。。。。。",
     "items": {
         "Wfolder.txt": {
             "md5": "dc4645513c94e6e60a48e4c2d2a50dc4",
             "size": "2",
             "count": "83",
             "url": [
-                "https://raw.githubusercontent.com/AzureIvory/block-ads/refs/heads/main/update/update/Wfolder.txt",
-                "https://api.ttraw.com/block-ads/update/Wfolder.txt"
+                "https://api.ttraw.com/block-ads/update/Wfolder.txt",
+                "https://raw.githubusercontent.com/AzureIvory/block-ads/refs/heads/main/update/update/Wfolder.txt"
             ]
         },
         "Wsign.txt": {
@@ -16,8 +16,8 @@
             "size": "2",
             "count": "57",
             "url": [
-                "https://raw.githubusercontent.com/AzureIvory/block-ads/refs/heads/main/update/update/Wsign.txt",
-                "https://api.ttraw.com/block-ads/update/Wsign.txt"
+                "https://api.ttraw.com/block-ads/update/Wsign.txt",
+                "https://raw.githubusercontent.com/AzureIvory/block-ads/refs/heads/main/update/update/Wsign.txt"
             ]
         },
         "folder.txt": {
@@ -25,8 +25,8 @@
             "size": "4",
             "count": "319",
             "url": [
-                "https://raw.githubusercontent.com/AzureIvory/block-ads/refs/heads/main/update/update/folder.txt",
-                "https://api.ttraw.com/block-ads/update/folder.txt"
+                "https://api.ttraw.com/block-ads/update/folder.txt",
+                "https://raw.githubusercontent.com/AzureIvory/block-ads/refs/heads/main/update/update/folder.txt"
             ]
         },
         "note.txt": {
@@ -34,8 +34,8 @@
             "size": "53",
             "count": "1281",
             "url": [
-                "https://raw.githubusercontent.com/AzureIvory/block-ads/refs/heads/main/update/update/note.txt",
-                "https://api.ttraw.com/block-ads/update/note.txt"
+                "https://api.ttraw.com/block-ads/update/note.txt",
+                "https://raw.githubusercontent.com/AzureIvory/block-ads/refs/heads/main/update/update/note.txt"
             ]
         },
         "sign.txt": {
@@ -43,8 +43,8 @@
             "size": "12",
             "count": "388",
             "url": [
-                "https://raw.githubusercontent.com/AzureIvory/block-ads/refs/heads/main/update/update/sign.txt",
-                "https://api.ttraw.com/block-ads/update/sign.txt"
+                "https://api.ttraw.com/block-ads/update/sign.txt",
+                "https://raw.githubusercontent.com/AzureIvory/block-ads/refs/heads/main/update/update/sign.txt"
             ]
         }
     }

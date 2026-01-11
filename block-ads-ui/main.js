@@ -74,11 +74,13 @@ function modalHide(id) {
 }
 
 
-// 全局等待弹窗
+// 全局等待弹窗 
 let __waitTok = 0;
 let __waitCur = 0;
 let __updWait = 0;
 let __syncWait = 0;
+let __staBusy = false;
+let __tmSta = 0, __tmLog = 0;
 
 function waitShow(text, mode) {
   const w = document.getElementById("waitOverlay");
@@ -220,6 +222,34 @@ window.__onDoUpd = function (res) {
   __updWait = 0;
 };
 
+// 异步检查更新回调 chkUpdAsync -> window.__onChkUpd
+window.__onChkUpd = function (res) {
+  const ok = !!(res && res.ok);
+  if (ok) {
+    renderUpd(res.info);
+
+    let txt = "已检查更新。";
+    const info = res && res.info;
+    if (info && info.has_update) txt = "发现新版本。";
+    else txt = "已是最新版本。";
+
+    if (__updWait) waitDone(__updWait, txt, false);
+    if (pendingUpdShowMsg) setMsg(txt, false);
+  } else {
+    const txt = "检测更新失败: " + (res && res.err ? res.err : "unknown");
+    if (__updWait) waitDone(__updWait, txt, true);
+    if (pendingUpdShowMsg) setMsg(txt, true);
+  }
+
+  pendingUpdShowMsg = false;
+  __updWait = 0;
+};
+
+window.__onStChk = function (s) {
+  __staBusy = false;
+  if (s) updSta(s);
+};
+
 window.__onChkSync = function (res) {
   const ok = !!(res && res.ok);
   if (ok) {
@@ -358,15 +388,6 @@ function renderSync(info) {
   applySyncPolicyUI();
 }
 
-function syncFilterApply() {
-  const inp = document.getElementById("syncFilter");
-  const q = ((inp && inp.value) || "").trim().toLowerCase();
-  document.querySelectorAll("#syncList .u-item").forEach((el) => {
-    const txt = el.innerText.toLowerCase();
-    el.style.display = !q || txt.includes(q) ? "" : "none";
-  });
-}
-
 function syncSelectedCacheFromUI() {
   const ids = Array.from(document.querySelectorAll(".sync-item"))
     .filter((cb) => cb.checked)
@@ -463,7 +484,7 @@ async function checkUpdate(showMsg) {
 
   try {
     // 异步
-    if (typeof window.chkUpdAsync === "function") {
+    if (typeof window.chkUpdAsync === "function" && typeof window.__onChkUpd === "function") {
       pendingUpdShowMsg = !!showMsg;
       if (shouldPopup) {
         __updWait = waitStart("检测更新");
@@ -1319,8 +1340,6 @@ function initUI() {
   if (btnSyncCheck) btnSyncCheck.addEventListener("click", () => checkSync(true));
   const btnSyncGo = document.getElementById("btnSyncGo");
   if (btnSyncGo) btnSyncGo.addEventListener("click", doSyncNow);
-  const syncFilter = document.getElementById("syncFilter");
-  if (syncFilter) syncFilter.addEventListener("input", syncFilterApply);
   document.addEventListener("change", function (e) {
     const t = e.target;
     if (t && t.name === "syncPolicy") {
@@ -1447,9 +1466,16 @@ function swTab(key) {
 // 定时刷新运行状态
 async function refSta() {
   try {
-    const s = await stChk();
-    updSta(s);
+    if (typeof window.stChkAsync === "function") {
+      if (__staBusy) return;
+      __staBusy = true;
+      callMaybe("stChkAsync");
+      return;
+  }
+  const s = await stChk();
+  updSta(s);
   } catch (e) {
+    __staBusy = false;
     console.error("状态检查失败", e);
   }
 }
@@ -1475,8 +1501,8 @@ async function boot() {
     updListHead();
 
     setMsg("", false);
-    setInterval(refLog, 5000);
-    setInterval(refSta, 4000);
+    __tmLog = setInterval(refLog, 5000);
+    __tmSta = setInterval(refSta, 4000);
 
     // 默认有更新时自动打开更新窗口
     setUpdPolicy(getUpdPolicy());
