@@ -40,7 +40,7 @@ var httpCli = &http.Client{
 	Timeout: 30 * time.Second,
 	Transport: &http.Transport{
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
-		Proxy:           http.ProxyFromEnvironment,
+		Proxy:           nil,
 	},
 }
 
@@ -262,7 +262,8 @@ func getJSON(urls []string, val any) ([]byte, string, error) {
 			lstErr = err
 			continue
 		}
-		req.Header.Set("User-Agent", "block-ads-ui")
+		req.Header.Set("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
+		req.Header.Set("Accept", "*/*")
 		res, err := httpCli.Do(req)
 		if err != nil {
 			lstErr = err
@@ -310,6 +311,7 @@ func dlTo(urls []string, outPth string, expMD5 string) (string, error) {
 			_ = os.Remove(part)
 
 			got, err := dl1(u, part, stl)
+			fmt.Println(got, expMD5)
 			if err != nil {
 				lst = fmt.Errorf("%s: %w", u, err)
 				_ = os.Remove(part)
@@ -318,8 +320,9 @@ func dlTo(urls []string, outPth string, expMD5 string) (string, error) {
 
 			if expMD5 != "" && !strings.EqualFold(strings.TrimSpace(got), strings.TrimSpace(expMD5)) {
 				lst = fmt.Errorf("%s: md5 mismatch", u)
-				_ = os.Remove(part)
+				//_ = os.Remove(part)
 				continue
+				return "", nil
 			}
 
 			_ = os.Remove(outPth)

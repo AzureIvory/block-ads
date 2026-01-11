@@ -3,7 +3,7 @@
     "updated_at": "2026-1-11",
     "Msupported_version": "1.0",
     "mandatory": "False",
-    "notes": "1.2版本\n优化UI\n新增同步/更新功能\n新增上传数据功能。。。。。。。。1111",
+    "notes": "1.2版本\n优化UI\n新增同步/更新功能\n新增上传数据功能",
     "items": {
         "Code.exe": {
             "path": "Code.exe",
@@ -47,8 +47,8 @@
         },
         "index.html": {
             "path": "index.html",
-            "md5": "a98d2834d52d5d652456fb8f601b75ec",
-            "size": "16",
+            "md5": "521e7f56002cdf07ece992fe57cfd752",
+            "size": "15",
             "run": "False",
             "url": [
                 "https://api.ttraw.com/block-ads/update/index.html",
@@ -57,8 +57,8 @@
         },
         "main.js": {
             "path": "main.js",
-            "md5": "09b9f0c9cb0c24d3dbdf9e93f250a9dc",
-            "size": "42",
+            "md5": "9d2de5ae36d5578601095bf58a3106f4",
+            "size": "41",
             "run": "False",
             "url": [
                 "https://api.ttraw.com/block-ads/update/main.js",
@@ -67,8 +67,8 @@
         },
         "style.css": {
             "path": "style.css",
-            "md5": "8e84957a96ec928e5543cc3d4f01104f",
-            "size": "16",
+            "md5": "1af8ce6b1772bd36b413d37ce24f9e2d",
+            "size": "15",
             "run": "False",
             "url": [
                 "https://api.ttraw.com/block-ads/update/style.css",

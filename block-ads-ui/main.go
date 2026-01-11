@@ -751,7 +751,6 @@ func dw1(k reg.Key, name string) error {
 }
 
 func main() {
-
 	if len(os.Args) >= 3 && os.Args[1] == "--apply-update" {
 		pendPth := os.Args[2]
 

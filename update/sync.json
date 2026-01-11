@@ -1,10 +1,10 @@
 {
     "updated_at": "2026-1-11",
-    "notes": "1.2版本\n优化UI\n新增同步/更新功能\n新增上传数据功能。。。。。",
+    "notes": "1.2版本\n优化UI\n新增同步/更新功能\n新增上传数据功能",
     "items": {
         "Wfolder.txt": {
-            "md5": "dc4645513c94e6e60a48e4c2d2a50dc4",
-            "size": "2",
+            "md5": "022453c6dead1e017d415344bac4cd0b",
+            "size": "1",
             "count": "83",
             "url": [
                 "https://api.ttraw.com/block-ads/update/Wfolder.txt",
@@ -12,7 +12,7 @@
             ]
         },
         "Wsign.txt": {
-            "md5": "22bb8f4c10499707242b1e361d7f22b2",
+            "md5": "198c7e5722906bfccc207fc2470a2076",
             "size": "2",
             "count": "57",
             "url": [
@@ -21,7 +21,7 @@
             ]
         },
         "folder.txt": {
-            "md5": "780a96c071f140dcbd1a36a649f7ba33",
+            "md5": "2f06b642ef3d8195f13510293e1b20eb",
             "size": "4",
             "count": "319",
             "url": [
@@ -30,8 +30,8 @@
             ]
         },
         "note.txt": {
-            "md5": "d176d051d4629225895b4f5a0cd445e4",
-            "size": "53",
+            "md5": "6061a4281bda43fcbf7222a7dd50266a",
+            "size": "51",
             "count": "1281",
             "url": [
                 "https://api.ttraw.com/block-ads/update/note.txt",
@@ -39,7 +39,7 @@
             ]
         },
         "sign.txt": {
-            "md5": "df380f6996795311e251b3f70eb56872",
+            "md5": "69654c2d8a36e3ebbeb42ac229c969e9",
             "size": "12",
             "count": "388",
             "url": [
