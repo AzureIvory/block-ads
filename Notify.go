@@ -1,7 +1,6 @@
 package main
 
 import (
-	_ "embed"
 	"encoding/binary"
 	"fmt"
 	"runtime"
@@ -12,54 +11,35 @@ import (
 )
 
 // NotifyConfig 配置参数
+// Icon/TitleIcon 支持：
+//   - syscall.Handle(HICON)：推荐(比如 SHGetFileInfoW)
+//   - []byte：.ico 文件内容
+//   - string：.ico 文件路径
+//
+// 注意：窗口关闭时会 DestroyIcon 释放句柄。
 type NotifyConfig struct {
-	Title       string
-	TitleIcon   interface{}
-	Message     string
-	SubMessage  string
-	Icon        interface{}
-	LeftColor   uint32
-	Timeout     int
-	OnBodyClick func()
-	OnIgnore    func()
-	OnWhitelist func()
-	OnDetails   func()
+	Title      string
+	TitleIcon  interface{}
+	Message    string
+	SubMessage string
+	Icon       interface{}
+	LeftColor  uint32
+	Timeout    int
+
+	OnIgnore    func() // 不再提示（全局关闭弹窗）
+	OnWhitelist func() // 加入白名单
+	OnBodyClick func() // 点击正文
 }
 
 // ShowNotification 显示通知入口
 func ShowNotification(cfg NotifyConfig) {
 	if cfg.LeftColor == 0 {
-		cfg.LeftColor = 0x2F2FD3 // 默认红色
+		cfg.LeftColor = 0x2F2FD3 // 默认红色(BGR)
 	}
 	if cfg.Timeout == 0 {
 		cfg.Timeout = 10 // 默认10秒
 	}
 	createWindow(cfg)
-}
-
-//go:embed icon.ico
-var demoIcon []byte
-
-func main1() {
-	fmt.Println("通知...")
-
-	ShowNotification(NotifyConfig{
-		Title:      "流氓软件拦截",
-		TitleIcon:  demoIcon,
-		Message:    "发现流氓行为",
-		SubMessage: "流氓 at C:\\svchost_fake.exe",
-		LeftColor:  0x2F2FD3,
-		Icon:       demoIcon,
-		Timeout:    15, // 15秒后自动消失
-		OnBodyClick: func() {
-			fmt.Println(">>> 查看详情")
-		},
-		OnIgnore: func() {
-			fmt.Println(">>> 不再提示")
-		},
-	})
-
-	fmt.Println("通知结束")
 }
 
 var (
@@ -81,7 +61,6 @@ type windowState struct {
 	rectBody      RECT
 	rectIgnore    RECT
 	rectWhitelist RECT
-	rectDetails   RECT
 	rectDismiss   RECT
 	rectClose     RECT
 
@@ -92,28 +71,30 @@ type windowState struct {
 
 func registerWindow(hwnd syscall.Handle, state *windowState) {
 	storeMutex.Lock()
-	defer storeMutex.Unlock()
 	windowStore[hwnd] = state
+	storeMutex.Unlock()
 }
 
 func unregisterWindow(hwnd syscall.Handle) {
 	storeMutex.Lock()
-	defer storeMutex.Unlock()
 	delete(windowStore, hwnd)
+	storeMutex.Unlock()
 }
 
 func getWindowState(hwnd syscall.Handle) *windowState {
 	storeMutex.RLock()
-	defer storeMutex.RUnlock()
-	return windowStore[hwnd]
+	s := windowStore[hwnd]
+	storeMutex.RUnlock()
+	return s
 }
 
 func createWindow(cfg NotifyConfig) {
+	// 每个窗口独立消息循环：必须锁 OS 线程
 	runtime.LockOSThread()
 	defer runtime.UnlockOSThread()
 
 	hInstance := GetModuleHandle(nil)
-	className := syscall.StringToUTF16Ptr("GoNotifyFinal_" + fmt.Sprint(time.Now().UnixNano()))
+	className := syscall.StringToUTF16Ptr("GoNotify_" + fmt.Sprint(time.Now().UnixNano()))
 
 	var wc WNDCLASSEX
 	wc.CbSize = uint32(unsafe.Sizeof(wc))
@@ -132,7 +113,6 @@ func createWindow(cfg NotifyConfig) {
 	x := int32(scrW) - int32(w) - 20
 	y := int32(scrH) - int32(h) - 60
 
-	// 初始不可见
 	hwnd := CreateWindowEx(
 		WS_EX_TOPMOST|WS_EX_TOOLWINDOW,
 		className,
@@ -141,12 +121,10 @@ func createWindow(cfg NotifyConfig) {
 		x, y, int32(w), int32(h),
 		0, 0, hInstance, nil,
 	)
-
 	if hwnd == 0 {
 		return
 	}
 
-	// 预加载资源
 	state := &windowState{
 		config:     &cfg,
 		hFontBold:  createFont("Microsoft YaHei UI", 13, 700),
@@ -157,17 +135,17 @@ func createWindow(cfg NotifyConfig) {
 	}
 	registerWindow(hwnd, state)
 
-	// 切圆角
+	// 圆角
 	rgn := CreateRoundRectRgn(0, 0, int32(w)+1, int32(h)+1, 8, 8)
 	SetWindowRgn(hwnd, rgn, true)
+	DeleteObject(HGDIOBJ(rgn))
 
 	if cfg.Timeout > 0 {
 		SetTimer(hwnd, 1, uint32(cfg.Timeout*1000), 0)
 	}
 
-	// 动画进场 (会触发 WM_PRINTCLIENT)
+	// 动画进场
 	AnimateWindow(hwnd, 200, AW_SLIDE|AW_VER_NEGATIVE|AW_ACTIVATE)
-
 	UpdateWindow(hwnd)
 
 	var msg MSG
@@ -187,7 +165,7 @@ func WndProc(hwnd syscall.Handle, msg uint32, wParam, lParam uintptr) uintptr {
 	case WM_ERASEBKGND:
 		return 1 // 防止闪烁
 
-	case WM_PRINTCLIENT: // 动画期间的绘制
+	case WM_PRINTCLIENT:
 		hdc := syscall.Handle(wParam)
 		drawDoubleBuffered(hdc, hwnd, state)
 		return 0
@@ -215,11 +193,11 @@ func WndProc(hwnd syscall.Handle, msg uint32, wParam, lParam uintptr) uintptr {
 		isOverBody := ptInRect(POINT{x, y}, state.rectBody)
 		if isOverBody != state.isHoveringBody {
 			state.isHoveringBody = isOverBody
-			InvalidateRect(hwnd, &state.rectBody, 0) // 仅刷新中间区域
+			InvalidateRect(hwnd, &state.rectBody, 0)
 		}
 
 		if state.config.Timeout > 0 {
-			SetTimer(hwnd, 1, uint32(state.config.Timeout*1000), 0) // 重置倒计时
+			SetTimer(hwnd, 1, uint32(state.config.Timeout*1000), 0)
 		}
 		return 0
 
@@ -235,11 +213,9 @@ func WndProc(hwnd syscall.Handle, msg uint32, wParam, lParam uintptr) uintptr {
 			GetCursorPos(&p)
 			ScreenToClient(hwnd, &p)
 
-			// 判断是否在可点击区域
 			isClickable := ptInRect(p, state.rectClose) ||
 				ptInRect(p, state.rectIgnore) ||
 				ptInRect(p, state.rectWhitelist) ||
-				ptInRect(p, state.rectDetails) ||
 				ptInRect(p, state.rectDismiss) ||
 				ptInRect(p, state.rectBody)
 
@@ -270,6 +246,15 @@ func WndProc(hwnd syscall.Handle, msg uint32, wParam, lParam uintptr) uintptr {
 		DeleteObject(HGDIOBJ(state.hFontBold))
 		DeleteObject(HGDIOBJ(state.hFontReg))
 		DeleteObject(HGDIOBJ(state.hFontSml))
+
+		// 图标释放：避免重复释放
+		if state.hTitleIcon != 0 {
+			DestroyIcon(state.hTitleIcon)
+		}
+		if state.hMainIcon != 0 && state.hMainIcon != state.hTitleIcon {
+			DestroyIcon(state.hMainIcon)
+		}
+
 		unregisterWindow(hwnd)
 		PostQuitMessage(0)
 		return 0
@@ -288,7 +273,6 @@ func drawDoubleBuffered(destDC syscall.Handle, hwnd syscall.Handle, state *windo
 	oldBitmap := SelectObject(memDC, HGDIOBJ(memBitmap))
 
 	drawUI(memDC, w, h, state)
-
 	BitBlt(destDC, 0, 0, w, h, memDC, 0, 0, SRCCOPY)
 
 	SelectObject(memDC, oldBitmap)
@@ -301,13 +285,13 @@ func drawUI(hdc syscall.Handle, w, h int32, state *windowState) {
 	cfg := state.config
 	SetBkMode(hdc, TRANSPARENT)
 
-	// 底层白色背景
+	// 底层彩条背景
 	brushBase := CreateSolidBrush(cfg.LeftColor)
 	rectBase := RECT{0, 0, w, h}
 	FillRect(hdc, &rectBase, brushBase)
 	DeleteObject(HGDIOBJ(brushBase))
 
-	// 内容层白色偏移6px背景
+	// 内容层白色偏移 6px
 	brushWhite := CreateSolidBrush(0xFFFFFF)
 	rectContent := RECT{6, 0, w, h}
 	FillRect(hdc, &rectContent, brushWhite)
@@ -328,7 +312,7 @@ func drawUI(hdc syscall.Handle, w, h int32, state *windowState) {
 	state.rectClose = RECT{w - 40, 0, w, 36}
 	DrawText(hdc, "×", &state.rectClose, DT_CENTER|DT_VCENTER|DT_SINGLELINE)
 
-	// 支持 Hover 变色主体区
+	// 正文区 hover
 	state.rectBody = RECT{6, 36, w, 125}
 	bodyColor := uint32(0xF9F9F9)
 	if state.isHoveringBody {
@@ -343,7 +327,6 @@ func drawUI(hdc syscall.Handle, w, h int32, state *windowState) {
 	rectIconBox := RECT{24, 52, 64, 92}
 	FillRect(hdc, &rectIconBox, brushIconBox)
 	DeleteObject(HGDIOBJ(brushIconBox))
-
 	if state.hMainIcon != 0 {
 		DrawIconEx(hdc, 28, 56, state.hMainIcon, 32, 32, 0, 0, DI_NORMAL)
 	}
@@ -358,25 +341,23 @@ func drawUI(hdc syscall.Handle, w, h int32, state *windowState) {
 	rectSub := RECT{76, 74, w - 20, 110}
 	DrawText(hdc, cfg.SubMessage, &rectSub, DT_WORDBREAK|DT_PATH_ELLIPSIS)
 
-	//底部按钮
+	// 底部按钮
 	drawLine(hdc, 6, 125, int(w), 125, 0xEAEAEA)
-
-	btnBlue := uint32(0xD77800) // BGR
 	SelectObject(hdc, HGDIOBJ(state.hFontSml))
 
+	btnBlue := uint32(0xD77800) // BGR
+
 	SetTextColor(hdc, 0x999999)
-	state.rectIgnore = RECT{20, 125, 100, 165}
-	DrawText(hdc, "不再弹窗提示", &state.rectIgnore, DT_SINGLELINE|DT_VCENTER)
+	state.rectIgnore = RECT{18, 125, 110, 165}
+	DrawText(hdc, "不再提示", &state.rectIgnore, DT_SINGLELINE|DT_VCENTER)
 
 	SetTextColor(hdc, btnBlue)
-	state.rectWhitelist = RECT{110, 125, 180, 165}
+	state.rectWhitelist = RECT{120, 125, 220, 165}
 	DrawText(hdc, "加入白名单", &state.rectWhitelist, DT_SINGLELINE|DT_VCENTER)
 
-	state.rectDetails = RECT{190, 125, 250, 165}
-	DrawText(hdc, "详细日志", &state.rectDetails, DT_SINGLELINE|DT_VCENTER)
-
-	state.rectDismiss = RECT{w - 60, 125, w - 20, 165}
-	DrawText(hdc, "已读", &state.rectDismiss, DT_RIGHT|DT_VCENTER|DT_SINGLELINE)
+	SetTextColor(hdc, 0x999999)
+	state.rectDismiss = RECT{w - 80, 125, w - 20, 165}
+	DrawText(hdc, "知道了", &state.rectDismiss, DT_RIGHT|DT_VCENTER|DT_SINGLELINE)
 }
 
 func handleClicks(hwnd syscall.Handle, state *windowState, x, y int32) {
@@ -398,13 +379,6 @@ func handleClicks(hwnd syscall.Handle, state *windowState, x, y int32) {
 	if ptInRect(pt, state.rectWhitelist) {
 		if cfg.OnWhitelist != nil {
 			cfg.OnWhitelist()
-		}
-		procDestroyWindow.Call(uintptr(hwnd))
-		return
-	}
-	if ptInRect(pt, state.rectDetails) {
-		if cfg.OnDetails != nil {
-			cfg.OnDetails()
 		}
 		procDestroyWindow.Call(uintptr(hwnd))
 		return
@@ -469,7 +443,6 @@ const (
 
 	// GDI
 	TRANSPARENT = 1
-	WHITE_BRUSH = 0
 	SRCCOPY     = 0x00CC0020
 
 	// Resources
@@ -487,6 +460,7 @@ type WNDCLASSEX struct {
 	LpszMenuName, LpszClassName              *uint16
 	HIconSm                                  syscall.Handle
 }
+
 type MSG struct {
 	Hwnd           syscall.Handle
 	Message        uint32
@@ -494,8 +468,11 @@ type MSG struct {
 	Time           uint32
 	Pt             POINT
 }
+
 type POINT struct{ X, Y int32 }
+
 type RECT struct{ Left, Top, Right, Bottom int32 }
+
 type PAINTSTRUCT struct {
 	Hdc                  syscall.Handle
 	FErase               int32
@@ -503,8 +480,11 @@ type PAINTSTRUCT struct {
 	FRestore, FIncUpdate int32
 	RgbReserved          [32]byte
 }
+
 type HBRUSH syscall.Handle
+
 type HGDIOBJ syscall.Handle
+
 type TRACKMOUSEEVENT struct {
 	CbSize      uint32
 	DwFlags     uint32
@@ -545,6 +525,7 @@ var (
 	procGetCursorPos     = user32.NewProc("GetCursorPos")
 	procScreenToClient   = user32.NewProc("ScreenToClient")
 	procSetCursor        = user32.NewProc("SetCursor")
+	procDestroyIcon      = user32.NewProc("DestroyIcon")
 
 	procCreateSolidBrush         = gdi32.NewProc("CreateSolidBrush")
 	procCreateRoundRectRgn       = gdi32.NewProc("CreateRoundRectRgn")
@@ -569,112 +550,154 @@ func GetModuleHandle(name *uint16) syscall.Handle {
 	ret, _, _ := procGetModuleHandleW.Call(uintptr(unsafe.Pointer(name)))
 	return syscall.Handle(ret)
 }
+
 func RegisterClassEx(wc *WNDCLASSEX) uint16 {
 	ret, _, _ := procRegisterClassExW.Call(uintptr(unsafe.Pointer(wc)))
 	return uint16(ret)
 }
+
 func CreateWindowEx(exStyle uint32, cn *uint16, wn *uint16, style uint32, x, y, w, h int32, p, m, i syscall.Handle, param unsafe.Pointer) syscall.Handle {
-	ret, _, _ := procCreateWindowExW.Call(uintptr(exStyle), uintptr(unsafe.Pointer(cn)), uintptr(unsafe.Pointer(wn)), uintptr(style), uintptr(x), uintptr(y), uintptr(w), uintptr(h), uintptr(p), uintptr(m), uintptr(i), uintptr(param))
+	ret, _, _ := procCreateWindowExW.Call(
+		uintptr(exStyle),
+		uintptr(unsafe.Pointer(cn)),
+		uintptr(unsafe.Pointer(wn)),
+		uintptr(style),
+		uintptr(x), uintptr(y), uintptr(w), uintptr(h),
+		uintptr(p), uintptr(m), uintptr(i),
+		uintptr(param),
+	)
 	return syscall.Handle(ret)
 }
+
 func UpdateWindow(hwnd syscall.Handle) { procUpdateWindow.Call(uintptr(hwnd)) }
+
 func GetMessage(msg *MSG, hwnd syscall.Handle, min, max uint32) int32 {
 	ret, _, _ := procGetMessageW.Call(uintptr(unsafe.Pointer(msg)), uintptr(hwnd), uintptr(min), uintptr(max))
 	return int32(ret)
 }
+
 func TranslateMessage(msg *MSG) { procTranslateMessage.Call(uintptr(unsafe.Pointer(msg))) }
-func DispatchMessage(msg *MSG)  { procDispatchMessageW.Call(uintptr(unsafe.Pointer(msg))) }
+
+func DispatchMessage(msg *MSG) { procDispatchMessageW.Call(uintptr(unsafe.Pointer(msg))) }
+
 func DefWindowProc(hwnd syscall.Handle, msg uint32, w, l uintptr) uintptr {
 	ret, _, _ := procDefWindowProcW.Call(uintptr(hwnd), uintptr(msg), w, l)
 	return ret
 }
+
 func PostQuitMessage(exitCode int32) { procPostQuitMessage.Call(uintptr(exitCode)) }
+
 func GetSystemMetrics(index int32) int32 {
 	ret, _, _ := procGetSystemMetrics.Call(uintptr(index))
 	return int32(ret)
 }
+
 func CreateRoundRectRgn(x1, y1, x2, y2, w, h int32) syscall.Handle {
 	ret, _, _ := procCreateRoundRectRgn.Call(uintptr(x1), uintptr(y1), uintptr(x2), uintptr(y2), uintptr(w), uintptr(h))
 	return syscall.Handle(ret)
 }
+
 func SetWindowRgn(hwnd, hrgn syscall.Handle, redraw bool) {
 	procSetWindowRgn.Call(uintptr(hwnd), uintptr(hrgn), uintptr(1))
 }
+
 func BeginPaint(hwnd syscall.Handle, ps *PAINTSTRUCT) syscall.Handle {
 	ret, _, _ := procBeginPaint.Call(uintptr(hwnd), uintptr(unsafe.Pointer(ps)))
 	return syscall.Handle(ret)
 }
+
 func EndPaint(hwnd syscall.Handle, ps *PAINTSTRUCT) {
 	procEndPaint.Call(uintptr(hwnd), uintptr(unsafe.Pointer(ps)))
 }
+
 func CreateSolidBrush(color uint32) HBRUSH {
 	ret, _, _ := procCreateSolidBrush.Call(uintptr(color))
 	return HBRUSH(ret)
 }
+
 func FillRect(hdc syscall.Handle, r *RECT, hbr HBRUSH) {
 	procFillRect.Call(uintptr(hdc), uintptr(unsafe.Pointer(r)), uintptr(hbr))
 }
+
 func DeleteObject(obj HGDIOBJ) { procDeleteObject.Call(uintptr(obj)) }
+
 func SelectObject(hdc syscall.Handle, obj HGDIOBJ) HGDIOBJ {
 	ret, _, _ := procSelectObject.Call(uintptr(hdc), uintptr(obj))
 	return HGDIOBJ(ret)
 }
+
 func SetBkMode(hdc syscall.Handle, mode int32) { procSetBkMode.Call(uintptr(hdc), uintptr(mode)) }
+
 func SetTextColor(hdc syscall.Handle, color uint32) {
 	procSetTextColor.Call(uintptr(hdc), uintptr(color))
 }
+
 func DrawText(hdc syscall.Handle, text string, rect *RECT, format uint32) {
 	ptr, _ := syscall.UTF16PtrFromString(text)
 	procDrawTextW.Call(uintptr(hdc), uintptr(unsafe.Pointer(ptr)), uintptr(^uint32(0)), uintptr(unsafe.Pointer(rect)), uintptr(format))
 }
+
 func LoadCursor(inst syscall.Handle, id uintptr) syscall.Handle {
 	ret, _, _ := procLoadCursorW.Call(uintptr(inst), id)
 	return syscall.Handle(ret)
 }
+
 func DrawIconEx(hdc syscall.Handle, x, y int32, hIcon syscall.Handle, w, h int32, step, brush, flags uint32) {
 	procDrawIconEx.Call(uintptr(hdc), uintptr(x), uintptr(y), uintptr(hIcon), uintptr(w), uintptr(h), uintptr(step), uintptr(brush), uintptr(flags))
 }
+
 func GetClientRect(hwnd syscall.Handle, rect *RECT) {
 	procGetClientRect.Call(uintptr(hwnd), uintptr(unsafe.Pointer(rect)))
 }
+
 func SetTimer(hwnd syscall.Handle, id uintptr, timeout uint32, proc uintptr) {
 	procSetTimer.Call(uintptr(hwnd), id, uintptr(timeout), proc)
 }
-func KillTimer(hwnd syscall.Handle, id uintptr) {
-	procKillTimer.Call(uintptr(hwnd), id)
-}
+
+func KillTimer(hwnd syscall.Handle, id uintptr) { procKillTimer.Call(uintptr(hwnd), id) }
+
 func AnimateWindow(hwnd syscall.Handle, time uint32, flags uint32) {
 	procAnimateWindow.Call(uintptr(hwnd), uintptr(time), uintptr(flags))
 }
-func TrackMouseEvent(tme *TRACKMOUSEEVENT) {
-	procTrackMouseEvent.Call(uintptr(unsafe.Pointer(tme)))
-}
+
+func TrackMouseEvent(tme *TRACKMOUSEEVENT) { procTrackMouseEvent.Call(uintptr(unsafe.Pointer(tme))) }
+
 func InvalidateRect(hwnd syscall.Handle, rect *RECT, erase int32) {
 	procInvalidateRect.Call(uintptr(hwnd), uintptr(unsafe.Pointer(rect)), uintptr(erase))
 }
-func GetCursorPos(pt *POINT) {
-	procGetCursorPos.Call(uintptr(unsafe.Pointer(pt)))
-}
+
+func GetCursorPos(pt *POINT) { procGetCursorPos.Call(uintptr(unsafe.Pointer(pt))) }
+
 func ScreenToClient(hwnd syscall.Handle, pt *POINT) {
 	procScreenToClient.Call(uintptr(hwnd), uintptr(unsafe.Pointer(pt)))
 }
-func SetCursor(hCursor syscall.Handle) {
-	procSetCursor.Call(uintptr(hCursor))
+
+func SetCursor(hCursor syscall.Handle) { procSetCursor.Call(uintptr(hCursor)) }
+
+func DestroyIcon(h syscall.Handle) {
+	if h != 0 {
+		procDestroyIcon.Call(uintptr(h))
+	}
 }
+
 func CreateCompatibleDC(hdc syscall.Handle) syscall.Handle {
 	ret, _, _ := procCreateCompatibleDC.Call(uintptr(hdc))
 	return syscall.Handle(ret)
 }
+
 func CreateCompatibleBitmap(hdc syscall.Handle, w, h int32) syscall.Handle {
 	ret, _, _ := procCreateCompatibleBitmap.Call(uintptr(hdc), uintptr(w), uintptr(h))
 	return syscall.Handle(ret)
 }
+
 func BitBlt(dest syscall.Handle, x, y, w, h int32, src syscall.Handle, x1, y1 int32, rop uint32) {
 	procBitBlt.Call(uintptr(dest), uintptr(x), uintptr(y), uintptr(w), uintptr(h), uintptr(src), uintptr(x1), uintptr(y1), uintptr(rop))
 }
+
 func DeleteDC(hdc syscall.Handle) { procDeleteDC.Call(uintptr(hdc)) }
 
 func LOWORD(dw uint32) uint16 { return uint16(dw & 0xFFFF) }
+
 func HIWORD(dw uint32) uint16 { return uint16((dw >> 16) & 0xFFFF) }
 
 func loadIcon(input interface{}) syscall.Handle {
@@ -682,8 +705,13 @@ func loadIcon(input interface{}) syscall.Handle {
 		return 0
 	}
 	switch v := input.(type) {
+	case syscall.Handle:
+		return v
+	case uintptr:
+		return syscall.Handle(v)
 	case string:
 		p, _ := syscall.UTF16PtrFromString(v)
+		// IMAGE_ICON=1, LR_LOADFROMFILE=0x10, LR_DEFAULTSIZE=0x40
 		h, _, _ := procLoadImageW.Call(0, uintptr(unsafe.Pointer(p)), 1, 0, 0, 0x10|0x40)
 		return syscall.Handle(h)
 	case []byte:
@@ -691,6 +719,7 @@ func loadIcon(input interface{}) syscall.Handle {
 	}
 	return 0
 }
+
 func loadIconFromBytes(data []byte) syscall.Handle {
 	if len(data) < 22 {
 		return 0
@@ -701,16 +730,32 @@ func loadIconFromBytes(data []byte) syscall.Handle {
 		return 0
 	}
 	iconData := data[offset : offset+size]
-	ret, _, _ := procCreateIconFromResourceEx.Call(uintptr(unsafe.Pointer(&iconData[0])), uintptr(size), 1, 0x00030000, 0, 0, 0)
+	ret, _, _ := procCreateIconFromResourceEx.Call(
+		uintptr(unsafe.Pointer(&iconData[0])),
+		uintptr(size),
+		1,
+		0x00030000,
+		0, 0, 0,
+	)
 	return syscall.Handle(ret)
 }
+
 func createFont(face string, size, weight int32) syscall.Handle {
 	h := -mulDiv(size, 96, 72)
 	f, _ := syscall.UTF16PtrFromString(face)
-	ret, _, _ := procCreateFontW.Call(uintptr(h), 0, 0, 0, uintptr(weight), 0, 0, 0, 1, 0, 0, 5, 0, uintptr(unsafe.Pointer(f)))
+	ret, _, _ := procCreateFontW.Call(
+		uintptr(h),
+		0, 0, 0,
+		uintptr(weight),
+		0, 0, 0,
+		1, 0, 0, 5, 0,
+		uintptr(unsafe.Pointer(f)),
+	)
 	return syscall.Handle(ret)
 }
+
 func mulDiv(n, num, den int32) int32 { return int32(int64(n) * int64(num) / int64(den)) }
+
 func drawLine(hdc syscall.Handle, x1, y1, x2, y2 int, color uint32) {
 	pen, _, _ := procCreatePen.Call(0, 1, uintptr(color))
 	old := SelectObject(hdc, HGDIOBJ(pen))

@@ -454,3 +454,52 @@ func NToWin(ntPath string) string {
 	}
 	return matchedDrive + "\\" + suffix
 }
+
+const (
+	SHGFI_ICON      = 0x00000100
+	SHGFI_LARGEICON = 0x00000000
+	SHGFI_SMALLICON = 0x00000001
+)
+
+type shFileInfo struct {
+	HIcon         syscall.Handle
+	IIcon         int32
+	DwAttributes  uint32
+	SzDisplayName [260]uint16
+	SzTypeName    [80]uint16
+}
+
+var (
+	shell32            = syscall.NewLazyDLL("shell32.dll")
+	procSHGetFileInfoW = shell32.NewProc("SHGetFileInfoW")
+)
+
+// 获取exe/文件图标。
+// large=true 取大图标，false 取小图标。
+func GetIcon(path string, large bool) syscall.Handle {
+	if path == "" {
+		return 0
+	}
+	p, err := syscall.UTF16PtrFromString(path)
+	if err != nil {
+		return 0
+	}
+	var sfi shFileInfo
+	flags := uint32(SHGFI_ICON)
+	if large {
+		flags |= SHGFI_LARGEICON
+	} else {
+		flags |= SHGFI_SMALLICON
+	}
+	ret, _, _ := procSHGetFileInfoW.Call(
+		uintptr(unsafe.Pointer(p)),
+		0,
+		uintptr(unsafe.Pointer(&sfi)),
+		uintptr(unsafe.Sizeof(sfi)),
+		uintptr(flags),
+	)
+	if ret == 0 {
+		return 0
+	}
+	return sfi.HIcon
+}
