@@ -818,6 +818,7 @@ func run() error {
 }
 
 func main() {
+	fmt.Println("正在启动")
 	if err := run(); err != nil {
 		log.Fatalf("[FATAL] %v", err)
 	}
