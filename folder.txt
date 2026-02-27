@@ -1,4 +1,3 @@
-CloudMusic
 XFQDXTool
 ProZip
 NetPowerZipBingTwo
