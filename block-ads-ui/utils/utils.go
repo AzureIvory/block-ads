@@ -321,6 +321,7 @@ func FindUn(exePath string) (string, string, error) {
 		"uninstall.exe",
 		"uninstaller.exe",
 		"uninst.exe",
+		"uni0nst.exe",
 		"unins000.exe",
 		"unins001.exe",
 		"unins002.exe",
