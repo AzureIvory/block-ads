@@ -310,6 +310,23 @@ func chkKey_pv(root reg.Key, sub string) bool {
 	return false
 }
 
+func normalizeUnName(name string) string {
+	name = strings.ToLower(strings.TrimSpace(name))
+	if name == "" {
+		return ""
+	}
+
+	var b strings.Builder
+	b.Grow(len(name))
+	for _, r := range name {
+		if r >= '0' && r <= '9' {
+			continue
+		}
+		b.WriteRune(r)
+	}
+	return b.String()
+}
+
 // 在程序目录找到常见卸载程序
 func FindUn(exePath string) (string, string, error) {
 	exePath = filepath.Clean(exePath)
@@ -321,7 +338,6 @@ func FindUn(exePath string) (string, string, error) {
 		"uninstall.exe",
 		"uninstaller.exe",
 		"uninst.exe",
-		"uni0nst.exe",
 		"unins000.exe",
 		"unins001.exe",
 		"unins002.exe",
@@ -333,7 +349,7 @@ func FindUn(exePath string) (string, string, error) {
 	}
 	unsSet := make(map[string]struct{}, len(uns))
 	for _, n := range uns {
-		unsSet[n] = struct{}{}
+		unsSet[normalizeUnName(n)] = struct{}{}
 	}
 
 	// 在单个目录中找
@@ -349,14 +365,14 @@ func FindUn(exePath string) (string, string, error) {
 				continue
 			}
 			name := e.Name()
-			low := strings.ToLower(name)
+			norm := normalizeUnName(name)
 
-			// 匹配常见卸载文件名
-			if _, ok := unsSet[low]; ok {
+			// 先去掉数字，再匹配常见卸载文件名
+			if _, ok := unsSet[norm]; ok {
 				return filepath.Join(d, name), nil
 			}
-			// 模糊匹配 unins/uninst
-			if wild == "" && (strings.Contains(low, "unins") || strings.Contains(low, "uninst")) {
+			// 模糊匹配 unins/uninst，同样兼容数字穿插的文件名
+			if wild == "" && (strings.Contains(norm, "unins") || strings.Contains(norm, "uninst")) {
 				wild = filepath.Join(d, name)
 			}
 		}
