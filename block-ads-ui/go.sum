@@ -1,3 +1,5 @@
+github.com/AzureIvory/winui v0.0.0-20260319063730-a5128f11298e h1:bF4bT7BN35YGL2vX/14zYE2mTAGT/nM9dyWDKOc14+4=
+github.com/AzureIvory/winui v0.0.0-20260319063730-a5128f11298e/go.mod h1:Ef/WpTgPdjn9mwvwQaqts9Dk6blP8csUILK6JXv7fqA=
 github.com/Microsoft/go-winio v0.4.14 h1:+hMXMk01us9KgxGb7ftKQt2Xpf5hH/yky+TDA+qxleU=
 github.com/Microsoft/go-winio v0.4.14/go.mod h1:qXqCSQ3Xa7+6tgxaGTIe4Kpcdsi+P8jBhyzoq1bpyYA=
 github.com/bi-zone/etw v0.0.0-20210519083747-fe9042eb0ea8 h1:mu/7j4dwooeHJVd40dlsefisptEztBbFMcmxp+LvBLw=

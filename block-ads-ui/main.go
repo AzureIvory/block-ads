@@ -750,7 +750,7 @@ func dw1(k reg.Key, name string) error {
 	return nil
 }
 
-func main() {
+func legacyWebUIEntry() {
 	if len(os.Args) >= 3 && os.Args[1] == "--apply-update" {
 		pendPth := os.Args[2]
 

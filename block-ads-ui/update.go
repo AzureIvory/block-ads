@@ -640,7 +640,7 @@ func (d *appDat) DoSyn(req map[string]interface{}) (bool, error) {
 	return chg, nil
 }
 
-func (d *appDat) DoUpd(wv webview.WebView) (bool, error) {
+func (d *appDat) DoUpdNative(onExit func()) (bool, error) {
 	updMu.Lock()
 	defer updMu.Unlock()
 
@@ -724,13 +724,21 @@ func (d *appDat) DoUpd(wv webview.WebView) (bool, error) {
 		return false, err
 	}
 
-	go func() {
-		time.Sleep(150 * time.Millisecond)
+	if onExit != nil {
+		go func() {
+			time.Sleep(150 * time.Millisecond)
+			onExit()
+		}()
+	}
+	return true, nil
+}
+
+func (d *appDat) DoUpd(wv webview.WebView) (bool, error) {
+	return d.DoUpdNative(func() {
 		wv.Dispatch(func() {
 			wv.Terminate()
 		})
-	}()
-	return true, nil
+	})
 }
 
 func AppPend(pendPth string, waitPID int) error {

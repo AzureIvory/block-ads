@@ -7,3 +7,5 @@ require (
 	github.com/webview/webview_go v0.0.0-20240831120633-6173450d4dd6
 	golang.org/x/sys v0.38.0
 )
+
+require github.com/AzureIvory/winui v0.0.0-20260319063730-a5128f11298e
