@@ -21,8 +21,6 @@ import (
 	"sync/atomic"
 	"syscall"
 	"time"
-
-	webview "github.com/webview/webview_go"
 )
 
 var (
@@ -731,14 +729,6 @@ func (d *appDat) DoUpdNative(onExit func()) (bool, error) {
 		}()
 	}
 	return true, nil
-}
-
-func (d *appDat) DoUpd(wv webview.WebView) (bool, error) {
-	return d.DoUpdNative(func() {
-		wv.Dispatch(func() {
-			wv.Terminate()
-		})
-	})
 }
 
 func AppPend(pendPth string, waitPID int) error {

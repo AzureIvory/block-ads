@@ -1,766 +1,1071 @@
+//go:build windows
+
 package main
 
 import (
-	"encoding/binary"
 	"fmt"
-	"runtime"
+	"strings"
 	"sync"
 	"syscall"
 	"time"
 	"unsafe"
+
+	"github.com/AzureIvory/winui/core"
+	"github.com/AzureIvory/winui/widgets"
+	"golang.org/x/sys/windows"
 )
 
-// NotifyConfig 配置参数
-// Icon/TitleIcon 支持：
-//   - syscall.Handle(HICON)：推荐(比如 SHGetFileInfoW)
-//   - []byte：.ico 文件内容
-//   - string：.ico 文件路径
-//
-// 注意：窗口关闭时会 DestroyIcon 释放句柄。
+// NotifyConfig 单条拦截提示。
+// ShowNotification 不会创建多个窗口，会把多条提示合并到同一个窗口里。
 type NotifyConfig struct {
 	Title      string
 	TitleIcon  interface{}
 	Message    string
 	SubMessage string
-	Icon       interface{}
-	LeftColor  uint32
-	Timeout    int
+	Detail     string
 
-	OnIgnore    func() // 不再提示（全局关闭弹窗）
-	OnWhitelist func() // 加入白名单
-	OnBodyClick func() // 点击正文
+	Icon      interface{}
+	LeftColor uint32
+	Timeout   int
+
+	OnIgnore    func()
+	OnWhitelist func()
 }
 
-// ShowNotification 显示通知入口
+// ShowNotification 追加一条提示。
 func ShowNotification(cfg NotifyConfig) {
+	if cfg.Timeout <= 0 {
+		cfg.Timeout = 10
+	}
 	if cfg.LeftColor == 0 {
-		cfg.LeftColor = 0x2F2FD3 // 默认红色(BGR)
+		cfg.LeftColor = 0x2F2FD3
 	}
-	if cfg.Timeout == 0 {
-		cfg.Timeout = 10 // 默认10秒
-	}
-	createWindow(cfg)
+	notifyMgrAdd(cfg)
 }
 
-var (
-	windowStore = make(map[syscall.Handle]*windowState)
-	storeMutex  sync.RWMutex
-)
-
-type windowState struct {
-	config *NotifyConfig
-
-	// 资源缓存
-	hFontBold  syscall.Handle
-	hFontReg   syscall.Handle
-	hFontSml   syscall.Handle
-	hTitleIcon syscall.Handle
-	hMainIcon  syscall.Handle
-
-	// 区域检测
-	rectBody      RECT
-	rectIgnore    RECT
-	rectWhitelist RECT
-	rectDismiss   RECT
-	rectClose     RECT
-
-	// 状态
-	isHoveringBody bool
-	isTracking     bool
-}
-
-func registerWindow(hwnd syscall.Handle, state *windowState) {
-	storeMutex.Lock()
-	windowStore[hwnd] = state
-	storeMutex.Unlock()
-}
-
-func unregisterWindow(hwnd syscall.Handle) {
-	storeMutex.Lock()
-	delete(windowStore, hwnd)
-	storeMutex.Unlock()
-}
-
-func getWindowState(hwnd syscall.Handle) *windowState {
-	storeMutex.RLock()
-	s := windowStore[hwnd]
-	storeMutex.RUnlock()
-	return s
-}
-
-func createWindow(cfg NotifyConfig) {
-	// 每个窗口独立消息循环：必须锁 OS 线程
-	runtime.LockOSThread()
-	defer runtime.UnlockOSThread()
-
-	hInstance := GetModuleHandle(nil)
-	className := syscall.StringToUTF16Ptr("GoNotify_" + fmt.Sprint(time.Now().UnixNano()))
-
-	var wc WNDCLASSEX
-	wc.CbSize = uint32(unsafe.Sizeof(wc))
-	wc.Style = CS_HREDRAW | CS_VREDRAW | CS_DROPSHADOW
-	wc.LpfnWndProc = syscall.NewCallback(WndProc)
-	wc.HInstance = hInstance
-	wc.HbrBackground = 0 // 自行绘制背景，防止闪烁
-	wc.LpszClassName = className
-	wc.HCursor = LoadCursor(0, IDC_ARROW)
-
-	RegisterClassEx(&wc)
-
-	w, h := 380, 165
-	scrW := GetSystemMetrics(SM_CXSCREEN)
-	scrH := GetSystemMetrics(SM_CYSCREEN)
-	x := int32(scrW) - int32(w) - 20
-	y := int32(scrH) - int32(h) - 60
-
-	hwnd := CreateWindowEx(
-		WS_EX_TOPMOST|WS_EX_TOOLWINDOW,
-		className,
-		syscall.StringToUTF16Ptr(cfg.Title),
-		WS_POPUP,
-		x, y, int32(w), int32(h),
-		0, 0, hInstance, nil,
-	)
-	if hwnd == 0 {
+func safeGo(fn func()) {
+	if fn == nil {
 		return
 	}
-
-	state := &windowState{
-		config:     &cfg,
-		hFontBold:  createFont("Microsoft YaHei UI", 13, 700),
-		hFontReg:   createFont("Microsoft YaHei UI", 16, 400),
-		hFontSml:   createFont("Microsoft YaHei UI", 11, 400),
-		hTitleIcon: loadIcon(cfg.TitleIcon),
-		hMainIcon:  loadIcon(cfg.Icon),
-	}
-	registerWindow(hwnd, state)
-
-	// 圆角
-	rgn := CreateRoundRectRgn(0, 0, int32(w)+1, int32(h)+1, 8, 8)
-	SetWindowRgn(hwnd, rgn, true)
-	DeleteObject(HGDIOBJ(rgn))
-
-	if cfg.Timeout > 0 {
-		SetTimer(hwnd, 1, uint32(cfg.Timeout*1000), 0)
-	}
-
-	// 动画进场
-	AnimateWindow(hwnd, 200, AW_SLIDE|AW_VER_NEGATIVE|AW_ACTIVATE)
-	UpdateWindow(hwnd)
-
-	var msg MSG
-	for GetMessage(&msg, 0, 0, 0) > 0 {
-		TranslateMessage(&msg)
-		DispatchMessage(&msg)
-	}
+	go func() {
+		defer func() { _ = recover() }()
+		fn()
+	}()
 }
 
-func WndProc(hwnd syscall.Handle, msg uint32, wParam, lParam uintptr) uintptr {
-	state := getWindowState(hwnd)
-	if state == nil && msg != WM_CREATE {
-		return DefWindowProc(hwnd, msg, wParam, lParam)
-	}
-
-	switch msg {
-	case WM_ERASEBKGND:
-		return 1 // 防止闪烁
-
-	case WM_PRINTCLIENT:
-		hdc := syscall.Handle(wParam)
-		drawDoubleBuffered(hdc, hwnd, state)
-		return 0
-
-	case WM_PAINT:
-		var ps PAINTSTRUCT
-		hdc := BeginPaint(hwnd, &ps)
-		drawDoubleBuffered(hdc, hwnd, state)
-		EndPaint(hwnd, &ps)
-		return 0
-
-	case WM_MOUSEMOVE:
-		x := int32(int16(LOWORD(uint32(lParam))))
-		y := int32(int16(HIWORD(uint32(lParam))))
-
-		if !state.isTracking {
-			var tme TRACKMOUSEEVENT
-			tme.CbSize = uint32(unsafe.Sizeof(tme))
-			tme.DwFlags = TME_LEAVE
-			tme.HwndTrack = hwnd
-			TrackMouseEvent(&tme)
-			state.isTracking = true
-		}
-
-		isOverBody := ptInRect(POINT{x, y}, state.rectBody)
-		if isOverBody != state.isHoveringBody {
-			state.isHoveringBody = isOverBody
-			InvalidateRect(hwnd, &state.rectBody, 0)
-		}
-
-		if state.config.Timeout > 0 {
-			SetTimer(hwnd, 1, uint32(state.config.Timeout*1000), 0)
-		}
-		return 0
-
-	case WM_MOUSELEAVE:
-		state.isTracking = false
-		state.isHoveringBody = false
-		InvalidateRect(hwnd, nil, 0)
-		return 0
-
-	case WM_SETCURSOR:
-		if syscall.Handle(wParam) == hwnd {
-			var p POINT
-			GetCursorPos(&p)
-			ScreenToClient(hwnd, &p)
-
-			isClickable := ptInRect(p, state.rectClose) ||
-				ptInRect(p, state.rectIgnore) ||
-				ptInRect(p, state.rectWhitelist) ||
-				ptInRect(p, state.rectDismiss) ||
-				ptInRect(p, state.rectBody)
-
-			if isClickable {
-				SetCursor(LoadCursor(0, IDC_HAND))
-			} else {
-				SetCursor(LoadCursor(0, IDC_ARROW))
-			}
-			return 1
-		}
-		return DefWindowProc(hwnd, msg, wParam, lParam)
-
-	case WM_LBUTTONUP:
-		x := int32(int16(LOWORD(uint32(lParam))))
-		y := int32(int16(HIWORD(uint32(lParam))))
-		handleClicks(hwnd, state, x, y)
-		return 0
-
-	case WM_TIMER:
-		if wParam == 1 {
-			KillTimer(hwnd, 1)
-			AnimateWindow(hwnd, 200, AW_HIDE|AW_BLEND)
-			procDestroyWindow.Call(uintptr(hwnd))
-		}
-		return 0
-
-	case WM_DESTROY:
-		DeleteObject(HGDIOBJ(state.hFontBold))
-		DeleteObject(HGDIOBJ(state.hFontReg))
-		DeleteObject(HGDIOBJ(state.hFontSml))
-
-		// 图标释放：避免重复释放
-		if state.hTitleIcon != 0 {
-			DestroyIcon(state.hTitleIcon)
-		}
-		if state.hMainIcon != 0 && state.hMainIcon != state.hTitleIcon {
-			DestroyIcon(state.hMainIcon)
-		}
-
-		unregisterWindow(hwnd)
-		PostQuitMessage(0)
-		return 0
-	}
-	return DefWindowProc(hwnd, msg, wParam, lParam)
+type notifyItem struct {
+	name        string
+	path        string
+	detail      string
+	icon        windows.Handle
+	onWhitelist func()
 }
 
-// 双缓冲绘制入口
-func drawDoubleBuffered(destDC syscall.Handle, hwnd syscall.Handle, state *windowState) {
-	var rect RECT
-	GetClientRect(hwnd, &rect)
-	w, h := rect.Right, rect.Bottom
-
-	memDC := CreateCompatibleDC(destDC)
-	memBitmap := CreateCompatibleBitmap(destDC, w, h)
-	oldBitmap := SelectObject(memDC, HGDIOBJ(memBitmap))
-
-	drawUI(memDC, w, h, state)
-	BitBlt(destDC, 0, 0, w, h, memDC, 0, 0, SRCCOPY)
-
-	SelectObject(memDC, oldBitmap)
-	DeleteObject(HGDIOBJ(memBitmap))
-	DeleteDC(memDC)
+type notifyState struct {
+	title     string
+	leftColor core.Color
+	timeout   int
+	onIgnore  func()
+	items     []notifyItem
 }
 
-// 实际绘制逻辑
-func drawUI(hdc syscall.Handle, w, h int32, state *windowState) {
-	cfg := state.config
-	SetBkMode(hdc, TRANSPARENT)
+type notifyManager struct {
+	mu          sync.Mutex
+	ready       chan struct{}
+	readyClosed bool
+	initErr     error
+	pending     []NotifyConfig
+	app         *core.App
+	view        *notifyView
+	hovering    bool
+	hideTimer   *time.Timer
+	hideToken   uint64
 
-	// 底层彩条背景
-	brushBase := CreateSolidBrush(cfg.LeftColor)
-	rectBase := RECT{0, 0, w, h}
-	FillRect(hdc, &rectBase, brushBase)
-	DeleteObject(HGDIOBJ(brushBase))
-
-	// 内容层白色偏移 6px
-	brushWhite := CreateSolidBrush(0xFFFFFF)
-	rectContent := RECT{6, 0, w, h}
-	FillRect(hdc, &rectContent, brushWhite)
-	DeleteObject(HGDIOBJ(brushWhite))
-
-	// 头部
-	if state.hTitleIcon != 0 {
-		DrawIconEx(hdc, 18, 10, state.hTitleIcon, 16, 16, 0, 0, DI_NORMAL)
-	}
-
-	SelectObject(hdc, HGDIOBJ(state.hFontBold))
-	SetTextColor(hdc, cfg.LeftColor)
-	rectTitle := RECT{42, 0, w - 40, 36}
-	DrawText(hdc, cfg.Title, &rectTitle, DT_SINGLELINE|DT_VCENTER)
-
-	SelectObject(hdc, HGDIOBJ(state.hFontReg))
-	SetTextColor(hdc, 0x888888)
-	state.rectClose = RECT{w - 40, 0, w, 36}
-	DrawText(hdc, "×", &state.rectClose, DT_CENTER|DT_VCENTER|DT_SINGLELINE)
-
-	// 正文区 hover
-	state.rectBody = RECT{6, 36, w, 125}
-	bodyColor := uint32(0xF9F9F9)
-	if state.isHoveringBody {
-		bodyColor = 0xECECEC
-	}
-	brushBody := CreateSolidBrush(bodyColor)
-	FillRect(hdc, &state.rectBody, brushBody)
-	DeleteObject(HGDIOBJ(brushBody))
-
-	// 图标底块
-	brushIconBox := CreateSolidBrush(0xEBEBEB)
-	rectIconBox := RECT{24, 52, 64, 92}
-	FillRect(hdc, &rectIconBox, brushIconBox)
-	DeleteObject(HGDIOBJ(brushIconBox))
-	if state.hMainIcon != 0 {
-		DrawIconEx(hdc, 28, 56, state.hMainIcon, 32, 32, 0, 0, DI_NORMAL)
-	}
-
-	SelectObject(hdc, HGDIOBJ(state.hFontBold))
-	SetTextColor(hdc, 0x222222)
-	rectMsg := RECT{76, 50, w - 20, 72}
-	DrawText(hdc, cfg.Message, &rectMsg, DT_SINGLELINE|DT_VCENTER|DT_PATH_ELLIPSIS)
-
-	SelectObject(hdc, HGDIOBJ(state.hFontSml))
-	SetTextColor(hdc, 0x666666)
-	rectSub := RECT{76, 74, w - 20, 110}
-	DrawText(hdc, cfg.SubMessage, &rectSub, DT_WORDBREAK|DT_PATH_ELLIPSIS)
-
-	// 底部按钮
-	drawLine(hdc, 6, 125, int(w), 125, 0xEAEAEA)
-	SelectObject(hdc, HGDIOBJ(state.hFontSml))
-
-	btnBlue := uint32(0xD77800) // BGR
-
-	SetTextColor(hdc, 0x999999)
-	state.rectIgnore = RECT{18, 125, 110, 165}
-	DrawText(hdc, "不再提示", &state.rectIgnore, DT_SINGLELINE|DT_VCENTER)
-
-	SetTextColor(hdc, btnBlue)
-	state.rectWhitelist = RECT{120, 125, 220, 165}
-	DrawText(hdc, "加入白名单", &state.rectWhitelist, DT_SINGLELINE|DT_VCENTER)
-
-	SetTextColor(hdc, 0x999999)
-	state.rectDismiss = RECT{w - 80, 125, w - 20, 165}
-	DrawText(hdc, "知道了", &state.rectDismiss, DT_RIGHT|DT_VCENTER|DT_SINGLELINE)
+	state notifyState
 }
 
-func handleClicks(hwnd syscall.Handle, state *windowState, x, y int32) {
-	pt := POINT{x, y}
-	cfg := state.config
+type notifyView struct {
+	scene *widgets.Scene
+	root  *widgets.Panel
+	card  *widgets.Panel
 
-	if ptInRect(pt, state.rectClose) {
-		AnimateWindow(hwnd, 150, AW_HIDE|AW_BLEND)
-		procDestroyWindow.Call(uintptr(hwnd))
-		return
-	}
-	if ptInRect(pt, state.rectIgnore) {
-		if cfg.OnIgnore != nil {
-			cfg.OnIgnore()
-		}
-		procDestroyWindow.Call(uintptr(hwnd))
-		return
-	}
-	if ptInRect(pt, state.rectWhitelist) {
-		if cfg.OnWhitelist != nil {
-			cfg.OnWhitelist()
-		}
-		procDestroyWindow.Call(uintptr(hwnd))
-		return
-	}
-	if ptInRect(pt, state.rectDismiss) {
-		procDestroyWindow.Call(uintptr(hwnd))
-		return
-	}
-	if ptInRect(pt, state.rectBody) {
-		if cfg.OnBodyClick != nil {
-			cfg.OnBodyClick()
-		}
-		procDestroyWindow.Call(uintptr(hwnd))
-	}
+	accent        *widgets.Panel
+	headerDivider *widgets.Panel
+	footerDivider *widgets.Panel
+
+	titleLabel  *widgets.Label
+	detailLabel *widgets.Label
+
+	closeBtn     *widgets.Button
+	ignoreBtn    *widgets.Button
+	whitelistBtn *widgets.Button
+	dismissBtn   *widgets.Button
+
+	rows          []notifyRow
+	titleIconRect core.Rect
 }
 
-func ptInRect(pt POINT, r RECT) bool {
-	return pt.X >= r.Left && pt.X <= r.Right && pt.Y >= r.Top && pt.Y <= r.Bottom
+type notifyRow struct {
+	panel   *widgets.Panel
+	iconBox *widgets.Panel
+	name    *widgets.Label
+	path    *widgets.Label
+	divider *widgets.Panel
 }
 
 const (
-	// Class Styles
-	CS_VREDRAW    = 0x0001
-	CS_HREDRAW    = 0x0002
-	CS_DROPSHADOW = 0x00020000
+	maxVisibleNotifyRows = 3
 
-	// Window Styles
-	WS_POPUP         = 0x80000000
-	WS_EX_TOPMOST    = 0x00000008
-	WS_EX_TOOLWINDOW = 0x00000080
+	wsPopup        = 0x80000000
+	wsExTopmost    = 0x00000008
+	wsExToolWindow = 0x00000080
+	wsExNoActivate = 0x08000000
 
-	// Messages
-	WM_CREATE      = 0x0001
-	WM_DESTROY     = 0x0002
-	WM_PAINT       = 0x000F
-	WM_ERASEBKGND  = 0x0014
-	WM_SETCURSOR   = 0x0020
-	WM_TIMER       = 0x0113
-	WM_MOUSEMOVE   = 0x0200
-	WM_LBUTTONUP   = 0x0202
-	WM_MOUSELEAVE  = 0x02A3
-	WM_PRINTCLIENT = 0x0318
+	swHide           = 0
+	swShownoactivate = 4
 
-	// System Metrics
-	SM_CXSCREEN = 0
-	SM_CYSCREEN = 1
+	swpNoActivate = 0x0010
 
-	// Animation
-	AW_SLIDE        = 0x00040000
-	AW_ACTIVATE     = 0x00020000
-	AW_BLEND        = 0x00080000
-	AW_HIDE         = 0x00010000
-	AW_VER_NEGATIVE = 0x00000008
-
-	// Text format
-	DT_CENTER        = 0x01
-	DT_RIGHT         = 0x02
-	DT_VCENTER       = 0x04
-	DT_SINGLELINE    = 0x20
-	DT_WORDBREAK     = 0x10
-	DT_PATH_ELLIPSIS = 0x4000
-
-	// GDI
-	TRANSPARENT = 1
-	SRCCOPY     = 0x00CC0020
-
-	// Resources
-	IDC_ARROW = 32512
-	IDC_HAND  = 32649
-	DI_NORMAL = 0x0003
-	TME_LEAVE = 0x00000002
+	spiGetWorkArea = 0x0030
 )
-
-type WNDCLASSEX struct {
-	CbSize, Style                            uint32
-	LpfnWndProc                              uintptr
-	CbClsExtra, CbWndExtra                   int32
-	HInstance, HIcon, HCursor, HbrBackground syscall.Handle
-	LpszMenuName, LpszClassName              *uint16
-	HIconSm                                  syscall.Handle
-}
-
-type MSG struct {
-	Hwnd           syscall.Handle
-	Message        uint32
-	WParam, LParam uintptr
-	Time           uint32
-	Pt             POINT
-}
-
-type POINT struct{ X, Y int32 }
-
-type RECT struct{ Left, Top, Right, Bottom int32 }
-
-type PAINTSTRUCT struct {
-	Hdc                  syscall.Handle
-	FErase               int32
-	RcPaint              RECT
-	FRestore, FIncUpdate int32
-	RgbReserved          [32]byte
-}
-
-type HBRUSH syscall.Handle
-
-type HGDIOBJ syscall.Handle
-
-type TRACKMOUSEEVENT struct {
-	CbSize      uint32
-	DwFlags     uint32
-	HwndTrack   syscall.Handle
-	DwHoverTime uint32
-}
 
 var (
-	user32   = syscall.NewLazyDLL("user32.dll")
-	gdi32    = syscall.NewLazyDLL("gdi32.dll")
-	kernel32 = syscall.NewLazyDLL("kernel32.dll")
+	gNotify notifyManager
 
-	procRegisterClassExW = user32.NewProc("RegisterClassExW")
-	procCreateWindowExW  = user32.NewProc("CreateWindowExW")
-	procDestroyWindow    = user32.NewProc("DestroyWindow")
-	procDefWindowProcW   = user32.NewProc("DefWindowProcW")
-	procGetMessageW      = user32.NewProc("GetMessageW")
-	procTranslateMessage = user32.NewProc("TranslateMessage")
-	procDispatchMessageW = user32.NewProc("DispatchMessageW")
-	procUpdateWindow     = user32.NewProc("UpdateWindow")
-	procGetSystemMetrics = user32.NewProc("GetSystemMetrics")
-	procSetWindowRgn     = user32.NewProc("SetWindowRgn")
-	procGetModuleHandleW = kernel32.NewProc("GetModuleHandleW")
-	procLoadCursorW      = user32.NewProc("LoadCursorW")
-	procLoadImageW       = user32.NewProc("LoadImageW")
-	procBeginPaint       = user32.NewProc("BeginPaint")
-	procEndPaint         = user32.NewProc("EndPaint")
-	procFillRect         = user32.NewProc("FillRect")
-	procDrawTextW        = user32.NewProc("DrawTextW")
-	procPostQuitMessage  = user32.NewProc("PostQuitMessage")
-	procDrawIconEx       = user32.NewProc("DrawIconEx")
-	procGetClientRect    = user32.NewProc("GetClientRect")
-	procSetTimer         = user32.NewProc("SetTimer")
-	procKillTimer        = user32.NewProc("KillTimer")
-	procAnimateWindow    = user32.NewProc("AnimateWindow")
-	procTrackMouseEvent  = user32.NewProc("TrackMouseEvent")
-	procInvalidateRect   = user32.NewProc("InvalidateRect")
-	procGetCursorPos     = user32.NewProc("GetCursorPos")
-	procScreenToClient   = user32.NewProc("ScreenToClient")
-	procSetCursor        = user32.NewProc("SetCursor")
-	procDestroyIcon      = user32.NewProc("DestroyIcon")
+	user32 = windows.NewLazySystemDLL("user32.dll")
+	gdi32  = windows.NewLazySystemDLL("gdi32.dll")
 
-	procCreateSolidBrush         = gdi32.NewProc("CreateSolidBrush")
-	procCreateRoundRectRgn       = gdi32.NewProc("CreateRoundRectRgn")
-	procCreateFontW              = gdi32.NewProc("CreateFontW")
-	procSelectObject             = gdi32.NewProc("SelectObject")
-	procDeleteObject             = gdi32.NewProc("DeleteObject")
-	procSetBkMode                = gdi32.NewProc("SetBkMode")
-	procSetTextColor             = gdi32.NewProc("SetTextColor")
-	procCreatePen                = gdi32.NewProc("CreatePen")
-	procMoveToEx                 = gdi32.NewProc("MoveToEx")
-	procLineTo                   = gdi32.NewProc("LineTo")
-	procCreateIconFromResourceEx = user32.NewProc("CreateIconFromResourceEx")
+	procShowWindow            = user32.NewProc("ShowWindow")
+	procUpdateWindow          = user32.NewProc("UpdateWindow")
+	procSetWindowPos          = user32.NewProc("SetWindowPos")
+	procSystemParametersInfoW = user32.NewProc("SystemParametersInfoW")
+	procSetWindowRgn          = user32.NewProc("SetWindowRgn")
+	procDestroyIcon           = user32.NewProc("DestroyIcon")
 
-	// 双缓冲
-	procCreateCompatibleDC     = gdi32.NewProc("CreateCompatibleDC")
-	procCreateCompatibleBitmap = gdi32.NewProc("CreateCompatibleBitmap")
-	procBitBlt                 = gdi32.NewProc("BitBlt")
-	procDeleteDC               = gdi32.NewProc("DeleteDC")
+	procCreateRoundRectRgn = gdi32.NewProc("CreateRoundRectRgn")
 )
 
-func GetModuleHandle(name *uint16) syscall.Handle {
-	ret, _, _ := procGetModuleHandleW.Call(uintptr(unsafe.Pointer(name)))
-	return syscall.Handle(ret)
+func notifyMgrAdd(cfg NotifyConfig) {
+	gNotify.mu.Lock()
+	gNotify.pending = append(gNotify.pending, cfg)
+	start := false
+	if gNotify.ready == nil {
+		gNotify.ready = make(chan struct{})
+		gNotify.readyClosed = false
+		start = true
+	}
+	ready := gNotify.ready
+	gNotify.mu.Unlock()
+
+	if start {
+		go gNotify.uiLoop()
+	}
+
+	select {
+	case <-ready:
+	case <-time.After(2 * time.Second):
+		return
+	}
+
+	gNotify.mu.Lock()
+	app := gNotify.app
+	initErr := gNotify.initErr
+	gNotify.mu.Unlock()
+	if initErr != nil || app == nil {
+		return
+	}
+
+	_ = app.Post(func() {
+		gNotify.drainPendingOnUI(true)
+	})
 }
 
-func RegisterClassEx(wc *WNDCLASSEX) uint16 {
-	ret, _, _ := procRegisterClassExW.Call(uintptr(unsafe.Pointer(wc)))
-	return uint16(ret)
+func (m *notifyManager) uiLoop() {
+	opts := core.Options{
+		ClassName:      "BlockAdsNotify",
+		Title:          "block-ads notify",
+		Width:          388,
+		Height:         164,
+		Style:          wsPopup | core.WSClipChildren | core.WSClipSiblings,
+		ExStyle:        wsExTopmost | wsExToolWindow | wsExNoActivate,
+		Cursor:         core.CursorArrow,
+		Background:     core.RGB(244, 246, 249),
+		DoubleBuffered: true,
+		RenderMode:     core.RenderModeAuto,
+	}
+
+	opts.OnMouseMove = func(_ *core.App, _ core.MouseEvent) {
+		m.handleMouseMoveOnUI()
+	}
+	opts.OnMouseLeave = func(_ *core.App) {
+		m.handleMouseLeaveOnUI()
+	}
+
+	widgets.BindScene(&opts, widgets.SceneHooks{
+		OnCreate: m.onCreate,
+		OnResize: m.onResize,
+		AfterPaint: func(app *core.App, _ *widgets.Scene, canvas *core.Canvas) {
+			m.afterPaint(app, canvas)
+		},
+		OnDestroy: m.onDestroy,
+	})
+
+	app, err := core.NewApp(opts)
+	if err != nil {
+		m.finishInit(nil, err)
+		return
+	}
+
+	m.mu.Lock()
+	m.app = app
+	m.mu.Unlock()
+
+	if err := app.Init(); err != nil {
+		m.finishInit(nil, err)
+		return
+	}
+
+	m.finishInit(app, nil)
+	app.Run()
 }
 
-func CreateWindowEx(exStyle uint32, cn *uint16, wn *uint16, style uint32, x, y, w, h int32, p, m, i syscall.Handle, param unsafe.Pointer) syscall.Handle {
-	ret, _, _ := procCreateWindowExW.Call(
-		uintptr(exStyle),
-		uintptr(unsafe.Pointer(cn)),
-		uintptr(unsafe.Pointer(wn)),
-		uintptr(style),
-		uintptr(x), uintptr(y), uintptr(w), uintptr(h),
-		uintptr(p), uintptr(m), uintptr(i),
-		uintptr(param),
+func (m *notifyManager) finishInit(app *core.App, err error) {
+	m.mu.Lock()
+	if err != nil {
+		m.initErr = err
+		m.app = nil
+	} else {
+		m.app = app
+	}
+	if m.ready != nil && !m.readyClosed {
+		close(m.ready)
+		m.readyClosed = true
+	}
+	m.mu.Unlock()
+}
+
+func (m *notifyManager) onCreate(app *core.App, scene *widgets.Scene) error {
+	view := newNotifyView(scene, m)
+	m.mu.Lock()
+	m.view = view
+	m.mu.Unlock()
+
+	m.drainPendingOnUI(false)
+	if len(m.state.items) == 0 {
+		hideWindow(app.Handle())
+	}
+	return nil
+}
+
+func (m *notifyManager) onResize(app *core.App, _ *widgets.Scene, size core.Size) {
+	if m.view == nil || size.Width <= 0 || size.Height <= 0 {
+		return
+	}
+	m.view.layout(app, size)
+}
+
+func (m *notifyManager) onDestroy(_ *core.App, _ *widgets.Scene) {
+	m.mu.Lock()
+	if m.hideTimer != nil {
+		m.hideTimer.Stop()
+		m.hideTimer = nil
+	}
+	m.app = nil
+	m.view = nil
+	m.mu.Unlock()
+	m.resetStateOnUI()
+}
+
+func (m *notifyManager) handleMouseMoveOnUI() {
+	m.mu.Lock()
+	m.hovering = true
+	if m.hideTimer != nil {
+		m.hideTimer.Stop()
+		m.hideTimer = nil
+	}
+	m.mu.Unlock()
+}
+
+func (m *notifyManager) handleMouseLeaveOnUI() {
+	m.mu.Lock()
+	m.hovering = false
+	timeout := m.state.timeout
+	m.mu.Unlock()
+	if len(m.state.items) == 0 {
+		return
+	}
+	m.armHideTimer(timeout)
+}
+
+func (m *notifyManager) drainPendingOnUI(show bool) {
+	m.mu.Lock()
+	pending := append([]NotifyConfig(nil), m.pending...)
+	m.pending = nil
+	app := m.app
+	view := m.view
+	m.mu.Unlock()
+
+	if app == nil || view == nil {
+		return
+	}
+
+	changed := false
+	for _, cfg := range pending {
+		m.applyConfigOnUI(cfg)
+		changed = true
+	}
+	if !changed {
+		return
+	}
+
+	m.presentOnUI(show)
+}
+
+func (m *notifyManager) applyConfigOnUI(cfg NotifyConfig) {
+	if cfg.Title != "" {
+		m.state.title = cfg.Title
+	}
+	if cfg.LeftColor != 0 {
+		m.state.leftColor = core.Color(cfg.LeftColor)
+	}
+	if cfg.Timeout > 0 {
+		m.state.timeout = cfg.Timeout
+	}
+	m.state.onIgnore = cfg.OnIgnore
+
+	item := notifyItem{
+		name:        strings.TrimSpace(cfg.Message),
+		path:        strings.TrimSpace(cfg.SubMessage),
+		detail:      strings.TrimSpace(cfg.Detail),
+		icon:        asHICON(cfg.Icon),
+		onWhitelist: cfg.OnWhitelist,
+	}
+	if item.name == "" {
+		item.name = "未知程序"
+	}
+
+	m.state.items = append([]notifyItem{item}, m.state.items...)
+	if len(m.state.items) > 20 {
+		for _, stale := range m.state.items[20:] {
+			destroyIconHandle(stale.icon)
+		}
+		m.state.items = m.state.items[:20]
+	}
+}
+
+func (m *notifyManager) presentOnUI(show bool) {
+	if m.app == nil || m.view == nil || len(m.state.items) == 0 {
+		return
+	}
+
+	m.view.syncFromState(m.state)
+	size := m.view.outerSize(m.app, len(m.state.items))
+	m.view.layout(m.app, size)
+	positionNotifyWindow(m.app, size)
+
+	if show {
+		showWindowNoActivate(m.app.Handle())
+		updateWindow(m.app.Handle())
+	}
+
+	m.armHideTimer(m.state.timeout)
+}
+
+func (m *notifyManager) armHideTimer(timeout int) {
+	if timeout <= 0 {
+		return
+	}
+
+	m.mu.Lock()
+	if m.hideTimer != nil {
+		m.hideTimer.Stop()
+	}
+	m.hideToken++
+	token := m.hideToken
+	app := m.app
+	m.hideTimer = time.AfterFunc(time.Duration(timeout)*time.Second, func() {
+		m.mu.Lock()
+		if token != m.hideToken || m.hovering || app == nil {
+			m.mu.Unlock()
+			return
+		}
+		m.mu.Unlock()
+
+		_ = app.Post(func() {
+			m.mu.Lock()
+			sameToken := token == m.hideToken
+			hovering := m.hovering
+			m.mu.Unlock()
+			if !sameToken || hovering {
+				return
+			}
+			m.hideAndResetOnUI()
+		})
+	})
+	m.mu.Unlock()
+}
+
+func (m *notifyManager) hideAndResetOnUI() {
+	if m.app == nil {
+		return
+	}
+
+	m.mu.Lock()
+	m.hovering = false
+	m.hideToken++
+	if m.hideTimer != nil {
+		m.hideTimer.Stop()
+		m.hideTimer = nil
+	}
+	m.mu.Unlock()
+
+	hideWindow(m.app.Handle())
+	m.resetStateOnUI()
+	if m.view != nil {
+		m.view.syncFromState(m.state)
+	}
+}
+
+func (m *notifyManager) resetStateOnUI() {
+	for _, item := range m.state.items {
+		destroyIconHandle(item.icon)
+	}
+	m.state = notifyState{}
+}
+
+func (m *notifyManager) onDismissClick() {
+	m.hideAndResetOnUI()
+}
+
+func (m *notifyManager) onIgnoreClick() {
+	cb := m.state.onIgnore
+	m.hideAndResetOnUI()
+	safeGo(cb)
+}
+
+func (m *notifyManager) onWhitelistClick() {
+	var cb func()
+	if len(m.state.items) > 0 {
+		cb = m.state.items[0].onWhitelist
+	}
+	m.hideAndResetOnUI()
+	safeGo(cb)
+}
+
+func (m *notifyManager) afterPaint(app *core.App, canvas *core.Canvas) {
+	if m.view == nil || len(m.state.items) == 0 {
+		return
+	}
+
+	drawShieldGlyph(canvas, m.view.titleIconRect, m.state.leftColor)
+
+	visible := len(m.state.items)
+	if visible > len(m.view.rows) {
+		visible = len(m.view.rows)
+	}
+	for i := 0; i < visible; i++ {
+		iconRect := insetRect(m.view.rows[i].iconBox.Bounds(), app.DP(7))
+		if m.state.items[i].icon != 0 {
+			drawRawIcon(canvas, m.state.items[i].icon, iconRect)
+			continue
+		}
+		drawWarningGlyph(canvas, iconRect)
+	}
+}
+
+func newNotifyView(scene *widgets.Scene, mgr *notifyManager) *notifyView {
+	root := scene.Root()
+	root.SetLayout(widgets.AbsoluteLayout{})
+
+	view := &notifyView{
+		scene:         scene,
+		root:          root,
+		card:          widgets.NewPanel("notify-card"),
+		accent:        widgets.NewPanel("notify-accent"),
+		headerDivider: widgets.NewPanel("notify-header-divider"),
+		footerDivider: widgets.NewPanel("notify-footer-divider"),
+		titleLabel: newLabel(
+			"notify-title",
+			widgets.TextStyle{
+				Font:   widgets.FontSpec{Face: "Microsoft YaHei UI", SizeDP: 16, Weight: 700},
+				Color:  core.RGB(220, 44, 44),
+				Format: core.DTVCenter | core.DTSingleLine | core.DTEndEllipsis,
+			},
+		),
+		detailLabel: newLabel(
+			"notify-detail",
+			widgets.TextStyle{
+				Font:   widgets.FontSpec{Face: "Microsoft YaHei UI", SizeDP: 11, Weight: 400},
+				Color:  core.RGB(132, 138, 148),
+				Format: core.DTVCenter | core.DTSingleLine | core.DTEndEllipsis,
+			},
+		),
+		closeBtn:     newButton("notify-close", "×", closeButtonStyle()),
+		ignoreBtn:    newButton("notify-ignore", "不再提示", mutedFooterButtonStyle()),
+		whitelistBtn: newButton("notify-whitelist", "加入白名单", mutedFooterButtonStyle()),
+		dismissBtn:   newButton("notify-dismiss", "知道了", accentFooterButtonStyle()),
+		rows:         make([]notifyRow, 0, maxVisibleNotifyRows),
+	}
+
+	view.card.SetStyle(widgets.PanelStyle{
+		Background:   core.RGB(255, 255, 255),
+		BorderColor:  core.RGB(232, 235, 240),
+		CornerRadius: 18,
+		BorderWidth:  1,
+	})
+	view.accent.SetStyle(widgets.PanelStyle{
+		Background: core.RGB(220, 44, 44),
+	})
+	view.headerDivider.SetStyle(widgets.PanelStyle{
+		Background: core.RGB(237, 239, 243),
+	})
+	view.footerDivider.SetStyle(widgets.PanelStyle{
+		Background: core.RGB(237, 239, 243),
+	})
+
+	view.closeBtn.SetOnClick(mgr.onDismissClick)
+	view.ignoreBtn.SetOnClick(mgr.onIgnoreClick)
+	view.whitelistBtn.SetOnClick(mgr.onWhitelistClick)
+	view.dismissBtn.SetOnClick(mgr.onDismissClick)
+
+	view.card.AddAll(
+		view.accent,
+		view.headerDivider,
+		view.footerDivider,
+		view.titleLabel,
+		view.detailLabel,
+		view.closeBtn,
+		view.ignoreBtn,
+		view.whitelistBtn,
+		view.dismissBtn,
 	)
-	return syscall.Handle(ret)
+
+	for i := 0; i < maxVisibleNotifyRows; i++ {
+		row := notifyRow{
+			panel:   widgets.NewPanel(fmt.Sprintf("notify-row-%d", i)),
+			iconBox: widgets.NewPanel(fmt.Sprintf("notify-row-iconbox-%d", i)),
+			name: newLabel(
+				fmt.Sprintf("notify-row-name-%d", i),
+				widgets.TextStyle{
+					Font:   widgets.FontSpec{Face: "Microsoft YaHei UI", SizeDP: 15, Weight: 700},
+					Color:  core.RGB(31, 35, 41),
+					Format: core.DTVCenter | core.DTSingleLine | core.DTEndEllipsis,
+				},
+			),
+			path: newLabel(
+				fmt.Sprintf("notify-row-path-%d", i),
+				widgets.TextStyle{
+					Font:   widgets.FontSpec{Face: "Microsoft YaHei UI", SizeDP: 11, Weight: 400},
+					Color:  core.RGB(126, 132, 140),
+					Format: core.DTVCenter | core.DTSingleLine | core.DTEndEllipsis,
+				},
+			),
+			divider: widgets.NewPanel(fmt.Sprintf("notify-row-divider-%d", i)),
+		}
+
+		row.iconBox.SetStyle(widgets.PanelStyle{
+			Background:   core.RGB(246, 247, 250),
+			BorderColor:  core.RGB(240, 242, 246),
+			CornerRadius: 10,
+			BorderWidth:  1,
+		})
+		row.divider.SetStyle(widgets.PanelStyle{
+			Background: core.RGB(237, 239, 243),
+		})
+
+		row.panel.AddAll(row.iconBox, row.name, row.path)
+		view.card.AddAll(row.panel, row.divider)
+		view.rows = append(view.rows, row)
+	}
+
+	root.Add(view.card)
+	return view
 }
 
-func UpdateWindow(hwnd syscall.Handle) { procUpdateWindow.Call(uintptr(hwnd)) }
+func (v *notifyView) syncFromState(state notifyState) {
+	count := len(state.items)
+	visibleRows := count
+	if visibleRows > len(v.rows) {
+		visibleRows = len(v.rows)
+	}
 
-func GetMessage(msg *MSG, hwnd syscall.Handle, min, max uint32) int32 {
-	ret, _, _ := procGetMessageW.Call(uintptr(unsafe.Pointer(msg)), uintptr(hwnd), uintptr(min), uintptr(max))
-	return int32(ret)
+	leftColor := state.leftColor
+	if leftColor == 0 {
+		leftColor = core.Color(0x2F2FD3)
+	}
+	v.accent.SetStyle(widgets.PanelStyle{Background: leftColor})
+
+	v.titleLabel.SetText(composeNotifyTitle(state.title, count))
+	v.titleLabel.SetStyle(widgets.TextStyle{
+		Font:   widgets.FontSpec{Face: "Microsoft YaHei UI", SizeDP: 16, Weight: 700},
+		Color:  leftColor,
+		Format: core.DTVCenter | core.DTSingleLine | core.DTEndEllipsis,
+	})
+
+	v.detailLabel.SetText(composeNotifyDetail(state.items))
+	v.footerDivider.SetVisible(count > 0)
+
+	for i := range v.rows {
+		show := i < visibleRows
+		row := v.rows[i]
+		row.panel.SetVisible(show)
+		row.iconBox.SetVisible(show)
+		row.name.SetVisible(show)
+		row.path.SetVisible(show)
+		row.divider.SetVisible(show && i < visibleRows-1)
+		if !show {
+			continue
+		}
+		row.name.SetText(state.items[i].name)
+		row.path.SetText(state.items[i].path)
+	}
+
+	hasIgnore := state.onIgnore != nil
+	hasWhitelist := false
+	if count > 0 {
+		hasWhitelist = state.items[0].onWhitelist != nil
+	}
+	v.ignoreBtn.SetVisible(hasIgnore)
+	v.whitelistBtn.SetVisible(hasWhitelist)
+	v.dismissBtn.SetVisible(count > 0)
 }
 
-func TranslateMessage(msg *MSG) { procTranslateMessage.Call(uintptr(unsafe.Pointer(msg))) }
+func (v *notifyView) outerSize(app *core.App, itemCount int) core.Size {
+	if itemCount < 1 {
+		itemCount = 1
+	}
+	if itemCount > len(v.rows) {
+		itemCount = len(v.rows)
+	}
 
-func DispatchMessage(msg *MSG) { procDispatchMessageW.Call(uintptr(unsafe.Pointer(msg))) }
+	shadow := app.DP(6)
+	headerH := app.DP(52)
+	rowH := app.DP(68)
+	footerH := app.DP(38)
 
-func DefWindowProc(hwnd syscall.Handle, msg uint32, w, l uintptr) uintptr {
-	ret, _, _ := procDefWindowProcW.Call(uintptr(hwnd), uintptr(msg), w, l)
-	return ret
-}
-
-func PostQuitMessage(exitCode int32) { procPostQuitMessage.Call(uintptr(exitCode)) }
-
-func GetSystemMetrics(index int32) int32 {
-	ret, _, _ := procGetSystemMetrics.Call(uintptr(index))
-	return int32(ret)
-}
-
-func CreateRoundRectRgn(x1, y1, x2, y2, w, h int32) syscall.Handle {
-	ret, _, _ := procCreateRoundRectRgn.Call(uintptr(x1), uintptr(y1), uintptr(x2), uintptr(y2), uintptr(w), uintptr(h))
-	return syscall.Handle(ret)
-}
-
-func SetWindowRgn(hwnd, hrgn syscall.Handle, redraw bool) {
-	procSetWindowRgn.Call(uintptr(hwnd), uintptr(hrgn), uintptr(1))
-}
-
-func BeginPaint(hwnd syscall.Handle, ps *PAINTSTRUCT) syscall.Handle {
-	ret, _, _ := procBeginPaint.Call(uintptr(hwnd), uintptr(unsafe.Pointer(ps)))
-	return syscall.Handle(ret)
-}
-
-func EndPaint(hwnd syscall.Handle, ps *PAINTSTRUCT) {
-	procEndPaint.Call(uintptr(hwnd), uintptr(unsafe.Pointer(ps)))
-}
-
-func CreateSolidBrush(color uint32) HBRUSH {
-	ret, _, _ := procCreateSolidBrush.Call(uintptr(color))
-	return HBRUSH(ret)
-}
-
-func FillRect(hdc syscall.Handle, r *RECT, hbr HBRUSH) {
-	procFillRect.Call(uintptr(hdc), uintptr(unsafe.Pointer(r)), uintptr(hbr))
-}
-
-func DeleteObject(obj HGDIOBJ) { procDeleteObject.Call(uintptr(obj)) }
-
-func SelectObject(hdc syscall.Handle, obj HGDIOBJ) HGDIOBJ {
-	ret, _, _ := procSelectObject.Call(uintptr(hdc), uintptr(obj))
-	return HGDIOBJ(ret)
-}
-
-func SetBkMode(hdc syscall.Handle, mode int32) { procSetBkMode.Call(uintptr(hdc), uintptr(mode)) }
-
-func SetTextColor(hdc syscall.Handle, color uint32) {
-	procSetTextColor.Call(uintptr(hdc), uintptr(color))
-}
-
-func DrawText(hdc syscall.Handle, text string, rect *RECT, format uint32) {
-	ptr, _ := syscall.UTF16PtrFromString(text)
-	procDrawTextW.Call(uintptr(hdc), uintptr(unsafe.Pointer(ptr)), uintptr(^uint32(0)), uintptr(unsafe.Pointer(rect)), uintptr(format))
-}
-
-func LoadCursor(inst syscall.Handle, id uintptr) syscall.Handle {
-	ret, _, _ := procLoadCursorW.Call(uintptr(inst), id)
-	return syscall.Handle(ret)
-}
-
-func DrawIconEx(hdc syscall.Handle, x, y int32, hIcon syscall.Handle, w, h int32, step, brush, flags uint32) {
-	procDrawIconEx.Call(uintptr(hdc), uintptr(x), uintptr(y), uintptr(hIcon), uintptr(w), uintptr(h), uintptr(step), uintptr(brush), uintptr(flags))
-}
-
-func GetClientRect(hwnd syscall.Handle, rect *RECT) {
-	procGetClientRect.Call(uintptr(hwnd), uintptr(unsafe.Pointer(rect)))
-}
-
-func SetTimer(hwnd syscall.Handle, id uintptr, timeout uint32, proc uintptr) {
-	procSetTimer.Call(uintptr(hwnd), id, uintptr(timeout), proc)
-}
-
-func KillTimer(hwnd syscall.Handle, id uintptr) { procKillTimer.Call(uintptr(hwnd), id) }
-
-func AnimateWindow(hwnd syscall.Handle, time uint32, flags uint32) {
-	procAnimateWindow.Call(uintptr(hwnd), uintptr(time), uintptr(flags))
-}
-
-func TrackMouseEvent(tme *TRACKMOUSEEVENT) { procTrackMouseEvent.Call(uintptr(unsafe.Pointer(tme))) }
-
-func InvalidateRect(hwnd syscall.Handle, rect *RECT, erase int32) {
-	procInvalidateRect.Call(uintptr(hwnd), uintptr(unsafe.Pointer(rect)), uintptr(erase))
-}
-
-func GetCursorPos(pt *POINT) { procGetCursorPos.Call(uintptr(unsafe.Pointer(pt))) }
-
-func ScreenToClient(hwnd syscall.Handle, pt *POINT) {
-	procScreenToClient.Call(uintptr(hwnd), uintptr(unsafe.Pointer(pt)))
-}
-
-func SetCursor(hCursor syscall.Handle) { procSetCursor.Call(uintptr(hCursor)) }
-
-func DestroyIcon(h syscall.Handle) {
-	if h != 0 {
-		procDestroyIcon.Call(uintptr(h))
+	return core.Size{
+		Width:  app.DP(388),
+		Height: shadow*2 + headerH + int32(itemCount)*rowH + footerH,
 	}
 }
 
-func CreateCompatibleDC(hdc syscall.Handle) syscall.Handle {
-	ret, _, _ := procCreateCompatibleDC.Call(uintptr(hdc))
-	return syscall.Handle(ret)
-}
-
-func CreateCompatibleBitmap(hdc syscall.Handle, w, h int32) syscall.Handle {
-	ret, _, _ := procCreateCompatibleBitmap.Call(uintptr(hdc), uintptr(w), uintptr(h))
-	return syscall.Handle(ret)
-}
-
-func BitBlt(dest syscall.Handle, x, y, w, h int32, src syscall.Handle, x1, y1 int32, rop uint32) {
-	procBitBlt.Call(uintptr(dest), uintptr(x), uintptr(y), uintptr(w), uintptr(h), uintptr(src), uintptr(x1), uintptr(y1), uintptr(rop))
-}
-
-func DeleteDC(hdc syscall.Handle) { procDeleteDC.Call(uintptr(hdc)) }
-
-func LOWORD(dw uint32) uint16 { return uint16(dw & 0xFFFF) }
-
-func HIWORD(dw uint32) uint16 { return uint16((dw >> 16) & 0xFFFF) }
-
-func loadIcon(input interface{}) syscall.Handle {
-	if input == nil {
-		return 0
+func (v *notifyView) layout(app *core.App, size core.Size) {
+	if size.Width <= 0 || size.Height <= 0 {
+		return
 	}
-	switch v := input.(type) {
-	case syscall.Handle:
-		return v
-	case uintptr:
-		return syscall.Handle(v)
-	case string:
-		p, _ := syscall.UTF16PtrFromString(v)
-		// IMAGE_ICON=1, LR_LOADFROMFILE=0x10, LR_DEFAULTSIZE=0x40
-		h, _, _ := procLoadImageW.Call(0, uintptr(unsafe.Pointer(p)), 1, 0, 0, 0x10|0x40)
-		return syscall.Handle(h)
-	case []byte:
-		return loadIconFromBytes(v)
+
+	shadow := app.DP(6)
+	cardRect := core.Rect{
+		X: shadow,
+		Y: shadow,
+		W: size.Width - shadow*2,
+		H: size.Height - shadow*2,
 	}
-	return 0
+
+	v.card.SetBounds(cardRect)
+	v.accent.SetBounds(core.Rect{X: cardRect.X, Y: cardRect.Y, W: app.DP(6), H: cardRect.H})
+
+	headerH := app.DP(52)
+	v.titleIconRect = core.Rect{X: cardRect.X + app.DP(16), Y: cardRect.Y + app.DP(14), W: app.DP(18), H: app.DP(18)}
+	v.titleLabel.SetBounds(core.Rect{
+		X: cardRect.X + app.DP(42),
+		Y: cardRect.Y + app.DP(12),
+		W: cardRect.W - app.DP(90),
+		H: app.DP(24),
+	})
+	v.closeBtn.SetBounds(core.Rect{
+		X: cardRect.X + cardRect.W - app.DP(34),
+		Y: cardRect.Y + app.DP(12),
+		W: app.DP(20),
+		H: app.DP(20),
+	})
+
+	headerDividerY := cardRect.Y + headerH - 1
+	v.headerDivider.SetBounds(core.Rect{
+		X: cardRect.X + app.DP(12),
+		Y: headerDividerY,
+		W: cardRect.W - app.DP(24),
+		H: 1,
+	})
+
+	rowStartY := headerDividerY + app.DP(8)
+	rowHeight := app.DP(64)
+	rowStep := app.DP(68)
+	for i, row := range v.rows {
+		rowY := rowStartY + int32(i)*rowStep
+		row.panel.SetBounds(core.Rect{
+			X: cardRect.X + app.DP(18),
+			Y: rowY,
+			W: cardRect.W - app.DP(36),
+			H: rowHeight,
+		})
+		row.iconBox.SetBounds(core.Rect{
+			X: cardRect.X + app.DP(18),
+			Y: rowY + app.DP(10),
+			W: app.DP(40),
+			H: app.DP(40),
+		})
+		row.name.SetBounds(core.Rect{
+			X: cardRect.X + app.DP(72),
+			Y: rowY + app.DP(8),
+			W: cardRect.W - app.DP(92),
+			H: app.DP(20),
+		})
+		row.path.SetBounds(core.Rect{
+			X: cardRect.X + app.DP(72),
+			Y: rowY + app.DP(30),
+			W: cardRect.W - app.DP(92),
+			H: app.DP(16),
+		})
+		row.divider.SetBounds(core.Rect{
+			X: cardRect.X + app.DP(18),
+			Y: rowY + rowHeight + app.DP(3),
+			W: cardRect.W - app.DP(36),
+			H: 1,
+		})
+	}
+
+	footerH := app.DP(38)
+	footerY := cardRect.Y + cardRect.H - footerH
+	v.footerDivider.SetBounds(core.Rect{
+		X: cardRect.X + app.DP(12),
+		Y: footerY,
+		W: cardRect.W - app.DP(24),
+		H: 1,
+	})
+
+	btnY := footerY + app.DP(6)
+	btnH := app.DP(24)
+	btnGap := app.DP(4)
+	right := cardRect.X + cardRect.W - app.DP(14)
+
+	layoutBtn := func(btn *widgets.Button, width int32) {
+		if !btn.Visible() {
+			btn.SetBounds(core.Rect{})
+			return
+		}
+		right -= width
+		btn.SetBounds(core.Rect{X: right, Y: btnY, W: width, H: btnH})
+		right -= btnGap
+	}
+
+	layoutBtn(v.dismissBtn, app.DP(54))
+	layoutBtn(v.whitelistBtn, app.DP(78))
+	layoutBtn(v.ignoreBtn, app.DP(68))
+
+	detailW := right - (cardRect.X + app.DP(16))
+	if detailW < app.DP(80) {
+		detailW = app.DP(80)
+	}
+	v.detailLabel.SetBounds(core.Rect{
+		X: cardRect.X + app.DP(16),
+		Y: footerY + app.DP(8),
+		W: detailW,
+		H: app.DP(18),
+	})
 }
 
-func loadIconFromBytes(data []byte) syscall.Handle {
-	if len(data) < 22 {
-		return 0
+func composeNotifyTitle(base string, count int) string {
+	base = strings.TrimSpace(base)
+	if base == "" {
+		base = "提示"
 	}
-	size := binary.LittleEndian.Uint32(data[14:18])
-	offset := binary.LittleEndian.Uint32(data[18:22])
-	if uint32(len(data)) < offset+size {
-		return 0
+	if count <= 1 {
+		return base
 	}
-	iconData := data[offset : offset+size]
-	ret, _, _ := procCreateIconFromResourceEx.Call(
-		uintptr(unsafe.Pointer(&iconData[0])),
-		uintptr(size),
-		1,
-		0x00030000,
-		0, 0, 0,
-	)
-	return syscall.Handle(ret)
+	return fmt.Sprintf("%s %d 个", base, count)
 }
 
-func createFont(face string, size, weight int32) syscall.Handle {
-	h := -mulDiv(size, 96, 72)
-	f, _ := syscall.UTF16PtrFromString(face)
-	ret, _, _ := procCreateFontW.Call(
+func composeNotifyDetail(items []notifyItem) string {
+	if len(items) == 0 {
+		return ""
+	}
+	if len(items) == 1 {
+		if items[0].detail != "" {
+			return items[0].detail
+		}
+		return "检测到拦截提示"
+	}
+
+	detail := items[0].detail
+	if detail == "" {
+		return fmt.Sprintf("检测到 %d 个拦截项", len(items))
+	}
+	return fmt.Sprintf("%s，另有 %d 条", detail, len(items)-1)
+}
+
+func newLabel(id string, style widgets.TextStyle) *widgets.Label {
+	label := widgets.NewLabel(id, "")
+	label.SetStyle(style)
+	return label
+}
+
+func newButton(id, text string, style widgets.ButtonStyle) *widgets.Button {
+	btn := widgets.NewButton(id, text, widgets.ModeCustom)
+	btn.SetStyle(style)
+	return btn
+}
+
+func closeButtonStyle() widgets.ButtonStyle {
+	return widgets.ButtonStyle{
+		Font:         widgets.FontSpec{Face: "Segoe UI", SizeDP: 12, Weight: 700},
+		TextColor:    core.RGB(146, 151, 160),
+		DownText:     core.RGB(88, 93, 103),
+		Background:   core.RGB(255, 255, 255),
+		Hover:        core.RGB(245, 246, 249),
+		Pressed:      core.RGB(235, 238, 243),
+		Border:       core.RGB(255, 255, 255),
+		CornerRadius: 10,
+		PadDP:        6,
+	}
+}
+
+func mutedFooterButtonStyle() widgets.ButtonStyle {
+	return widgets.ButtonStyle{
+		Font:         widgets.FontSpec{Face: "Microsoft YaHei UI", SizeDP: 11, Weight: 500},
+		TextColor:    core.RGB(134, 139, 147),
+		DownText:     core.RGB(91, 97, 107),
+		Background:   core.RGB(255, 255, 255),
+		Hover:        core.RGB(246, 247, 250),
+		Pressed:      core.RGB(238, 241, 245),
+		Border:       core.RGB(255, 255, 255),
+		CornerRadius: 8,
+		PadDP:        8,
+	}
+}
+
+func accentFooterButtonStyle() widgets.ButtonStyle {
+	return widgets.ButtonStyle{
+		Font:         widgets.FontSpec{Face: "Microsoft YaHei UI", SizeDP: 11, Weight: 600},
+		TextColor:    core.RGB(220, 44, 44),
+		DownText:     core.RGB(180, 34, 34),
+		Background:   core.RGB(255, 255, 255),
+		Hover:        core.RGB(255, 244, 244),
+		Pressed:      core.RGB(255, 233, 233),
+		Border:       core.RGB(255, 255, 255),
+		CornerRadius: 8,
+		PadDP:        8,
+	}
+}
+
+func positionNotifyWindow(app *core.App, size core.Size) {
+	if app == nil || app.Handle() == 0 {
+		return
+	}
+
+	area := workArea()
+	marginX := app.DP(18)
+	marginY := app.DP(28)
+	x := area.Right - size.Width - marginX
+	y := area.Bottom - size.Height - marginY
+	if x < area.Left {
+		x = area.Left
+	}
+	if y < area.Top {
+		y = area.Top
+	}
+
+	setWindowPos(app.Handle(), x, y, size.Width, size.Height)
+	setRoundedRegion(app.Handle(), size.Width, size.Height, app.DP(20))
+}
+
+func showWindowNoActivate(hwnd windows.Handle) {
+	if hwnd == 0 {
+		return
+	}
+	procShowWindow.Call(uintptr(hwnd), swShownoactivate)
+}
+
+func hideWindow(hwnd windows.Handle) {
+	if hwnd == 0 {
+		return
+	}
+	procShowWindow.Call(uintptr(hwnd), swHide)
+}
+
+func updateWindow(hwnd windows.Handle) {
+	if hwnd == 0 {
+		return
+	}
+	procUpdateWindow.Call(uintptr(hwnd))
+}
+
+func setWindowPos(hwnd windows.Handle, x, y, w, h int32) {
+	const hwndTopmost = ^uintptr(0)
+	procSetWindowPos.Call(
+		uintptr(hwnd),
+		hwndTopmost,
+		uintptr(x),
+		uintptr(y),
+		uintptr(w),
 		uintptr(h),
-		0, 0, 0,
-		uintptr(weight),
-		0, 0, 0,
-		1, 0, 0, 5, 0,
-		uintptr(unsafe.Pointer(f)),
+		swpNoActivate,
 	)
-	return syscall.Handle(ret)
 }
 
-func mulDiv(n, num, den int32) int32 { return int32(int64(n) * int64(num) / int64(den)) }
+func setRoundedRegion(hwnd windows.Handle, w, h, radius int32) {
+	if hwnd == 0 || w <= 0 || h <= 0 {
+		return
+	}
+	if radius < 1 {
+		radius = 1
+	}
+	rgn, _, _ := procCreateRoundRectRgn.Call(
+		0,
+		0,
+		uintptr(w+1),
+		uintptr(h+1),
+		uintptr(radius),
+		uintptr(radius),
+	)
+	if rgn == 0 {
+		return
+	}
+	procSetWindowRgn.Call(uintptr(hwnd), rgn, 1)
+}
 
-func drawLine(hdc syscall.Handle, x1, y1, x2, y2 int, color uint32) {
-	pen, _, _ := procCreatePen.Call(0, 1, uintptr(color))
-	old := SelectObject(hdc, HGDIOBJ(pen))
-	procMoveToEx.Call(uintptr(hdc), uintptr(x1), uintptr(y1), 0)
-	procLineTo.Call(uintptr(hdc), uintptr(x2), uintptr(y2))
-	SelectObject(hdc, old)
-	DeleteObject(HGDIOBJ(pen))
+type winRect struct {
+	Left   int32
+	Top    int32
+	Right  int32
+	Bottom int32
+}
+
+func workArea() winRect {
+	var rect winRect
+	ret, _, _ := procSystemParametersInfoW.Call(
+		spiGetWorkArea,
+		0,
+		uintptr(unsafe.Pointer(&rect)),
+		0,
+	)
+	if ret == 0 {
+		return winRect{Left: 0, Top: 0, Right: 1920, Bottom: 1080}
+	}
+	return rect
+}
+
+func asHICON(v interface{}) windows.Handle {
+	switch t := v.(type) {
+	case windows.Handle:
+		return t
+	case syscall.Handle:
+		return windows.Handle(t)
+	case uintptr:
+		return windows.Handle(t)
+	default:
+		return 0
+	}
+}
+
+func destroyIconHandle(h windows.Handle) {
+	if h == 0 {
+		return
+	}
+	procDestroyIcon.Call(uintptr(h))
+}
+
+func insetRect(rect core.Rect, inset int32) core.Rect {
+	rect.X += inset
+	rect.Y += inset
+	rect.W -= inset * 2
+	rect.H -= inset * 2
+	if rect.W < 1 {
+		rect.W = 1
+	}
+	if rect.H < 1 {
+		rect.H = 1
+	}
+	return rect
+}
+
+func drawRawIcon(canvas *core.Canvas, icon windows.Handle, rect core.Rect) {
+	if canvas == nil || icon == 0 {
+		return
+	}
+	tmp := struct {
+		handle windows.Handle
+	}{handle: icon}
+	_ = canvas.DrawIcon((*core.Icon)(unsafe.Pointer(&tmp)), rect)
+}
+
+func drawShieldGlyph(canvas *core.Canvas, rect core.Rect, accent core.Color) {
+	if canvas == nil || rect.W <= 0 || rect.H <= 0 {
+		return
+	}
+	if accent == 0 {
+		accent = core.RGB(220, 44, 44)
+	}
+
+	outer := shieldPoints(rect)
+	inner := shieldPoints(insetRect(rect, max32(1, rect.W/7)))
+	_ = canvas.FillPolygon(outer, accent)
+	_ = canvas.FillPolygon(inner, core.RGB(255, 255, 255))
+
+	lineRect := core.Rect{
+		X: rect.X + rect.W/2 - max32(1, rect.W/14),
+		Y: rect.Y + rect.H/4,
+		W: max32(2, rect.W/7),
+		H: rect.H / 3,
+	}
+	dotRect := core.Rect{
+		X: rect.X + rect.W/2 - max32(1, rect.W/14),
+		Y: rect.Y + rect.H - rect.H/4,
+		W: max32(2, rect.W/7),
+		H: max32(2, rect.H/8),
+	}
+	_ = canvas.FillRoundRect(lineRect, max32(1, lineRect.W/2), accent)
+	_ = canvas.FillRoundRect(dotRect, max32(1, dotRect.W/2), accent)
+}
+
+func drawWarningGlyph(canvas *core.Canvas, rect core.Rect) {
+	if canvas == nil || rect.W <= 0 || rect.H <= 0 {
+		return
+	}
+
+	outer := []core.Point{
+		{X: rect.X + rect.W/2, Y: rect.Y},
+		{X: rect.X + rect.W, Y: rect.Y + rect.H},
+		{X: rect.X, Y: rect.Y + rect.H},
+	}
+	inner := []core.Point{
+		{X: rect.X + rect.W/2, Y: rect.Y + max32(1, rect.H/10)},
+		{X: rect.X + rect.W - max32(1, rect.W/10), Y: rect.Y + rect.H - max32(1, rect.H/10)},
+		{X: rect.X + max32(1, rect.W/10), Y: rect.Y + rect.H - max32(1, rect.H/10)},
+	}
+	_ = canvas.FillPolygon(outer, core.RGB(35, 38, 43))
+	_ = canvas.FillPolygon(inner, core.RGB(255, 214, 10))
+
+	lineRect := core.Rect{
+		X: rect.X + rect.W/2 - max32(1, rect.W/16),
+		Y: rect.Y + rect.H/3 - max32(1, rect.H/16),
+		W: max32(2, rect.W/8),
+		H: rect.H / 3,
+	}
+	dotRect := core.Rect{
+		X: rect.X + rect.W/2 - max32(1, rect.W/16),
+		Y: rect.Y + rect.H - rect.H/4,
+		W: max32(2, rect.W/8),
+		H: max32(2, rect.H/10),
+	}
+	_ = canvas.FillRoundRect(lineRect, max32(1, lineRect.W/2), core.RGB(35, 38, 43))
+	_ = canvas.FillRoundRect(dotRect, max32(1, dotRect.W/2), core.RGB(35, 38, 43))
+}
+
+func shieldPoints(rect core.Rect) []core.Point {
+	return []core.Point{
+		{X: rect.X + rect.W/2, Y: rect.Y},
+		{X: rect.X + rect.W - max32(1, rect.W/10), Y: rect.Y + rect.H/4},
+		{X: rect.X + rect.W - max32(1, rect.W/6), Y: rect.Y + rect.H - max32(1, rect.H/5)},
+		{X: rect.X + rect.W/2, Y: rect.Y + rect.H},
+		{X: rect.X + max32(1, rect.W/6), Y: rect.Y + rect.H - max32(1, rect.H/5)},
+		{X: rect.X + max32(1, rect.W/10), Y: rect.Y + rect.H/4},
+	}
+}
+
+func max32(a, b int32) int32 {
+	if a > b {
+		return a
+	}
+	return b
 }

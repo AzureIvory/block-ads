@@ -143,6 +143,7 @@ type nativeUI struct {
 
 	aboutDialog  *widgets.Panel
 	aboutTitle   *widgets.Label
+	aboutIcon    *widgets.Image
 	aboutName    *widgets.Label
 	aboutDesc    *widgets.Label
 	aboutVersion *widgets.Label
@@ -220,7 +221,6 @@ func runNativeUI(dat *appDat, dir string) error {
 		ui.icon = ico
 		opts.Icon = ico
 	}
-
 	widgets.BindScene(&opts, widgets.SceneHooks{
 		OnCreate:  ui.onCreate,
 		OnResize:  ui.onResize,
@@ -284,7 +284,7 @@ func (u *nativeUI) buildRoot() {
 	u.header.SetStyle(widgets.PanelStyle{
 		Background:   u.col(250, 252, 255),
 		BorderColor:  u.col(228, 235, 246),
-		CornerRadius: 18,
+		CornerRadius: 16,
 		BorderWidth:  1,
 	})
 
@@ -292,21 +292,21 @@ func (u *nativeUI) buildRoot() {
 	u.sidebar.SetStyle(widgets.PanelStyle{
 		Background:   u.col(250, 252, 255),
 		BorderColor:  u.col(228, 235, 246),
-		CornerRadius: 18,
+		CornerRadius: 16,
 		BorderWidth:  1,
 	})
 
 	u.rulesCard = widgets.NewPanel("rules-card")
 	u.rulesCard.SetStyle(widgets.PanelStyle{
 		Background:   u.col(255, 255, 255),
-		BorderColor:  u.col(224, 231, 243),
-		CornerRadius: 18,
+		BorderColor:  u.col(214, 224, 241),
+		CornerRadius: 20,
 		BorderWidth:  1,
 	})
 
 	u.logsCard = widgets.NewPanel("logs-card")
 	u.logsCard.SetStyle(widgets.PanelStyle{
-		Background:   u.col(255, 255, 255),
+		Background:   u.col(252, 253, 255),
 		BorderColor:  u.col(224, 231, 243),
 		CornerRadius: 18,
 		BorderWidth:  1,
@@ -327,30 +327,30 @@ func (u *nativeUI) buildRoot() {
 }
 
 func (u *nativeUI) buildHeader() {
-	u.brandLabel = u.label("brand", "名单管理", 24, 700, u.col(35, 87, 230), core.DTVCenter|core.DTSingleLine)
-	u.adminLabel = u.label("admin", "管理员", 13, 600, u.col(22, 163, 74), core.DTCenter|core.DTVCenter|core.DTSingleLine)
-	u.runLabel = u.label("run-state", "未运行", 13, 600, u.col(120, 132, 158), core.DTCenter|core.DTVCenter|core.DTSingleLine)
+	u.brandLabel = u.label("brand", "名单管理", 22, 700, u.col(35, 87, 230), core.DTVCenter|core.DTSingleLine)
+	u.adminLabel = u.label("admin", "管理员", 12, 600, u.col(22, 163, 74), core.DTCenter|core.DTVCenter|core.DTSingleLine)
+	u.runLabel = u.label("run-state", "未运行", 12, 600, u.col(120, 132, 158), core.DTCenter|core.DTVCenter|core.DTSingleLine)
 
-	u.btnRun = widgets.NewButton("run", "启动")
+	u.btnRun = widgets.NewButton("run", "启动", widgets.ModeCustom)
 	u.btnRun.SetStyle(u.primaryButtonStyle())
 	u.btnRun.SetOnClick(u.handleToggleRun)
 
-	u.chkBoot = widgets.NewCheckBox("boot", "开机自启")
+	u.chkBoot = widgets.NewCheckBox("boot", "开机自启", widgets.ModeCustom)
 	u.chkBoot.SetStyle(u.checkStyle())
 	u.chkBoot.SetOnChange(func(v bool) {
 		u.handleBootChange(v)
 	})
 
-	u.btnFake = widgets.NewButton("fake", "一键伪装")
-	u.btnFake.SetStyle(u.softButtonStyle())
+	u.btnFake = widgets.NewButton("fake", "一键伪装", widgets.ModeCustom)
+	u.btnFake.SetStyle(u.compactSoftButtonStyle())
 	u.btnFake.SetOnClick(u.handleFake)
 
-	u.btnHelp = widgets.NewButton("help", "使用指南")
-	u.btnHelp.SetStyle(u.softButtonStyle())
+	u.btnHelp = widgets.NewButton("help", "使用指南", widgets.ModeCustom)
+	u.btnHelp.SetStyle(u.compactSoftButtonStyle())
 	u.btnHelp.SetOnClick(u.handleHelp)
 
-	u.btnGit = widgets.NewButton("github", "GitHub")
-	u.btnGit.SetStyle(u.softButtonStyle())
+	u.btnGit = widgets.NewButton("github", "GitHub", widgets.ModeCustom)
+	u.btnGit.SetStyle(u.compactSoftButtonStyle())
 	u.btnGit.SetOnClick(u.handleGit)
 
 	u.header.AddAll(
@@ -367,7 +367,7 @@ func (u *nativeUI) buildHeader() {
 
 func (u *nativeUI) buildSidebar() {
 	for _, key := range listOrder {
-		btn := widgets.NewButton("tab-"+key, listTitle[key])
+		btn := widgets.NewButton("tab-"+key, listTitle[key], widgets.ModeCustom)
 		btn.SetStyle(u.sideButtonStyle(false))
 		cur := key
 		btn.SetOnClick(func() {
@@ -377,25 +377,25 @@ func (u *nativeUI) buildSidebar() {
 		u.sidebar.Add(btn)
 	}
 
-	u.btnUpload = widgets.NewButton("upload", "上传")
+	u.btnUpload = widgets.NewButton("upload", "上传", widgets.ModeCustom)
 	u.btnUpload.SetStyle(u.sidebarActionStyle())
 	u.btnUpload.SetOnClick(func() {
 		u.openUploadDialog()
 	})
 
-	u.btnSync = widgets.NewButton("sync", "同步")
+	u.btnSync = widgets.NewButton("sync", "同步", widgets.ModeCustom)
 	u.btnSync.SetStyle(u.sidebarActionStyle())
 	u.btnSync.SetOnClick(func() {
 		u.openSyncDialog()
 	})
 
-	u.btnUpdate = widgets.NewButton("update", "更新")
+	u.btnUpdate = widgets.NewButton("update", "更新", widgets.ModeCustom)
 	u.btnUpdate.SetStyle(u.sidebarActionStyle())
 	u.btnUpdate.SetOnClick(func() {
 		u.openUpdateDialog()
 	})
 
-	u.btnAbout = widgets.NewButton("about", "关于")
+	u.btnAbout = widgets.NewButton("about", "关于", widgets.ModeCustom)
 	u.btnAbout.SetStyle(u.sidebarActionStyle())
 	u.btnAbout.SetOnClick(func() {
 		u.openAboutDialog()
@@ -405,26 +405,26 @@ func (u *nativeUI) buildSidebar() {
 }
 
 func (u *nativeUI) buildRulesCard() {
-	u.ruleTitle = u.label("rule-title", "规则列表", 19, 700, u.col(23, 33, 61), core.DTEndEllipsis)
-	u.ruleState = u.label("rule-state", "已加载", 13, 500, u.col(120, 132, 158), core.DTEndEllipsis)
-	u.ruleNote = u.label("rule-note", "备注: -", 13, 400, u.col(103, 116, 145), dtWordBreak)
+	u.ruleTitle = u.label("rule-title", "规则列表", 16, 700, u.col(23, 33, 61), core.DTEndEllipsis)
+	u.ruleState = u.label("rule-state", "已加载", 12, 500, u.col(120, 132, 158), core.DTEndEllipsis)
+	u.ruleNote = u.label("rule-note", "备注: -", 12, 400, u.col(103, 116, 145), dtWordBreak)
 
-	u.searchBox = widgets.NewEditBox("search")
+	u.searchBox = widgets.NewEditBox("search", widgets.ModeCustom)
 	u.searchBox.SetPlaceholder("搜索...")
-	u.searchBox.SetStyle(u.editStyle())
+	u.searchBox.SetStyle(u.compactEditStyle())
 	u.searchBox.SetOnChange(func(text string) {
 		u.filter = strings.TrimSpace(text)
 		u.refreshRuleList()
 	})
 
-	u.btnAdd = widgets.NewButton("add", "新增")
-	u.btnAdd.SetStyle(u.primaryButtonStyle())
+	u.btnAdd = widgets.NewButton("add", "新增", widgets.ModeCustom)
+	u.btnAdd.SetStyle(u.compactPrimaryButtonStyle())
 	u.btnAdd.SetOnClick(func() {
 		u.openAddDialog()
 	})
 
-	u.btnDel = widgets.NewButton("delete", "删除")
-	u.btnDel.SetStyle(u.outlineDangerStyle())
+	u.btnDel = widgets.NewButton("delete", "删除", widgets.ModeCustom)
+	u.btnDel.SetStyle(u.compactOutlineDangerStyle())
 	u.btnDel.SetEnabled(false)
 	u.btnDel.SetOnClick(u.handleDelete)
 
@@ -445,10 +445,11 @@ func (u *nativeUI) buildRulesCard() {
 }
 
 func (u *nativeUI) buildLogsCard() {
-	u.logTitle = u.label("log-title", "每日拦截记录", 19, 700, u.col(23, 33, 61), core.DTEndEllipsis)
-	u.logInfo = u.label("log-info", "今日暂无记录", 13, 500, u.col(120, 132, 158), core.DTEndEllipsis)
-	u.serviceLabel = u.label("service", "服务状态: 未知", 13, 500, u.col(22, 163, 74), core.DTEndEllipsis)
-	u.modeLabel = u.label("mode", "User Mode", 13, 500, u.col(103, 116, 145), core.DTEndEllipsis)
+	u.logTitle = u.label("log-title", "每日拦截记录", 16, 700, u.col(23, 33, 61), core.DTEndEllipsis)
+	u.logInfo = u.label("log-info", "今日暂无记录", 12, 500, u.col(120, 132, 158), core.DTEndEllipsis)
+	u.serviceLabel = u.label("service", "服务状态: 未知", 12, 500, u.col(22, 163, 74), core.DTEndEllipsis)
+	u.serviceLabel.SetVisible(false)
+	u.modeLabel = u.label("mode", "User Mode", 12, 500, u.col(103, 116, 145), core.DTEndEllipsis)
 
 	u.logsList = widgets.NewListBox("logs")
 	u.logsList.SetStyle(u.logListStyle())
@@ -464,17 +465,17 @@ func (u *nativeUI) buildLogsCard() {
 		u.openSelectedLog()
 	})
 
-	u.btnLogOpen = widgets.NewButton("log-open", "定位文件")
-	u.btnLogOpen.SetStyle(u.softButtonStyle())
+	u.btnLogOpen = widgets.NewButton("log-open", "定位文件", widgets.ModeCustom)
+	u.btnLogOpen.SetStyle(u.compactSoftButtonStyle())
 	u.btnLogOpen.SetEnabled(false)
 	u.btnLogOpen.SetOnClick(u.openSelectedLog)
 
-	u.btnLogWhite = widgets.NewButton("log-white", "加入白名单")
-	u.btnLogWhite.SetStyle(u.softButtonStyle())
+	u.btnLogWhite = widgets.NewButton("log-white", "加入白名单", widgets.ModeCustom)
+	u.btnLogWhite.SetStyle(u.compactSoftButtonStyle())
 	u.btnLogWhite.SetEnabled(false)
 	u.btnLogWhite.SetOnClick(u.addSelectedLogToWhitelist)
 
-	u.msgLabel = u.label("msg", "", 13, 500, u.col(120, 132, 158), dtWordBreak)
+	u.msgLabel = u.label("msg", "", 12, 500, u.col(120, 132, 158), dtWordBreak)
 
 	u.logsCard.AddAll(
 		u.logTitle,
@@ -482,7 +483,6 @@ func (u *nativeUI) buildLogsCard() {
 		u.logsList,
 		u.btnLogOpen,
 		u.btnLogWhite,
-		u.serviceLabel,
 		u.modeLabel,
 	)
 	u.root.Add(u.msgLabel)
@@ -500,18 +500,18 @@ func (u *nativeUI) buildAddDialog() {
 	u.addDialog = u.newDialog("add-dialog")
 	u.addTitle = u.label("add-title", "新增规则", 20, 700, u.col(23, 33, 61), core.DTEndEllipsis)
 	u.addHint = u.label("add-hint", "请输入要新增的内容。", 14, 400, u.col(103, 116, 145), dtWordBreak)
-	u.addInput = widgets.NewEditBox("add-input")
+	u.addInput = widgets.NewEditBox("add-input", widgets.ModeCustom)
 	u.addInput.SetPlaceholder("新增一行内容")
 	u.addInput.SetStyle(u.editStyle())
 	u.addInput.SetOnSubmit(func(string) {
 		u.handleAdd()
 	})
-	u.addCancel = widgets.NewButton("add-cancel", "取消")
+	u.addCancel = widgets.NewButton("add-cancel", "取消", widgets.ModeCustom)
 	u.addCancel.SetStyle(u.softButtonStyle())
 	u.addCancel.SetOnClick(func() {
 		u.hideDialogs()
 	})
-	u.addConfirm = widgets.NewButton("add-confirm", "确定添加")
+	u.addConfirm = widgets.NewButton("add-confirm", "确定添加", widgets.ModeCustom)
 	u.addConfirm.SetStyle(u.primaryButtonStyle())
 	u.addConfirm.SetOnClick(u.handleAdd)
 
@@ -522,19 +522,24 @@ func (u *nativeUI) buildAddDialog() {
 func (u *nativeUI) buildAboutDialog() {
 	u.aboutDialog = u.newDialog("about-dialog")
 	u.aboutTitle = u.label("about-title", "关于", 20, 700, u.col(23, 33, 61), core.DTEndEllipsis)
+	u.aboutIcon = widgets.NewImage("about-icon")
+	u.aboutIcon.SetScaleMode(widgets.ImageScaleContain)
+	if buf, err := os.ReadFile(filepath.Join(u.dir, "icon.png")); err == nil {
+		_ = u.aboutIcon.LoadBytes(buf)
+	}
 	u.aboutName = u.label("about-name", "block-ads", 28, 700, u.col(47, 104, 243), core.DTCenter|core.DTEndEllipsis)
 	u.aboutDesc = u.label("about-desc", "简单、高效的流氓软件拦截工具", 15, 400, u.col(76, 91, 119), core.DTCenter|dtWordBreak)
 	u.aboutVersion = u.label("about-version", "Version -", 15, 500, u.col(103, 116, 145), core.DTCenter|core.DTEndEllipsis)
-	u.aboutGit = widgets.NewButton("about-git", "GitHub")
+	u.aboutGit = widgets.NewButton("about-git", "GitHub", widgets.ModeCustom)
 	u.aboutGit.SetStyle(u.softButtonStyle())
 	u.aboutGit.SetOnClick(u.handleGit)
-	u.aboutClose = widgets.NewButton("about-close", "关闭")
+	u.aboutClose = widgets.NewButton("about-close", "关闭", widgets.ModeCustom)
 	u.aboutClose.SetStyle(u.primaryButtonStyle())
 	u.aboutClose.SetOnClick(func() {
 		u.hideDialogs()
 	})
 
-	u.aboutDialog.AddAll(u.aboutTitle, u.aboutName, u.aboutDesc, u.aboutVersion, u.aboutGit, u.aboutClose)
+	u.aboutDialog.AddAll(u.aboutTitle, u.aboutIcon, u.aboutName, u.aboutDesc, u.aboutVersion, u.aboutGit, u.aboutClose)
 	u.registerDialog(u.aboutDialog)
 }
 
@@ -543,17 +548,17 @@ func (u *nativeUI) buildUpdateDialog() {
 	u.updateTitle = u.label("update-title", "更新", 20, 700, u.col(23, 33, 61), core.DTEndEllipsis)
 	u.updateVersion = u.label("update-version", "本地 v- -> 在线 v-", 15, 600, u.col(47, 104, 243), core.DTEndEllipsis)
 	u.updateDate = u.label("update-date", "更新日期: -", 14, 500, u.col(103, 116, 145), core.DTEndEllipsis)
-	u.updateNotes = u.label("update-notes", "更新说明: -", 14, 400, u.col(76, 91, 119), dtWordBreak)
-	u.updateItems = u.label("update-items", "", 14, 400, u.col(76, 91, 119), dtWordBreak)
-	u.updateCheck = widgets.NewButton("update-check", "检测更新")
+	u.updateNotes = u.label("update-notes", "更新说明: -", 13, 400, u.col(76, 91, 119), dtWordBreak)
+	u.updateItems = u.label("update-items", "", 13, 400, u.col(76, 91, 119), dtWordBreak)
+	u.updateCheck = widgets.NewButton("update-check", "检测更新", widgets.ModeCustom)
 	u.updateCheck.SetStyle(u.softButtonStyle())
 	u.updateCheck.SetOnClick(func() {
 		u.checkUpdateAsync(true)
 	})
-	u.updateGo = widgets.NewButton("update-go", "立即更新")
+	u.updateGo = widgets.NewButton("update-go", "立即更新", widgets.ModeCustom)
 	u.updateGo.SetStyle(u.primaryButtonStyle())
 	u.updateGo.SetOnClick(u.doUpdateAsync)
-	u.updateClose = widgets.NewButton("update-close", "关闭")
+	u.updateClose = widgets.NewButton("update-close", "关闭", widgets.ModeCustom)
 	u.updateClose.SetStyle(u.softButtonStyle())
 	u.updateClose.SetOnClick(func() {
 		u.hideDialogs()
@@ -587,7 +592,7 @@ func (u *nativeUI) buildSyncDialog() {
 		BorderWidth:  1,
 	})
 
-	u.syncRadioSel = widgets.NewRadioButton("sync-radio-sel", "以后自动同步已勾选的项目")
+	u.syncRadioSel = widgets.NewRadioButton("sync-radio-sel", "以后自动同步已勾选的项目", widgets.ModeCustom)
 	u.syncRadioSel.SetGroup("sync-policy")
 	u.syncRadioSel.SetStyle(u.radioStyle())
 	u.syncRadioSel.SetChecked(true)
@@ -598,7 +603,7 @@ func (u *nativeUI) buildSyncDialog() {
 		}
 	})
 
-	u.syncRadioAll = widgets.NewRadioButton("sync-radio-all", "以后自动同步所有项目")
+	u.syncRadioAll = widgets.NewRadioButton("sync-radio-all", "以后自动同步所有项目", widgets.ModeCustom)
 	u.syncRadioAll.SetGroup("sync-policy")
 	u.syncRadioAll.SetStyle(u.radioStyle())
 	u.syncRadioAll.SetOnChange(func(v bool) {
@@ -608,7 +613,7 @@ func (u *nativeUI) buildSyncDialog() {
 		}
 	})
 
-	u.syncRadioNever = widgets.NewRadioButton("sync-radio-never", "以后都不同步")
+	u.syncRadioNever = widgets.NewRadioButton("sync-radio-never", "以后都不同步", widgets.ModeCustom)
 	u.syncRadioNever.SetGroup("sync-policy")
 	u.syncRadioNever.SetStyle(u.radioStyle())
 	u.syncRadioNever.SetOnChange(func(v bool) {
@@ -618,17 +623,17 @@ func (u *nativeUI) buildSyncDialog() {
 		}
 	})
 
-	u.syncCheck = widgets.NewButton("sync-check", "检查同步")
+	u.syncCheck = widgets.NewButton("sync-check", "检查同步", widgets.ModeCustom)
 	u.syncCheck.SetStyle(u.softButtonStyle())
 	u.syncCheck.SetOnClick(func() {
 		u.checkSyncAsync(true)
 	})
 
-	u.syncGo = widgets.NewButton("sync-go", "开始同步")
+	u.syncGo = widgets.NewButton("sync-go", "开始同步", widgets.ModeCustom)
 	u.syncGo.SetStyle(u.primaryButtonStyle())
 	u.syncGo.SetOnClick(u.doSyncAsync)
 
-	u.syncClose = widgets.NewButton("sync-close", "关闭")
+	u.syncClose = widgets.NewButton("sync-close", "关闭", widgets.ModeCustom)
 	u.syncClose.SetStyle(u.softButtonStyle())
 	u.syncClose.SetOnClick(func() {
 		u.hideDialogs()
@@ -656,7 +661,7 @@ func (u *nativeUI) buildUploadDialog() {
 	u.uploadDesc = u.label("upload-desc", "如果发现还有流氓软件没能结束，可以将本地信息上传到服务器分析。", 14, 400, u.col(76, 91, 119), dtWordBreak)
 	u.uploadWarn = u.label("upload-warn", "注意：这里只用于完善名单库以优化拦截效果，不会上传您的文件。", 14, 500, u.col(220, 38, 38), dtWordBreak)
 
-	u.uploadAll = widgets.NewCheckBox("upload-all", "全选")
+	u.uploadAll = widgets.NewCheckBox("upload-all", "全选", widgets.ModeCustom)
 	u.uploadAll.SetStyle(u.checkStyle())
 	u.uploadAll.SetOnChange(func(v bool) {
 		for key, cb := range u.uploadChecks {
@@ -666,7 +671,7 @@ func (u *nativeUI) buildUploadDialog() {
 	})
 
 	for _, opt := range uploadOptions {
-		cb := widgets.NewCheckBox("upload-"+opt.Key, opt.Label)
+		cb := widgets.NewCheckBox("upload-"+opt.Key, opt.Label, widgets.ModeCustom)
 		cb.SetStyle(u.checkStyle())
 		key := opt.Key
 		cb.SetOnChange(func(v bool) {
@@ -677,17 +682,17 @@ func (u *nativeUI) buildUploadDialog() {
 		u.uploadDialog.Add(cb)
 	}
 
-	u.uploadClose = widgets.NewButton("upload-close", "关闭")
+	u.uploadClose = widgets.NewButton("upload-close", "关闭", widgets.ModeCustom)
 	u.uploadClose.SetStyle(u.softButtonStyle())
 	u.uploadClose.SetOnClick(func() {
 		u.hideDialogs()
 	})
-	u.uploadCancel = widgets.NewButton("upload-cancel", "取消")
+	u.uploadCancel = widgets.NewButton("upload-cancel", "取消", widgets.ModeCustom)
 	u.uploadCancel.SetStyle(u.softButtonStyle())
 	u.uploadCancel.SetOnClick(func() {
 		u.hideDialogs()
 	})
-	u.uploadGo = widgets.NewButton("upload-go", "立即上传")
+	u.uploadGo = widgets.NewButton("upload-go", "立即上传", widgets.ModeCustom)
 	u.uploadGo.SetStyle(u.primaryButtonStyle())
 	u.uploadGo.SetOnClick(u.doUploadAsync)
 
@@ -710,19 +715,19 @@ func (u *nativeUI) layout(size core.Size) {
 		return
 	}
 
-	m := u.dp(18)
-	gap := u.dp(16)
-	headerH := u.dp(66)
-	sideW := u.dp(176)
+	m := u.dp(16)
+	gap := u.dp(14)
+	headerH := u.dp(60)
+	sideW := u.dp(164)
 	contentX := m + sideW + gap
 	contentW := w - contentX - m
 	topY := m + headerH + gap
-	rulesH := u.dp(258)
+	rulesH := u.dp(284)
 	logsY := topY + rulesH + gap
-	footerH := u.dp(34)
+	footerH := u.dp(28)
 	logsH := h - logsY - m - footerH
-	if logsH < u.dp(170) {
-		logsH = u.dp(170)
+	if logsH < u.dp(156) {
+		logsH = u.dp(156)
 	}
 
 	u.header.SetBounds(core.Rect{X: m, Y: m, W: w - m*2, H: headerH})
@@ -731,44 +736,43 @@ func (u *nativeUI) layout(size core.Size) {
 	u.logsCard.SetBounds(core.Rect{X: contentX, Y: logsY, W: contentW, H: logsH})
 	u.mask.SetBounds(core.Rect{X: 0, Y: 0, W: w, H: h})
 
-	u.brandLabel.SetBounds(core.Rect{X: m + u.dp(20), Y: m + u.dp(8), W: u.dp(150), H: u.dp(48)})
-	u.btnRun.SetBounds(core.Rect{X: m + u.dp(180), Y: m + u.dp(11), W: u.dp(92), H: u.dp(40)})
-	u.chkBoot.SetBounds(core.Rect{X: m + u.dp(286), Y: m + u.dp(14), W: u.dp(100), H: u.dp(34)})
-	u.adminLabel.SetBounds(core.Rect{X: m + u.dp(375), Y: m + u.dp(16), W: u.dp(64), H: u.dp(28)})
-	u.runLabel.SetBounds(core.Rect{X: m + u.dp(465), Y: m + u.dp(16), W: u.dp(64), H: u.dp(28)})
-	u.btnFake.SetBounds(core.Rect{X: w - m - u.dp(280), Y: m + u.dp(11), W: u.dp(92), H: u.dp(40)})
-	u.btnHelp.SetBounds(core.Rect{X: w - m - u.dp(182), Y: m + u.dp(11), W: u.dp(92), H: u.dp(40)})
-	u.btnGit.SetBounds(core.Rect{X: w - m - u.dp(84), Y: m + u.dp(11), W: u.dp(80), H: u.dp(40)})
+	u.brandLabel.SetBounds(core.Rect{X: m + u.dp(18), Y: m + u.dp(6), W: u.dp(138), H: u.dp(40)})
+	u.btnRun.SetBounds(core.Rect{X: m + u.dp(160), Y: m + u.dp(10), W: u.dp(86), H: u.dp(36)})
+	u.chkBoot.SetBounds(core.Rect{X: m + u.dp(258), Y: m + u.dp(12), W: u.dp(96), H: u.dp(30)})
+	u.adminLabel.SetBounds(core.Rect{X: m + u.dp(346), Y: m + u.dp(14), W: u.dp(58), H: u.dp(24)})
+	u.runLabel.SetBounds(core.Rect{X: m + u.dp(410), Y: m + u.dp(14), W: u.dp(58), H: u.dp(24)})
+	u.btnFake.SetBounds(core.Rect{X: w - m - u.dp(252), Y: m + u.dp(10), W: u.dp(82), H: u.dp(36)})
+	u.btnHelp.SetBounds(core.Rect{X: w - m - u.dp(164), Y: m + u.dp(10), W: u.dp(78), H: u.dp(36)})
+	u.btnGit.SetBounds(core.Rect{X: w - m - u.dp(80), Y: m + u.dp(10), W: u.dp(74), H: u.dp(36)})
 
-	sideX := m + u.dp(16)
-	sideBtnW := sideW - u.dp(32)
+	sideX := m + u.dp(12)
+	sideBtnW := sideW - u.dp(24)
 	for i, key := range listOrder {
-		y := topY + u.dp(18) + int32(i)*u.dp(54)
-		u.sideButtons[key].SetBounds(core.Rect{X: sideX, Y: y, W: sideBtnW, H: u.dp(42)})
+		y := topY + u.dp(14) + int32(i)*u.dp(48)
+		u.sideButtons[key].SetBounds(core.Rect{X: sideX, Y: y, W: sideBtnW, H: u.dp(38)})
 	}
-	sideActionY := h - m - u.dp(198)
-	u.btnUpload.SetBounds(core.Rect{X: sideX, Y: sideActionY, W: sideBtnW, H: u.dp(38)})
-	u.btnSync.SetBounds(core.Rect{X: sideX, Y: sideActionY + u.dp(46), W: sideBtnW, H: u.dp(38)})
-	u.btnUpdate.SetBounds(core.Rect{X: sideX, Y: sideActionY + u.dp(92), W: sideBtnW, H: u.dp(38)})
-	u.btnAbout.SetBounds(core.Rect{X: sideX, Y: sideActionY + u.dp(138), W: sideBtnW, H: u.dp(38)})
+	sideActionY := h - m - u.dp(158)
+	u.btnUpload.SetBounds(core.Rect{X: sideX, Y: sideActionY, W: sideBtnW, H: u.dp(34)})
+	u.btnSync.SetBounds(core.Rect{X: sideX, Y: sideActionY + u.dp(40), W: sideBtnW, H: u.dp(34)})
+	u.btnUpdate.SetBounds(core.Rect{X: sideX, Y: sideActionY + u.dp(80), W: sideBtnW, H: u.dp(34)})
+	u.btnAbout.SetBounds(core.Rect{X: sideX, Y: sideActionY + u.dp(120), W: sideBtnW, H: u.dp(34)})
 
-	cardX := contentX + u.dp(16)
-	cardW := contentW - u.dp(32)
-	u.ruleTitle.SetBounds(core.Rect{X: cardX, Y: topY + u.dp(14), W: u.dp(260), H: u.dp(28)})
-	u.ruleState.SetBounds(core.Rect{X: contentX + contentW - u.dp(110), Y: topY + u.dp(18), W: u.dp(80), H: u.dp(22)})
-	u.searchBox.SetBounds(core.Rect{X: cardX, Y: topY + u.dp(52), W: cardW - u.dp(188), H: u.dp(38)})
-	u.btnAdd.SetBounds(core.Rect{X: contentX + contentW - u.dp(168), Y: topY + u.dp(52), W: u.dp(76), H: u.dp(38)})
-	u.btnDel.SetBounds(core.Rect{X: contentX + contentW - u.dp(84), Y: topY + u.dp(52), W: u.dp(68), H: u.dp(38)})
-	u.rulesList.SetBounds(core.Rect{X: cardX, Y: topY + u.dp(104), W: cardW, H: rulesH - u.dp(154)})
-	u.ruleNote.SetBounds(core.Rect{X: cardX, Y: topY + rulesH - u.dp(40), W: cardW, H: u.dp(28)})
+	cardX := contentX + u.dp(14)
+	cardW := contentW - u.dp(28)
+	u.ruleTitle.SetBounds(core.Rect{X: cardX, Y: topY + u.dp(10), W: u.dp(236), H: u.dp(24)})
+	u.ruleState.SetBounds(core.Rect{X: contentX + contentW - u.dp(98), Y: topY + u.dp(12), W: u.dp(70), H: u.dp(18)})
+	u.searchBox.SetBounds(core.Rect{X: cardX, Y: topY + u.dp(40), W: cardW - u.dp(134), H: u.dp(30)})
+	u.btnAdd.SetBounds(core.Rect{X: contentX + contentW - u.dp(120), Y: topY + u.dp(40), W: u.dp(54), H: u.dp(30)})
+	u.btnDel.SetBounds(core.Rect{X: contentX + contentW - u.dp(60), Y: topY + u.dp(40), W: u.dp(46), H: u.dp(30)})
+	u.rulesList.SetBounds(core.Rect{X: cardX, Y: topY + u.dp(80), W: cardW, H: rulesH - u.dp(112)})
+	u.ruleNote.SetBounds(core.Rect{X: cardX, Y: topY + rulesH - u.dp(22), W: cardW, H: u.dp(16)})
 
-	u.logTitle.SetBounds(core.Rect{X: cardX, Y: logsY + u.dp(14), W: u.dp(260), H: u.dp(28)})
-	u.logInfo.SetBounds(core.Rect{X: contentX + contentW - u.dp(150), Y: logsY + u.dp(18), W: u.dp(120), H: u.dp(22)})
-	u.logsList.SetBounds(core.Rect{X: cardX, Y: logsY + u.dp(52), W: cardW, H: logsH - u.dp(128)})
-	u.btnLogOpen.SetBounds(core.Rect{X: cardX, Y: logsY + logsH - u.dp(64), W: u.dp(92), H: u.dp(34)})
-	u.btnLogWhite.SetBounds(core.Rect{X: cardX + u.dp(102), Y: logsY + logsH - u.dp(64), W: u.dp(108), H: u.dp(34)})
-	u.serviceLabel.SetBounds(core.Rect{X: cardX, Y: logsY + logsH - u.dp(26), W: u.dp(220), H: u.dp(20)})
-	u.modeLabel.SetBounds(core.Rect{X: contentX + contentW - u.dp(120), Y: logsY + logsH - u.dp(26), W: u.dp(96), H: u.dp(20)})
+	u.logTitle.SetBounds(core.Rect{X: cardX, Y: logsY + u.dp(10), W: u.dp(236), H: u.dp(22)})
+	u.logInfo.SetBounds(core.Rect{X: contentX + contentW - u.dp(132), Y: logsY + u.dp(12), W: u.dp(104), H: u.dp(18)})
+	u.logsList.SetBounds(core.Rect{X: cardX, Y: logsY + u.dp(40), W: cardW, H: logsH - u.dp(78)})
+	u.btnLogOpen.SetBounds(core.Rect{X: cardX, Y: logsY + logsH - u.dp(38), W: u.dp(76), H: u.dp(28)})
+	u.btnLogWhite.SetBounds(core.Rect{X: cardX + u.dp(84), Y: logsY + logsH - u.dp(38), W: u.dp(90), H: u.dp(28)})
+	u.modeLabel.SetBounds(core.Rect{X: contentX + contentW - u.dp(108), Y: logsY + logsH - u.dp(16), W: u.dp(84), H: u.dp(16)})
 	u.msgLabel.SetBounds(core.Rect{X: contentX, Y: h - m - footerH, W: contentW, H: footerH})
 
 	u.layoutDialogs(w, h)
@@ -787,22 +791,23 @@ func (u *nativeUI) layoutDialogs(w, h int32) {
 	u.addCancel.SetBounds(core.Rect{X: addRect.X + addRect.W - u.dp(184), Y: addRect.Y + addRect.H - u.dp(58), W: u.dp(74), H: u.dp(36)})
 	u.addConfirm.SetBounds(core.Rect{X: addRect.X + addRect.W - u.dp(100), Y: addRect.Y + addRect.H - u.dp(58), W: u.dp(76), H: u.dp(36)})
 
-	aboutRect := center(u.dp(500), u.dp(340))
+	aboutRect := center(u.dp(500), u.dp(372))
 	u.aboutDialog.SetBounds(aboutRect)
 	u.aboutTitle.SetBounds(core.Rect{X: aboutRect.X + u.dp(24), Y: aboutRect.Y + u.dp(18), W: aboutRect.W - u.dp(48), H: u.dp(28)})
-	u.aboutName.SetBounds(core.Rect{X: aboutRect.X + u.dp(40), Y: aboutRect.Y + u.dp(90), W: aboutRect.W - u.dp(80), H: u.dp(40)})
-	u.aboutDesc.SetBounds(core.Rect{X: aboutRect.X + u.dp(80), Y: aboutRect.Y + u.dp(142), W: aboutRect.W - u.dp(160), H: u.dp(44)})
-	u.aboutVersion.SetBounds(core.Rect{X: aboutRect.X + u.dp(60), Y: aboutRect.Y + u.dp(232), W: aboutRect.W - u.dp(120), H: u.dp(24)})
-	u.aboutGit.SetBounds(core.Rect{X: aboutRect.X + (aboutRect.W-u.dp(104))/2, Y: aboutRect.Y + u.dp(190), W: u.dp(104), H: u.dp(38)})
+	u.aboutIcon.SetBounds(core.Rect{X: aboutRect.X + (aboutRect.W-u.dp(72))/2, Y: aboutRect.Y + u.dp(70), W: u.dp(72), H: u.dp(72)})
+	u.aboutName.SetBounds(core.Rect{X: aboutRect.X + u.dp(40), Y: aboutRect.Y + u.dp(150), W: aboutRect.W - u.dp(80), H: u.dp(40)})
+	u.aboutDesc.SetBounds(core.Rect{X: aboutRect.X + u.dp(80), Y: aboutRect.Y + u.dp(198), W: aboutRect.W - u.dp(160), H: u.dp(44)})
+	u.aboutGit.SetBounds(core.Rect{X: aboutRect.X + (aboutRect.W-u.dp(104))/2, Y: aboutRect.Y + u.dp(252), W: u.dp(104), H: u.dp(38)})
+	u.aboutVersion.SetBounds(core.Rect{X: aboutRect.X + u.dp(60), Y: aboutRect.Y + u.dp(300), W: aboutRect.W - u.dp(120), H: u.dp(24)})
 	u.aboutClose.SetBounds(core.Rect{X: aboutRect.X + aboutRect.W - u.dp(100), Y: aboutRect.Y + aboutRect.H - u.dp(58), W: u.dp(76), H: u.dp(36)})
 
-	updateRect := center(u.dp(620), u.dp(470))
+	updateRect := center(u.dp(640), u.dp(560))
 	u.updateDialog.SetBounds(updateRect)
 	u.updateTitle.SetBounds(core.Rect{X: updateRect.X + u.dp(24), Y: updateRect.Y + u.dp(18), W: u.dp(120), H: u.dp(28)})
 	u.updateVersion.SetBounds(core.Rect{X: updateRect.X + u.dp(24), Y: updateRect.Y + u.dp(58), W: updateRect.W - u.dp(48), H: u.dp(24)})
 	u.updateDate.SetBounds(core.Rect{X: updateRect.X + u.dp(24), Y: updateRect.Y + u.dp(92), W: updateRect.W - u.dp(48), H: u.dp(24)})
-	u.updateNotes.SetBounds(core.Rect{X: updateRect.X + u.dp(24), Y: updateRect.Y + u.dp(128), W: updateRect.W - u.dp(48), H: u.dp(132)})
-	u.updateItems.SetBounds(core.Rect{X: updateRect.X + u.dp(24), Y: updateRect.Y + u.dp(272), W: updateRect.W - u.dp(48), H: u.dp(108)})
+	u.updateNotes.SetBounds(core.Rect{X: updateRect.X + u.dp(24), Y: updateRect.Y + u.dp(126), W: updateRect.W - u.dp(48), H: u.dp(230)})
+	u.updateItems.SetBounds(core.Rect{X: updateRect.X + u.dp(24), Y: updateRect.Y + u.dp(370), W: updateRect.W - u.dp(48), H: u.dp(110)})
 	u.updateCheck.SetBounds(core.Rect{X: updateRect.X + updateRect.W - u.dp(286), Y: updateRect.Y + updateRect.H - u.dp(58), W: u.dp(90), H: u.dp(36)})
 	u.updateGo.SetBounds(core.Rect{X: updateRect.X + updateRect.W - u.dp(188), Y: updateRect.Y + updateRect.H - u.dp(58), W: u.dp(76), H: u.dp(36)})
 	u.updateClose.SetBounds(core.Rect{X: updateRect.X + updateRect.W - u.dp(100), Y: updateRect.Y + updateRect.H - u.dp(58), W: u.dp(76), H: u.dp(36)})
@@ -1006,24 +1011,24 @@ func (u *nativeUI) refreshStatus(st uiSta) {
 	u.chkBoot.SetChecked(st.Boot)
 	if st.Adm {
 		u.adminLabel.SetText("管理员")
-		u.adminLabel.SetStyle(u.textStyle(13, 600, u.col(22, 163, 74), core.DTCenter|core.DTVCenter|core.DTSingleLine))
+		u.adminLabel.SetStyle(u.textStyle(12, 600, u.col(22, 163, 74), core.DTCenter|core.DTVCenter|core.DTSingleLine))
 	} else {
 		u.adminLabel.SetText("普通用户")
-		u.adminLabel.SetStyle(u.textStyle(13, 600, u.col(220, 38, 38), core.DTCenter|core.DTVCenter|core.DTSingleLine))
+		u.adminLabel.SetStyle(u.textStyle(12, 600, u.col(220, 38, 38), core.DTCenter|core.DTVCenter|core.DTSingleLine))
 	}
 	if st.Run {
 		u.runLabel.SetText("已运行")
-		u.runLabel.SetStyle(u.textStyle(13, 600, u.col(22, 163, 74), core.DTCenter|core.DTVCenter|core.DTSingleLine))
+		u.runLabel.SetStyle(u.textStyle(12, 600, u.col(22, 163, 74), core.DTCenter|core.DTVCenter|core.DTSingleLine))
 		u.serviceLabel.SetText("服务状态: 已运行")
-		u.serviceLabel.SetStyle(u.textStyle(13, 500, u.col(22, 163, 74), core.DTEndEllipsis))
+		u.serviceLabel.SetStyle(u.textStyle(12, 500, u.col(22, 163, 74), core.DTEndEllipsis))
 		u.btnRun.SetText("停止")
 		u.btnRun.SetStyle(u.dangerButtonStyle())
 		u.app.SetTitle("名单管理 - 已运行")
 	} else {
 		u.runLabel.SetText("未运行")
-		u.runLabel.SetStyle(u.textStyle(13, 600, u.col(120, 132, 158), core.DTCenter|core.DTVCenter|core.DTSingleLine))
+		u.runLabel.SetStyle(u.textStyle(12, 600, u.col(120, 132, 158), core.DTCenter|core.DTVCenter|core.DTSingleLine))
 		u.serviceLabel.SetText("服务状态: 未运行")
-		u.serviceLabel.SetStyle(u.textStyle(13, 500, u.col(120, 132, 158), core.DTEndEllipsis))
+		u.serviceLabel.SetStyle(u.textStyle(12, 500, u.col(120, 132, 158), core.DTEndEllipsis))
 		u.btnRun.SetText("启动")
 		u.btnRun.SetStyle(u.primaryButtonStyle())
 		u.app.SetTitle("名单管理 - 未运行")
@@ -1122,7 +1127,7 @@ func (u *nativeUI) rebuildSyncChecks(items []SyncItemInfo) {
 
 	for _, item := range items {
 		txt := fmt.Sprintf("%s  %s  %s", item.Name, emptyAs(item.SizeText, "-"), ternary(item.Need, "需同步", "已同步"))
-		cb := widgets.NewCheckBox("sync-"+item.Name, txt)
+		cb := widgets.NewCheckBox("sync-"+item.Name, txt, widgets.ModeCustom)
 		cb.SetStyle(u.checkStyle())
 		cb.SetChecked(u.syncSelected[item.Name])
 		name := item.Name
@@ -1659,7 +1664,7 @@ func (u *nativeUI) newDialog(id string) *widgets.Panel {
 }
 
 func (u *nativeUI) theme() *widgets.Theme {
-	theme := widgets.NewTheme(widgets.ThemeOptions{HardMode: true})
+	theme := widgets.DefaultTheme()
 	theme.BackgroundColor = u.col(245, 248, 252)
 	theme.Text = u.textStyle(15, 400, u.col(23, 33, 61), core.DTVCenter|core.DTSingleLine)
 	theme.Title = u.textStyle(20, 700, u.col(23, 33, 61), core.DTVCenter|core.DTSingleLine)
@@ -1764,7 +1769,7 @@ func (u *nativeUI) outlineDangerStyle() widgets.ButtonStyle {
 func (u *nativeUI) sideButtonStyle(active bool) widgets.ButtonStyle {
 	if active {
 		return widgets.ButtonStyle{
-			Font:         widgets.FontSpec{Face: "Microsoft YaHei UI", SizeDP: 15, Weight: 700},
+			Font:         widgets.FontSpec{Face: "Microsoft YaHei UI", SizeDP: 14, Weight: 700},
 			TextColor:    u.col(47, 104, 243),
 			DownText:     u.col(47, 104, 243),
 			DisabledText: u.col(130, 156, 214),
@@ -1773,14 +1778,14 @@ func (u *nativeUI) sideButtonStyle(active bool) widgets.ButtonStyle {
 			Pressed:      u.col(219, 232, 255),
 			Disabled:     u.col(240, 245, 255),
 			Border:       u.col(156, 190, 252),
-			CornerRadius: 14,
-			PadDP:        14,
-			TextInsetDP:  18,
-			GapDP:        8,
+			CornerRadius: 13,
+			PadDP:        10,
+			TextInsetDP:  14,
+			GapDP:        6,
 		}
 	}
 	return widgets.ButtonStyle{
-		Font:         widgets.FontSpec{Face: "Microsoft YaHei UI", SizeDP: 15, Weight: 600},
+		Font:         widgets.FontSpec{Face: "Microsoft YaHei UI", SizeDP: 14, Weight: 600},
 		TextColor:    u.col(31, 41, 55),
 		DownText:     u.col(31, 41, 55),
 		DisabledText: u.col(171, 183, 206),
@@ -1789,16 +1794,16 @@ func (u *nativeUI) sideButtonStyle(active bool) widgets.ButtonStyle {
 		Pressed:      u.col(236, 242, 252),
 		Disabled:     u.col(245, 248, 252),
 		Border:       u.col(226, 232, 243),
-		CornerRadius: 14,
-		PadDP:        14,
-		TextInsetDP:  18,
-		GapDP:        8,
+		CornerRadius: 13,
+		PadDP:        10,
+		TextInsetDP:  14,
+		GapDP:        6,
 	}
 }
 
 func (u *nativeUI) sidebarActionStyle() widgets.ButtonStyle {
 	return widgets.ButtonStyle{
-		Font:         widgets.FontSpec{Face: "Microsoft YaHei UI", SizeDP: 15, Weight: 600},
+		Font:         widgets.FontSpec{Face: "Microsoft YaHei UI", SizeDP: 13, Weight: 600},
 		TextColor:    u.col(33, 45, 76),
 		DownText:     u.col(33, 45, 76),
 		DisabledText: u.col(171, 183, 206),
@@ -1807,10 +1812,83 @@ func (u *nativeUI) sidebarActionStyle() widgets.ButtonStyle {
 		Pressed:      u.col(228, 236, 250),
 		Disabled:     u.col(247, 249, 252),
 		Border:       u.col(228, 235, 246),
-		CornerRadius: 12,
-		PadDP:        12,
-		TextInsetDP:  18,
-		GapDP:        8,
+		CornerRadius: 10,
+		PadDP:        8,
+		TextInsetDP:  12,
+		GapDP:        6,
+	}
+}
+
+func (u *nativeUI) compactPrimaryButtonStyle() widgets.ButtonStyle {
+	return widgets.ButtonStyle{
+		Font:         widgets.FontSpec{Face: "Microsoft YaHei UI", SizeDP: 12, Weight: 700},
+		TextColor:    u.col(255, 255, 255),
+		DownText:     u.col(255, 255, 255),
+		DisabledText: u.col(225, 232, 243),
+		Background:   u.col(47, 104, 243),
+		Hover:        u.col(38, 93, 228),
+		Pressed:      u.col(31, 78, 200),
+		Disabled:     u.col(160, 181, 235),
+		Border:       u.col(47, 104, 243),
+		CornerRadius: 9,
+		PadDP:        7,
+		TextInsetDP:  10,
+		GapDP:        6,
+	}
+}
+
+func (u *nativeUI) compactSoftButtonStyle() widgets.ButtonStyle {
+	return widgets.ButtonStyle{
+		Font:         widgets.FontSpec{Face: "Microsoft YaHei UI", SizeDP: 12, Weight: 600},
+		TextColor:    u.col(41, 52, 77),
+		DownText:     u.col(41, 52, 77),
+		DisabledText: u.col(171, 183, 206),
+		Background:   u.col(255, 255, 255),
+		Hover:        u.col(242, 246, 253),
+		Pressed:      u.col(232, 238, 250),
+		Disabled:     u.col(245, 248, 252),
+		Border:       u.col(220, 228, 242),
+		CornerRadius: 9,
+		PadDP:        7,
+		TextInsetDP:  10,
+		GapDP:        6,
+	}
+}
+
+func (u *nativeUI) compactOutlineDangerStyle() widgets.ButtonStyle {
+	return widgets.ButtonStyle{
+		Font:         widgets.FontSpec{Face: "Microsoft YaHei UI", SizeDP: 12, Weight: 600},
+		TextColor:    u.col(220, 38, 38),
+		DownText:     u.col(255, 255, 255),
+		DisabledText: u.col(216, 158, 158),
+		Background:   u.col(255, 255, 255),
+		Hover:        u.col(254, 242, 242),
+		Pressed:      u.col(220, 38, 38),
+		Disabled:     u.col(252, 243, 243),
+		Border:       u.col(252, 165, 165),
+		CornerRadius: 9,
+		PadDP:        7,
+		TextInsetDP:  10,
+		GapDP:        6,
+	}
+}
+
+func (u *nativeUI) iconDisplayButtonStyle() widgets.ButtonStyle {
+	return widgets.ButtonStyle{
+		Font:         widgets.FontSpec{Face: "Microsoft YaHei UI", SizeDP: 12, Weight: 400},
+		TextColor:    u.col(255, 255, 255),
+		DownText:     u.col(255, 255, 255),
+		DisabledText: u.col(255, 255, 255),
+		Background:   u.col(255, 255, 255),
+		Hover:        u.col(255, 255, 255),
+		Pressed:      u.col(255, 255, 255),
+		Disabled:     u.col(255, 255, 255),
+		Border:       u.col(255, 255, 255),
+		CornerRadius: 0,
+		IconSizeDP:   72,
+		TextInsetDP:  0,
+		GapDP:        0,
+		PadDP:        0,
 	}
 }
 
@@ -1829,7 +1907,7 @@ func (u *nativeUI) checkStyle() widgets.ChoiceStyle {
 		DisabledBg:      u.col(245, 247, 250),
 		DisabledBorder:  u.col(212, 218, 228),
 		CornerRadius:    6,
-		IndicatorStyle:  widgets.ChoiceIndicatorCheck,
+		IndicatorStyle:  widgets.ChoiceIndicatorDot,
 		IndicatorSizeDP: 18,
 		IndicatorGapDP:  10,
 	}
@@ -1850,7 +1928,7 @@ func (u *nativeUI) radioStyle() widgets.ChoiceStyle {
 		DisabledBg:      u.col(245, 247, 250),
 		DisabledBorder:  u.col(212, 218, 228),
 		CornerRadius:    9,
-		IndicatorStyle:  widgets.ChoiceIndicatorCheck,
+		IndicatorStyle:  widgets.ChoiceIndicatorDot,
 		IndicatorSizeDP: 18,
 		IndicatorGapDP:  10,
 	}
@@ -1858,7 +1936,7 @@ func (u *nativeUI) radioStyle() widgets.ChoiceStyle {
 
 func (u *nativeUI) ruleListStyle() widgets.ListStyle {
 	return widgets.ListStyle{
-		Font:              widgets.FontSpec{Face: "Microsoft YaHei UI", SizeDP: 15, Weight: 500},
+		Font:              widgets.FontSpec{Face: "Microsoft YaHei UI", SizeDP: 13, Weight: 500},
 		TextColor:         u.col(31, 41, 55),
 		DisabledText:      u.col(148, 163, 184),
 		Background:        u.col(255, 255, 255),
@@ -1868,15 +1946,15 @@ func (u *nativeUI) ruleListStyle() widgets.ListStyle {
 		ItemHoverColor:    u.col(242, 247, 255),
 		ItemSelectedColor: u.col(47, 104, 243),
 		ItemTextColor:     u.col(255, 255, 255),
-		ItemHeightDP:      36,
-		PaddingDP:         10,
-		CornerRadius:      14,
+		ItemHeightDP:      30,
+		PaddingDP:         8,
+		CornerRadius:      12,
 	}
 }
 
 func (u *nativeUI) logListStyle() widgets.ListStyle {
 	return widgets.ListStyle{
-		Font:              widgets.FontSpec{Face: "Microsoft YaHei UI", SizeDP: 14, Weight: 500},
+		Font:              widgets.FontSpec{Face: "Microsoft YaHei UI", SizeDP: 13, Weight: 500},
 		TextColor:         u.col(41, 52, 77),
 		DisabledText:      u.col(148, 163, 184),
 		Background:        u.col(255, 255, 255),
@@ -1886,9 +1964,9 @@ func (u *nativeUI) logListStyle() widgets.ListStyle {
 		ItemHoverColor:    u.col(244, 247, 252),
 		ItemSelectedColor: u.col(234, 242, 255),
 		ItemTextColor:     u.col(47, 104, 243),
-		ItemHeightDP:      32,
-		PaddingDP:         10,
-		CornerRadius:      14,
+		ItemHeightDP:      28,
+		PaddingDP:         8,
+		CornerRadius:      12,
 	}
 }
 
@@ -1909,6 +1987,23 @@ func (u *nativeUI) editStyle() widgets.EditStyle {
 	}
 }
 
+func (u *nativeUI) compactEditStyle() widgets.EditStyle {
+	return widgets.EditStyle{
+		Font:             widgets.FontSpec{Face: "Microsoft YaHei UI", SizeDP: 12, Weight: 500},
+		TextColor:        u.col(31, 41, 55),
+		PlaceholderColor: u.col(148, 163, 184),
+		Background:       u.col(255, 255, 255),
+		BorderColor:      u.col(223, 230, 243),
+		HoverBorder:      u.col(96, 165, 250),
+		FocusBorder:      u.col(47, 104, 243),
+		DisabledText:     u.col(148, 163, 184),
+		DisabledBg:       u.col(245, 247, 250),
+		CaretColor:       u.col(47, 104, 243),
+		PaddingDP:        8,
+		CornerRadius:     9,
+	}
+}
+
 func (u *nativeUI) col(r, g, b byte) core.Color {
 	return core.RGB(r, g, b)
 }
@@ -1925,11 +2020,15 @@ func (u *nativeUI) hasRuleIndex(idx int) bool {
 }
 
 func loadWinUIIcon(path string) *core.Icon {
+	return loadWinUIIconSized(path, 48)
+}
+
+func loadWinUIIconSized(path string, want int32) *core.Icon {
 	buf, err := os.ReadFile(path)
 	if err != nil {
 		return nil
 	}
-	icon, err := core.LoadIconFromICO(buf, 48)
+	icon, err := core.LoadIconFromICO(buf, want)
 	if err != nil {
 		return nil
 	}

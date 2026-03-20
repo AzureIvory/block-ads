@@ -2,7 +2,6 @@ package main
 
 import (
 	"block-ads-ui/utils"
-	"encoding/json"
 	"fmt"
 	"os"
 	"os/exec"
@@ -14,7 +13,6 @@ import (
 	"time"
 
 	"github.com/bi-zone/etw"
-	webview "github.com/webview/webview_go"
 	"golang.org/x/sys/windows"
 	reg "golang.org/x/sys/windows/registry"
 )
@@ -62,11 +60,10 @@ const (
 type appDat struct {
 	mu  sync.Mutex
 	dir string
-	lst map[string][]string // key -> 行
-	not map[string]string   // 文本 -> 注释
-	lg  []string            // 日志
+	lst map[string][]string
+	not map[string]string
+	lg  []string
 }
-
 type uiSta struct {
 	Adm  bool `json:"adm"`
 	Run  bool `json:"run"`
@@ -75,10 +72,10 @@ type uiSta struct {
 
 func stopAd(dir string) error {
 	if err := utils.Kill("block-ads.exe"); err != nil {
-		fmt.Println("结束 block-ads.exe 失败:", err)
+		fmt.Println("缂佹挻娼?block-ads.exe 婢惰精瑙?", err)
 	}
 	if err := etw.KillSession("blockads-ProcMon-ETW"); err != nil {
-		fmt.Println("结束ETW会话失败:", err)
+		fmt.Println("缂佹挻娼獷TW娴兼俺鐦芥径杈Е:", err)
 	}
 	p := filepath.Join(dir, "skin.txt")
 	_ = os.WriteFile(p, []byte{}, 0644)
@@ -272,7 +269,7 @@ func (d *appDat) svLst(key string) error {
 	return os.WriteFile(p, []byte(b.String()), 0644)
 }
 
-// 拷贝列表
+// 閹风柉绀夐崚妤勩€?
 func (d *appDat) all() map[string][]string {
 	d.mu.Lock()
 	defer d.mu.Unlock()
@@ -286,7 +283,7 @@ func (d *appDat) all() map[string][]string {
 	return out
 }
 
-// 拷贝注释
+// 閹风柉绀夊▔銊╁櫞
 func (d *appDat) note() map[string]string {
 	d.mu.Lock()
 	defer d.mu.Unlock()
@@ -298,7 +295,7 @@ func (d *appDat) note() map[string]string {
 	return out
 }
 
-// 拷贝日志
+// 閹风柉绀夐弮銉ョ箶
 func (d *appDat) log() []string {
 	d.mu.Lock()
 	defer d.mu.Unlock()
@@ -351,7 +348,7 @@ func (d *appDat) delLn(key string, idx int) ([]string, error) {
 	return out, nil
 }
 
-// 从日志加入白名单：kind = "folder" / "sign"
+// 娴犲孩妫╄箛妤€濮為崗銉ф閸氬秴宕熼敍姝琲nd = "folder" / "sign"
 func (d *appDat) addWhite(kind, val, path string) (bool, error) {
 	kind = strings.ToLower(strings.TrimSpace(kind))
 	val = strings.TrimSpace(val)
@@ -370,14 +367,14 @@ func (d *appDat) addWhite(kind, val, path string) (bool, error) {
 	}
 }
 
-// sign 模式：把签名加入Wsign.txt
+// sign 濡€崇础閿涙碍濡哥粵鎯ф倳閸旂姴鍙哤sign.txt
 func (d *appDat) addWsign(sign string) (bool, error) {
 	if sign == "" {
 		return false, os.ErrInvalid
 	}
 	wl := d.lst["signWhite"]
 
-	// 已存在则不重复写入
+	// 瀹告彃鐡ㄩ崷銊ュ灟娑撳秹鍣告径宥呭晸閸?
 	for _, s := range wl {
 		if strings.EqualFold(s, sign) {
 			return false, nil
@@ -392,8 +389,8 @@ func (d *appDat) addWsign(sign string) (bool, error) {
 	return true, nil
 }
 
-// folder 模式：从路径各级目录中找出与 folder.txt 行一致的名字，加入Wfolder.txt
-// - 第一段和最后一段不匹配
+// folder 濡€崇础閿涙矮绮犵捄顖氱窞閸氬嫮楠囬惄顔肩秿娑擃厽澹橀崙杞扮瑢 folder.txt 鐞涘奔绔撮懛瀵告畱閸氬秴鐡ч敍灞藉閸忣櫇folder.txt
+// - 缁楊兛绔村▓闈涙嫲閺堚偓閸氬簼绔村▓鍏哥瑝閸栧綊鍘?
 func (d *appDat) addWfolder(path string) (bool, error) {
 	if path == "" {
 		return false, os.ErrInvalid
@@ -405,7 +402,7 @@ func (d *appDat) addWfolder(path string) (bool, error) {
 	}
 	wl := d.lst["whitelist"]
 
-	// 预处理folder.txt
+	// 妫板嫬顦╅悶鍞俹lder.txt
 	fset := make(map[string]struct{})
 	for _, ln := range folders {
 		ln = strings.TrimSpace(ln)
@@ -418,13 +415,13 @@ func (d *appDat) addWfolder(path string) (bool, error) {
 		fset[strings.ToLower(ln)] = struct{}{}
 	}
 
-	// 现有白名单集合，用于去重
+	// 閻滅増婀侀惂钘夋倳閸楁洟娉﹂崥鍫礉閻劋绨崢濠氬櫢
 	wset := make(map[string]struct{})
 	for _, ln := range wl {
 		wset[strings.ToLower(strings.TrimSpace(ln))] = struct{}{}
 	}
 
-	// 统一分隔符
+	// 缂佺喍绔撮崚鍡涙缁?
 	p := strings.ReplaceAll(path, "/", `\`)
 	var segs []string
 	for _, part := range strings.Split(p, `\`) {
@@ -435,12 +432,12 @@ func (d *appDat) addWfolder(path string) (bool, error) {
 		segs = append(segs, part)
 	}
 	if len(segs) <= 2 {
-		// 只有根和文件名，没啥可匹配的
+		// 閸欘亝婀侀弽鐟版嫲閺傚洣娆㈤崥宥忕礉濞屸€虫殣閸欘垰灏柊宥囨畱
 		return false, nil
 	}
 
 	added := false
-	// 从第二段到倒数第二段
+	// 娴犲海顑囨禍灞绢唽閸掓澘鈧帗鏆熺粭顑跨癌濞?
 	for i := 1; i < len(segs)-1; i++ {
 		name := strings.TrimSpace(segs[i])
 		if name == "" {
@@ -452,7 +449,7 @@ func (d *appDat) addWfolder(path string) (bool, error) {
 			continue
 		}
 		if _, ok := wset[low]; ok {
-			// 已在白名单
+			// 瀹告彃婀惂钘夋倳閸?
 			continue
 		}
 
@@ -472,7 +469,7 @@ func (d *appDat) addWfolder(path string) (bool, error) {
 	return true, nil
 }
 
-// 是否管理员
+// 閺勵垰鎯佺粻锛勬倞閸?
 func chkAdm() bool {
 	f, err := os.Open(`\\.\PHYSICALDRIVE0`)
 	if err != nil {
@@ -482,7 +479,7 @@ func chkAdm() bool {
 	return true
 }
 
-// 拦截进程是否运行
+// 閹凤附鍩呮潻娑氣柤閺勵垰鎯佹潻鎰攽
 func chkRun() bool {
 	cmd := exec.Command("tasklist", "/FI", "IMAGENAME eq "+exeName)
 	cmd.SysProcAttr = &syscall.SysProcAttr{
@@ -495,7 +492,7 @@ func chkRun() bool {
 	return strings.Contains(strings.ToLower(string(out)), strings.ToLower(exeName))
 }
 
-// 检查开机自启
+// 濡偓閺屻儱绱戦張楦垮殰閸?
 func hasBoot(exe string) bool {
 	return hasBootKey(runName, exe)
 }
@@ -518,7 +515,7 @@ func hasBootKey(key, exe string) bool {
 	return strings.EqualFold(val, exe)
 }
 
-// 设置开机自启
+// 鐠佸墽鐤嗗鈧張楦垮殰閸?
 func setBoot(exe string, on bool) error {
 	return setBootKey(runName, exe, on)
 }
@@ -544,7 +541,7 @@ func setBootKey(key, exe string, on bool) error {
 	return err
 }
 
-// 以管理员模式启动
+// 娴犮儳顓搁悶鍡楁喅濡€崇础閸氼垰濮?
 func runExe(exe string) error {
 	if _, err := os.Stat(exe); err != nil {
 		return err
@@ -560,7 +557,7 @@ func runExe(exe string) error {
 	return windows.ShellExecute(0, vPtr, ePtr, nil, dPtr, show)
 }
 
-// 用默认浏览器打开网页
+// 閻劑绮拋銈嗙セ鐟欏牆娅掗幍鎾崇磻缂冩垿銆?
 func goUrl(u string) error {
 	if u == "" {
 		return nil
@@ -572,7 +569,7 @@ func goUrl(u string) error {
 	return cmd.Start()
 }
 
-// 伪装安装火绒
+// 娴碱亣顥婄€瑰顥婇悘顐ょ钵
 func reghr() error {
 	const sub = `SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\HuorongSysdiag`
 	const tgt = `C:\Program Files\Huorong\Sysdiag\bin\HipsMain.exe`
@@ -595,7 +592,7 @@ func reghr() error {
 	return nil
 }
 
-// 伪装虚拟机
+// 娴碱亣顥婇搹姘珯閺?
 func regvm() error {
 	const sub = `Applications\VMwareHostOpen.exe\shell\open\command`
 
@@ -611,7 +608,7 @@ func regvm() error {
 	return nil
 }
 
-// 注册表伪装vip
+// 濞夈劌鍞界悰銊ゅ悏鐟佸嵕ip
 func regvip() error {
 	const sub = `SOFTWARE\LDSGameMaster\User`
 
@@ -627,7 +624,7 @@ func regvip() error {
 	return nil
 }
 
-// ini文件伪装vip
+// ini閺傚洣娆㈡导顏囶棅vip
 func inivip() error {
 	app := os.Getenv("APPDATA")
 	if app == "" {
@@ -652,7 +649,7 @@ func inivip() error {
 
 	lines := strings.Split(string(data), "\n")
 
-	// 找 [settings]
+	// 閹?[settings]
 	secSt := -1
 	for i, ln := range lines {
 		t := strings.TrimSpace(ln)
@@ -674,7 +671,7 @@ func inivip() error {
 		return os.WriteFile(cfg, []byte(strings.Join(lines, "\n")), 0644)
 	}
 
-	// 找 [settings] 结束行
+	// 閹?[settings] 缂佹挻娼悰?
 	secEd := len(lines)
 	for i := secSt + 1; i < len(lines); i++ {
 		t := strings.TrimSpace(lines[i])
@@ -684,7 +681,7 @@ func inivip() error {
 		}
 	}
 
-	// 找 level
+	// 閹?level
 	lvlIdx := -1
 	for i := secSt + 1; i < secEd; i++ {
 		t := strings.TrimSpace(lines[i])
@@ -719,7 +716,7 @@ func inivip() error {
 	return os.WriteFile(cfg, []byte(strings.Join(lines, "\n")), 0644)
 }
 
-// 伪装开启360弹窗拦截
+// 娴碱亣顥婂鈧崥?60瀵湱鐛ラ幏锔藉焻
 func ads360() error {
 	const sub = `SOFTWARE\WOW6432Node\360Safe\stat`
 
@@ -738,7 +735,7 @@ func ads360() error {
 	return nil
 }
 
-// 把DWORD值设置为1
+// 閹跺WORD閸婅壈顔曠純顔昏礋1
 func dw1(k reg.Key, name string) error {
 	v, _, err := k.GetIntegerValue(name)
 	if err == nil && v == 1 {
@@ -748,361 +745,4 @@ func dw1(k reg.Key, name string) error {
 		return fmt.Errorf("dw1(%s): %w", name, err)
 	}
 	return nil
-}
-
-func legacyWebUIEntry() {
-	if len(os.Args) >= 3 && os.Args[1] == "--apply-update" {
-		pendPth := os.Args[2]
-
-		waitPID := 0
-		for i := 3; i < len(os.Args); i++ {
-			if os.Args[i] == "--wait-pid" && i+1 < len(os.Args) {
-				if v, err := strconv.Atoi(os.Args[i+1]); err == nil {
-					waitPID = v
-				}
-				i++
-			}
-		}
-
-		if err := AppPend(pendPth, waitPID); err != nil {
-			fmt.Println("apply update failed:", err)
-		}
-		return
-	}
-
-	utils.HasWV2()
-	exePath, err := os.Executable()
-	if err != nil {
-		panic(err)
-	}
-	dir := filepath.Dir(exePath)
-	_ = os.Remove(filepath.Join(dir, ".updater_tmp.exe"))
-	dat := newDat(dir)
-	exe := filepath.Join(dir, exeName)
-	w := webview.New(false)
-	defer w.Destroy()
-
-	w.SetSize(715, 540, webview.HintNone)
-	w.SetTitle("拦截管理")
-
-	_ = w.Bind("getAll", func() (map[string][]string, error) {
-		return dat.all(), nil
-	})
-	_ = w.Bind("getNot", func() (map[string]string, error) {
-		return dat.note(), nil
-	})
-	_ = w.Bind("getLog", func() ([]string, error) {
-		return dat.log(), nil
-	})
-	_ = w.Bind("addLn", func(key, txt string) ([]string, error) {
-		return dat.addLn(key, txt)
-	})
-	_ = w.Bind("delLn", func(key string, idx int) ([]string, error) {
-		return dat.delLn(key, idx)
-	})
-	_ = w.Bind("trydel", utils.Del)
-	_ = w.Bind("tryrm", func(p string) error {
-		up, wd, err := utils.FindUn(p)
-		if err != nil || up == "" {
-			utils.PopMsg("提示", "未找到卸载程序,请手动卸载", 0x00000000, 0x00000030)
-			return err
-		}
-
-		msg := "已找到卸载程序\n是否停止拦截进程并开始卸载?"
-		ret := utils.PopMsg("提示", msg, 0x00000001, 0x00000030)
-		if ret != 1 {
-			return nil
-		}
-
-		if err := stopAd(dir); err != nil {
-			return err
-		}
-		return utils.RunUn(up, wd)
-	})
-
-	codeExe := filepath.Join(dir, codeExeName)
-
-	// 异步状态检查
-	_ = w.Bind("stChkAsync", func() (bool, error) {
-		go func() {
-			st := uiSta{
-				Adm:  chkAdm(),
-				Run:  chkRun(),
-				Boot: hasBootKey(runName, exe) && hasBootKey(runNameCode, codeExe),
-			}
-
-			t := "名单管理"
-			if st.Run {
-				t += " - 已运行"
-			} else {
-				t += " - 未运行"
-			}
-
-			b, _ := json.Marshal(st)
-			js := fmt.Sprintf(
-				`(function(){ if (typeof window.__onStChk === "function") { window.__onStChk(%s); } })();`,
-				string(b),
-			)
-
-			w.Dispatch(func() {
-				w.SetTitle(t)
-				w.Eval(js)
-			})
-		}()
-		return true, nil
-	})
-
-	// 同步状态检查
-	_ = w.Bind("stChk", func() (uiSta, error) {
-		st := uiSta{
-			Adm:  chkAdm(),
-			Run:  chkRun(),
-			Boot: hasBootKey(runName, exe) && hasBootKey(runNameCode, codeExe),
-		}
-		t := "名单管理"
-		if st.Run {
-			t += " - 已运行"
-		} else {
-			t += " - 未运行"
-		}
-		w.SetTitle(t)
-		return st, nil
-	})
-
-	_ = w.Bind("doRun", func() (bool, error) {
-		if err := runExe(exe); err != nil {
-			return false, err
-		}
-		return true, nil
-	})
-	_ = w.Bind("doStop", func() (bool, error) {
-		if err := stopAd(dir); err != nil {
-			return false, err
-		}
-		return true, nil
-	})
-	//前往GitHub
-	_ = w.Bind("doGit", func() (bool, error) {
-		if err := goUrl("https://github.com/AzureIvory/block-ads"); err != nil {
-			return false, err
-		}
-		return true, nil
-	})
-	_ = w.Bind("setAut", func(on bool) (bool, error) {
-		if err := setBootKey(runName, exe, on); err != nil {
-			return false, err
-		}
-		if err := setBootKey(runNameCode, codeExe, on); err != nil {
-			return false, err
-		}
-		return hasBootKey(runName, exe) && hasBootKey(runNameCode, codeExe), nil
-	})
-
-	// 更新 / 同步
-	_ = w.Bind("chkUpd", func() (UpdateInfo, error) {
-		return dat.ChkUpd()
-	})
-	_ = w.Bind("doUpd", func() (bool, error) {
-		return dat.DoUpd(w)
-	})
-	_ = w.Bind("chkSync", func() (SyncInfo, error) {
-		return dat.ChkSyn()
-	})
-	_ = w.Bind("doSync", func(req map[string]interface{}) (bool, error) {
-		return dat.DoSyn(req)
-	})
-	_ = w.Bind("doUp", func(req map[string]interface{}) (bool, error) {
-		go func() {
-			sel := selMap(req)
-			if len(sel) == 0 {
-				sel = map[string]bool{
-					"desktop": true, "process": true, "startup": true,
-					"uninstall": true, "startmenu": true,
-				}
-			}
-
-			dat.mu.Lock()
-			kws := append([]string(nil), dat.lst["folder"]...)
-			dat.mu.Unlock()
-
-			up := mkUp(sel, kws)
-			b, err := json.Marshal(up)
-			url := ""
-			if err == nil {
-				url, err = utils.UpPost(getUrl(req), b)
-			}
-			payload := map[string]interface{}{
-				"ok":  err == nil,
-				"err": "",
-				"url": url,
-			}
-			if err != nil {
-				payload["err"] = err.Error()
-			}
-			jb, _ := json.Marshal(payload)
-			js := fmt.Sprintf(
-				`(function(){ if (typeof window.__onUp === "function") { window.__onUp(%s); } })();`,
-				string(jb),
-			)
-			w.Dispatch(func() { w.Eval(js) })
-		}()
-		return true, nil
-	})
-
-	// 检测更新/同步
-	_ = w.Bind("chkUpdAsync", func() (bool, error) {
-		go func() {
-			info, err := dat.ChkUpd()
-
-			payload := map[string]interface{}{
-				"ok":   err == nil,
-				"info": info,
-				"err":  "",
-			}
-			if err != nil {
-				payload["info"] = nil
-				payload["err"] = err.Error()
-			}
-
-			b, _ := json.Marshal(payload)
-			js := fmt.Sprintf(
-				`(function(){ if (typeof window.__onChkUpd === "function") { window.__onChkUpd(%s); } })();`,
-				string(b),
-			)
-
-			w.Dispatch(func() {
-				w.Eval(js)
-			})
-		}()
-		return true, nil
-	})
-
-	//异步更新
-	_ = w.Bind("doUpdAsync", func() (bool, error) {
-		go func() {
-			started, err := dat.DoUpd(w)
-
-			payload := map[string]interface{}{
-				"ok":      err == nil,
-				"started": started,
-				"err":     "",
-			}
-			if err != nil {
-				payload["err"] = err.Error()
-			}
-
-			b, _ := json.Marshal(payload)
-			js := fmt.Sprintf(
-				`(function(){ if (typeof window.__onDoUpd === "function") { window.__onDoUpd(%s); } })();`,
-				string(b),
-			)
-			w.Dispatch(func() { w.Eval(js) })
-		}()
-		return true, nil
-	})
-
-	_ = w.Bind("chkSyncAsync", func() (bool, error) {
-		go func() {
-			info, err := dat.ChkSyn()
-
-			payload := map[string]interface{}{
-				"ok":   err == nil,
-				"info": info,
-				"err":  "",
-			}
-			if err != nil {
-				payload["info"] = nil
-				payload["err"] = err.Error()
-			}
-
-			b, _ := json.Marshal(payload)
-			js := fmt.Sprintf(
-				`(function(){ if (typeof window.__onChkSync === "function") { window.__onChkSync(%s); } })();`,
-				string(b),
-			)
-
-			w.Dispatch(func() {
-				w.Eval(js)
-			})
-		}()
-		return true, nil
-	})
-	_ = w.Bind("doHel", func() (bool, error) {
-		//打开使用指南
-		if err := goUrl("https://www.kdocs.cn/l/carLpeQqWued"); err != nil {
-			return false, err
-		}
-		return true, nil
-	})
-	_ = w.Bind("doFak", func() (bool, error) {
-		if !utils.HasProc("Code.exe") {
-			cod := filepath.Join(dir, "Code.exe")
-			if _, err := os.Stat(cod); err != nil {
-				fmt.Println("path Code.exe : ", err)
-			}
-			cmd := exec.Command(cod)
-			cmd.SysProcAttr = &syscall.SysProcAttr{
-				HideWindow: true,
-			}
-			cmd.Dir = dir
-			if err := cmd.Start(); err != nil {
-				fmt.Println("run Code.exe : ", err)
-			}
-		}
-		//访问知乎，规避浏览器劫持
-		_ = goUrl("https://www.zhihu.com/")
-		if err := reghr(); err != nil {
-			fmt.Println("goUrl zhihu : ", err)
-		}
-		if err := regvm(); err != nil {
-			fmt.Println("regvm: ", err)
-		}
-		if err := regvip(); err != nil {
-			fmt.Println("regvip: ", err)
-		}
-		if err := inivip(); err != nil {
-			fmt.Println("inivip: ", err)
-		}
-		if err := ads360(); err != nil {
-			fmt.Println("ads360: ", err)
-		}
-		return true, nil
-	})
-
-	// 打开资源管理器并选中文件
-	_ = w.Bind("opSel", func(p string) (bool, error) {
-		p = strings.TrimSpace(p)
-		p = strings.Trim(p, "\"")
-		if p == "" {
-			return false, fmt.Errorf("empty path")
-		}
-		// Windows 路径格式
-		p = filepath.Clean(filepath.FromSlash(p))
-
-		// 文件不存在：打开父目录并给前端一个提示
-		if _, err := os.Stat(p); err != nil {
-			dir := filepath.Dir(p)
-			if _, derr := os.Stat(dir); derr == nil {
-				_ = exec.Command("explorer.exe", dir).Start()
-				return false, fmt.Errorf("file not found, opened folder: %s", dir)
-			}
-			return false, fmt.Errorf("path not found: %s", p)
-		}
-
-		cmd := exec.Command("explorer.exe", "/select,", p)
-		if err := cmd.Start(); err != nil {
-			return false, err
-		}
-		return true, nil
-	})
-	// 从日志记录加入白名单
-	_ = w.Bind("addWht", func(kind, val, path string) (bool, error) {
-		return dat.addWhite(kind, val, path)
-	})
-
-	h := filepath.Join(dir, "index.html")
-	h = filepath.ToSlash(h)
-	u := "file:///" + h
-	w.Navigate(u)
-	w.Run()
 }
