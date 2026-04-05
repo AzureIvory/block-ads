@@ -1,5 +1,5 @@
 {
-    "updated_at": "2026-1-11",
+    "updated_at": "2026-4-5",
     "notes": "常规同步",
     "items": {
         "Wfolder.txt": {
@@ -21,27 +21,27 @@
             ]
         },
         "folder.txt": {
-            "md5": "2f06b642ef3d8195f13510293e1b20eb",
+            "md5": "9ea15f92274d16589a5fa95a0f050f23",
             "size": "4",
-            "count": "319",
+            "count": "323",
             "url": [
                 "https://api.ttraw.com/block-ads/update/folder.txt",
                 "https://raw.githubusercontent.com/AzureIvory/block-ads/refs/heads/main/update/update/folder.txt"
             ]
         },
         "note.txt": {
-            "md5": "6061a4281bda43fcbf7222a7dd50266a",
+            "md5": "0c9c23df1a0f74aa576ba54880412011",
             "size": "51",
-            "count": "1281",
+            "count": "1284",
             "url": [
                 "https://api.ttraw.com/block-ads/update/note.txt",
                 "https://raw.githubusercontent.com/AzureIvory/block-ads/refs/heads/main/update/update/note.txt"
             ]
         },
         "sign.txt": {
-            "md5": "69654c2d8a36e3ebbeb42ac229c969e9",
+            "md5": "63239ade7ba1b57eed8ca345d0144eb3",
             "size": "12",
-            "count": "388",
+            "count": "390",
             "url": [
                 "https://api.ttraw.com/block-ads/update/sign.txt",
                 "https://raw.githubusercontent.com/AzureIvory/block-ads/refs/heads/main/update/update/sign.txt"

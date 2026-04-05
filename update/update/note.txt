@@ -1183,7 +1183,6 @@ Beijing Kingsoft Security software Co.,Ltd--金山毒霸等
 重庆赫赫有盾科技有限公司--dx修复
 Keroro Technology Ltd--红警
 Guizhou Aidobi Technology Co., Ltd.--ps
-珠海市莫停之科技有限公司--清理大师
 Jiangxia Information Technology (Huizhou) Co., Ltd.--打印机驱动
 Shenzhen Chaoshidai Software Co., Ltd.--打印机驱动，dll修复
 Changsha Little Tomato Technology Co., Ltd.--dx修复
@@ -1279,3 +1278,7 @@ Chrome--谷歌内核浏览器
 Wireshark--抓包软件
 easytshark--基于Wireshark的抓包软件
 FileZilla FTP Client--FTP工具
+珠海市莫停之科技有限公司--Windows优化大师、PDF大师、Win解压缩等软件
+Beijing AoLanDe Information Technology Co., Ltd.--win工具箱等
+武汉优思干科技有限公司--电脑DLL修复工具等
+NetPowerDLLRepair--电脑DLL修复工具
