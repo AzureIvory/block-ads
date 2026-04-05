@@ -1280,3 +1280,5 @@ easytshark--基于Wireshark的抓包软件
 FileZilla FTP Client--FTP工具
 珠海市莫停之科技有限公司--Windows优化大师、PDF大师、Win解压缩等软件
 Beijing AoLanDe Information Technology Co., Ltd.--win工具箱等
+武汉优思干科技有限公司--电脑DLL修复工具等
+NetPowerDLLRepair--电脑DLL修复工具
