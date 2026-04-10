@@ -338,6 +338,8 @@ func FindUn(exePath string) (string, string, error) {
 		"uninstall.exe",
 		"uninstaller.exe",
 		"uninst.exe",
+		"unin.exe",
+		"*Uninst.exe", //通配符，例：JXUninst.exe
 		"unins000.exe",
 		"unins001.exe",
 		"unins002.exe",
