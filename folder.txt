@@ -1,3 +1,5 @@
+ZxVxTidy
+MultiWeChat
 NetPowerDLLRepair
 武汉优思干科技有限公司
 driverpro360
@@ -321,3 +323,4 @@ RecordMaster
 redianNote
 RedrabCut
 regfastsearch
+MultiWeChat

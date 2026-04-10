@@ -1282,3 +1282,8 @@ FileZilla FTP Client--FTP工具
 Beijing AoLanDe Information Technology Co., Ltd.--win工具箱等
 武汉优思干科技有限公司--电脑DLL修复工具等
 NetPowerDLLRepair--电脑DLL修复工具
+天津微极智科技有限公司--该公司有款资源管理器，双击打开文件夹后调用的是该软件
+MultiWeChat--微信智迅多开，付费
+ZxVxTidy--智迅文件整理
+成都智云界科技有限公司--微信智迅多开，智迅文件整理等
+TaskbarFX--桌面美化软件
