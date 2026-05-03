@@ -253,7 +253,7 @@ func Kill(pid int) error {
 	for _, e := range errs {
 		msg += "  - " + e.Error() + "\n"
 	}
-	return fmt.Errorf(msg)
+	return fmt.Errorf("%s", msg)
 }
 
 func killOS(pid int) error {

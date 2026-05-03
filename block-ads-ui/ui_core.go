@@ -1,0 +1,557 @@
+//go:build windows
+
+package main
+
+import (
+	"fmt"
+	"github.com/AzureIvory/winui/core"
+	"github.com/AzureIvory/winui/widgets"
+	"os"
+	"os/exec"
+	"path/filepath"
+	"strings"
+	"time"
+)
+
+func (u *nativeUI) onCreate(app *core.App, scene *widgets.Scene) error {
+	u.app = app
+	u.scene = scene
+
+	scene.SetTheme(u.theme())
+	u.root = scene.Root()
+	u.root.SetStyle(widgets.PanelStyle{
+		Background:   u.col(245, 248, 252),
+		CornerRadius: 0,
+		BorderWidth:  0,
+	})
+
+	u.buildAll()
+
+	size := app.ClientSize()
+	u.layout(size)
+	u.reloadData()
+	u.refreshStatus(u.currentStatus())
+	u.startPolling()
+	return nil
+}
+
+func (u *nativeUI) onResize(_ *core.App, _ *widgets.Scene, size core.Size) {
+	u.layout(size)
+}
+
+func (u *nativeUI) onDestroy(_ *core.App, _ *widgets.Scene) {
+	u.stopOnce.Do(func() {
+		close(u.stopCh)
+	})
+	if u.icon != nil {
+		_ = u.icon.Close()
+		u.icon = nil
+	}
+}
+
+func (u *nativeUI) buildRoot() {
+	u.header = widgets.NewPanel("header")
+	u.header.SetStyle(widgets.PanelStyle{
+		Background:   u.col(250, 252, 255),
+		BorderColor:  u.col(228, 235, 246),
+		CornerRadius: 16,
+		BorderWidth:  1,
+	})
+
+	u.sidebar = widgets.NewPanel("sidebar")
+	u.sidebar.SetStyle(widgets.PanelStyle{
+		Background:   u.col(250, 252, 255),
+		BorderColor:  u.col(228, 235, 246),
+		CornerRadius: 16,
+		BorderWidth:  1,
+	})
+
+	u.rulesCard = widgets.NewPanel("rules-card")
+	u.rulesCard.SetStyle(widgets.PanelStyle{
+		Background:   u.col(255, 255, 255),
+		BorderColor:  u.col(214, 224, 241),
+		CornerRadius: 20,
+		BorderWidth:  1,
+	})
+
+	u.logsCard = widgets.NewPanel("logs-card")
+	u.logsCard.SetStyle(widgets.PanelStyle{
+		Background:   u.col(252, 253, 255),
+		BorderColor:  u.col(224, 231, 243),
+		CornerRadius: 18,
+		BorderWidth:  1,
+	})
+
+	u.mask = widgets.NewPanel("dialog-mask")
+	u.mask.SetStyle(widgets.PanelStyle{
+		Background:   u.col(239, 244, 251),
+		CornerRadius: 0,
+		BorderWidth:  0,
+	})
+	u.mask.SetVisible(false)
+	u.mask.SetOnClick(func() {
+		u.hideDialogs()
+	})
+
+	u.root.AddAll(u.header, u.sidebar, u.rulesCard, u.logsCard, u.mask)
+}
+
+func (u *nativeUI) startPolling() {
+	go func() {
+		tk := time.NewTicker(3 * time.Second)
+		defer tk.Stop()
+		for {
+			select {
+			case <-u.stopCh:
+				return
+			case <-tk.C:
+				status := u.currentStatus()
+				logs := u.dat.log()
+				_ = u.app.Post(func() {
+					u.logs = logs
+					u.refreshStatus(status)
+					u.refreshLogList()
+				})
+			}
+		}
+	}()
+}
+
+func (u *nativeUI) reloadData() {
+	u.data = u.dat.all()
+	u.notes = u.dat.note()
+	u.logs = u.dat.log()
+	u.refreshSidebar()
+	u.refreshRuleList()
+	u.refreshLogList()
+	u.refreshAboutVersion()
+}
+
+func (u *nativeUI) currentStatus() uiSta {
+	return uiSta{
+		Adm:  chkAdm(),
+		Run:  chkRun(),
+		Boot: hasBootKey(runName, u.exe) && hasBootKey(runNameCode, u.codeEx),
+	}
+}
+
+func (u *nativeUI) showMessage(text string, isErr bool) {
+	if u.msgLabel == nil {
+		return
+	}
+	u.msgLabel.SetText(text)
+	if isErr {
+		u.msgLabel.SetStyle(u.textStyle(13, 500, u.col(220, 38, 38), dtWordBreak))
+		return
+	}
+	u.msgLabel.SetStyle(u.textStyle(13, 500, u.col(120, 132, 158), dtWordBreak))
+}
+
+func (u *nativeUI) theme() *widgets.Theme {
+	theme := widgets.DefaultTheme()
+	theme.BackgroundColor = u.col(245, 248, 252)
+	theme.Text = u.textStyle(15, 400, u.col(23, 33, 61), core.DTVCenter|core.DTSingleLine)
+	theme.Title = u.textStyle(20, 700, u.col(23, 33, 61), core.DTVCenter|core.DTSingleLine)
+	theme.Button = u.softButtonStyle()
+	theme.CheckBox = u.checkStyle()
+	theme.RadioButton = u.radioStyle()
+	theme.ListBox = u.ruleListStyle()
+	theme.Edit = u.editStyle()
+	return theme
+}
+
+func (u *nativeUI) label(id, text string, size, weight int32, color core.Color, format uint32) *widgets.Label {
+	l := widgets.NewLabel(id, text)
+	l.SetStyle(u.textStyle(size, weight, color, format))
+	return l
+}
+
+func (u *nativeUI) textStyle(size, weight int32, color core.Color, format uint32) widgets.TextStyle {
+	return widgets.TextStyle{
+		Font: widgets.FontSpec{
+			Face:   "Microsoft YaHei UI",
+			SizeDP: size,
+			Weight: weight,
+		},
+		Color:  color,
+		Format: format,
+	}
+}
+
+func (u *nativeUI) col(r, g, b byte) core.Color {
+	return core.RGB(r, g, b)
+}
+
+func (u *nativeUI) dp(v int32) int32 {
+	if u.app == nil {
+		return v
+	}
+	return u.app.DP(v)
+}
+
+func (u *nativeUI) hasRuleIndex(idx int) bool {
+	return idx >= 0 && idx < len(u.data[u.curKey])
+}
+
+func loadWinUIIcon(path string) *core.Icon {
+	return loadWinUIIconSized(path, 48)
+}
+
+func loadWinUIIconSized(path string, want int32) *core.Icon {
+	buf, err := os.ReadFile(path)
+	if err != nil {
+		return nil
+	}
+	icon, err := core.LoadIconFromICO(buf, want)
+	if err != nil {
+		return nil
+	}
+	return icon
+}
+
+func clearPanelChildren(panel *widgets.Panel) {
+	if panel == nil {
+		return
+	}
+	for _, child := range panel.Children() {
+		panel.Remove(child.ID())
+	}
+}
+
+// uiMdl 封装界面共享状态。
+type uiMdl struct {
+	ui *nativeUI
+}
+
+// headCtl 管理顶部区域。
+type headCtl struct {
+	ui  *nativeUI
+	pan *widgets.Panel
+}
+
+// sideCtl 管理左侧区域。
+type sideCtl struct {
+	ui  *nativeUI
+	pan *widgets.Panel
+}
+
+// ruleCtl 管理规则区域。
+type ruleCtl struct {
+	ui  *nativeUI
+	pan *widgets.Panel
+}
+
+// logCtl 管理日志区域。
+type logCtl struct {
+	ui  *nativeUI
+	pan *widgets.Panel
+}
+
+// addDlg 映射新增弹窗。
+type addDlg struct {
+	pan *widgets.Panel
+}
+
+// abtDlg 映射关于弹窗。
+type abtDlg struct {
+	pan *widgets.Panel
+	ver *widgets.Label
+}
+
+// fakeDlg 映射伪装弹窗。
+type fakeDlg struct {
+	pan *widgets.Panel
+	msg *widgets.Label
+}
+
+// updDlg 映射更新弹窗。
+type updDlg struct {
+	pan *widgets.Panel
+}
+
+// synDlg 映射同步弹窗。
+type synDlg struct {
+	pan *widgets.Panel
+}
+
+// upDlg 映射上传弹窗。
+type upDlg struct {
+	pan *widgets.Panel
+}
+
+// dlgCtl 管理全部弹窗。
+type dlgCtl struct {
+	ui   *nativeUI
+	add  addDlg
+	abt  abtDlg
+	fake fakeDlg
+	upd  updDlg
+	syn  synDlg
+	up   upDlg
+}
+
+// newUI 创建界面主控。
+func newUI(dat *appDat, dir string) *nativeUI {
+	u := &nativeUI{
+		dir:               dir,
+		exe:               filepath.Join(dir, exeName),
+		codeEx:            filepath.Join(dir, codeExeName),
+		dat:               dat,
+		stopCh:            make(chan struct{}),
+		curKey:            "sign",
+		selectedRuleIndex: -1,
+		selectedLogIndex:  -1,
+		syncPolicy:        "auto_selected",
+		syncSelected:      map[string]bool{},
+		uploadChecked:     map[string]bool{},
+		sideButtons:       map[string]*widgets.Button{},
+		uploadChecks:      map[string]*widgets.CheckBox{},
+	}
+	for _, opt := range uploadOptions {
+		u.uploadChecked[opt.Key] = false
+	}
+	u.mdl = &uiMdl{ui: u}
+	u.head = &headCtl{ui: u}
+	u.side = &sideCtl{ui: u}
+	u.rule = &ruleCtl{ui: u}
+	u.log = &logCtl{ui: u}
+	u.dlg = &dlgCtl{ui: u}
+	return u
+}
+
+// buildAll 组装全部区域。
+func (u *nativeUI) buildAll() {
+	u.buildRoot()
+	u.buildHeader()
+	u.buildSidebar()
+	u.buildRulesCard()
+	u.buildLogsCard()
+	u.buildDialogs()
+	u.linkCtl()
+}
+
+// linkCtl 把旧控件绑定到新控制器。
+func (u *nativeUI) linkCtl() {
+	u.head.pan = u.header
+	u.side.pan = u.sidebar
+	u.rule.pan = u.rulesCard
+	u.log.pan = u.logsCard
+
+	u.dlg.add.pan = u.addDialog
+	u.dlg.abt.pan = u.aboutDialog
+	u.dlg.abt.ver = u.aboutVersion
+	u.dlg.fake.pan = u.fakeConfirmDialog
+	u.dlg.fake.msg = u.fakeConfirmMessage
+	u.dlg.upd.pan = u.updateDialog
+	u.dlg.syn.pan = u.syncDialog
+	u.dlg.up.pan = u.uploadDialog
+}
+
+// syncAbt 刷新关于版本。
+func (d *dlgCtl) syncAbt() {
+	d.ui.refreshAboutVersion()
+}
+
+// containsFold 忽略大小写比较切片内容。
+func containsFold(items []string, target string) bool {
+	for _, item := range items {
+		if strings.EqualFold(strings.TrimSpace(item), strings.TrimSpace(target)) {
+			return true
+		}
+	}
+	return false
+}
+
+// emptyAs 返回非空值或回退值。
+func emptyAs(value, fallback string) string {
+	value = strings.TrimSpace(value)
+	if value == "" {
+		return fallback
+	}
+	return value
+}
+
+// ternary 返回简单二选一结果。
+func ternary(cond bool, yes, no string) string {
+	if cond {
+		return yes
+	}
+	return no
+}
+
+// baseName 提取路径末级名称。
+func baseName(path string) string {
+	path = strings.TrimSpace(path)
+	if path == "" {
+		return "-"
+	}
+	parts := strings.FieldsFunc(path, func(r rune) bool {
+		return r == '\\' || r == '/'
+	})
+	if len(parts) == 0 {
+		return path
+	}
+	return parts[len(parts)-1]
+}
+
+// openAndSelectPath 打开并尝试定位文件。
+func openAndSelectPath(path string) (bool, error) {
+	path = strings.Trim(strings.TrimSpace(path), `"`)
+	if path == "" {
+		return false, fmt.Errorf("empty path")
+	}
+	path = filepath.Clean(filepath.FromSlash(path))
+	if _, err := os.Stat(path); err != nil {
+		dir := filepath.Dir(path)
+		if _, derr := os.Stat(dir); derr == nil {
+			_ = exec.Command("explorer.exe", dir).Start()
+			return false, nil
+		}
+		return false, err
+	}
+	cmd := exec.Command("explorer.exe", "/select,", path)
+	if err := cmd.Start(); err != nil {
+		return false, err
+	}
+	return true, nil
+}
+
+func (u *nativeUI) layout(size core.Size) {
+	w := size.Width
+	h := size.Height
+	if w <= 0 || h <= 0 {
+		return
+	}
+
+	m := u.dp(16)
+	gap := u.dp(14)
+	headerH := u.dp(60)
+	sideW := u.dp(164)
+	contentX := m + sideW + gap
+	contentW := w - contentX - m
+	topY := m + headerH + gap
+	rulesH := u.dp(284)
+	logsY := topY + rulesH + gap
+	footerH := u.dp(28)
+	logsH := h - logsY - m - footerH
+	if logsH < u.dp(156) {
+		logsH = u.dp(156)
+	}
+
+	u.header.SetBounds(core.Rect{X: m, Y: m, W: w - m*2, H: headerH})
+	u.sidebar.SetBounds(core.Rect{X: m, Y: topY, W: sideW, H: h - topY - m})
+	u.rulesCard.SetBounds(core.Rect{X: contentX, Y: topY, W: contentW, H: rulesH})
+	u.logsCard.SetBounds(core.Rect{X: contentX, Y: logsY, W: contentW, H: logsH})
+	u.mask.SetBounds(core.Rect{X: 0, Y: 0, W: w, H: h})
+
+	u.brandLabel.SetBounds(core.Rect{X: m + u.dp(18), Y: m + u.dp(6), W: u.dp(138), H: u.dp(40)})
+	u.btnRun.SetBounds(core.Rect{X: m + u.dp(160), Y: m + u.dp(10), W: u.dp(86), H: u.dp(36)})
+	u.chkBoot.SetBounds(core.Rect{X: m + u.dp(258), Y: m + u.dp(12), W: u.dp(96), H: u.dp(30)})
+	u.adminLabel.SetBounds(core.Rect{X: m + u.dp(346), Y: m + u.dp(14), W: u.dp(58), H: u.dp(24)})
+	u.runLabel.SetBounds(core.Rect{X: m + u.dp(410), Y: m + u.dp(14), W: u.dp(58), H: u.dp(24)})
+	u.btnFake.SetBounds(core.Rect{X: w - m - u.dp(168), Y: m + u.dp(10), W: u.dp(82), H: u.dp(36)})
+	u.btnGit.SetBounds(core.Rect{X: w - m - u.dp(80), Y: m + u.dp(10), W: u.dp(74), H: u.dp(36)})
+
+	sideX := m + u.dp(12)
+	sideBtnW := sideW - u.dp(24)
+	for i, key := range listOrder {
+		y := topY + u.dp(14) + int32(i)*u.dp(48)
+		u.sideButtons[key].SetBounds(core.Rect{X: sideX, Y: y, W: sideBtnW, H: u.dp(38)})
+	}
+	sideActionY := h - m - u.dp(158)
+	u.btnUpload.SetBounds(core.Rect{X: sideX, Y: sideActionY, W: sideBtnW, H: u.dp(34)})
+	u.btnSync.SetBounds(core.Rect{X: sideX, Y: sideActionY + u.dp(40), W: sideBtnW, H: u.dp(34)})
+	u.btnUpdate.SetBounds(core.Rect{X: sideX, Y: sideActionY + u.dp(80), W: sideBtnW, H: u.dp(34)})
+	u.btnAbout.SetBounds(core.Rect{X: sideX, Y: sideActionY + u.dp(120), W: sideBtnW, H: u.dp(34)})
+
+	cardX := contentX + u.dp(14)
+	cardW := contentW - u.dp(28)
+	u.ruleTitle.SetBounds(core.Rect{X: cardX, Y: topY + u.dp(10), W: u.dp(236), H: u.dp(24)})
+	u.ruleState.SetBounds(core.Rect{X: contentX + contentW - u.dp(98), Y: topY + u.dp(12), W: u.dp(70), H: u.dp(18)})
+	u.searchBox.SetBounds(core.Rect{X: cardX, Y: topY + u.dp(40), W: cardW - u.dp(134), H: u.dp(30)})
+	u.btnAdd.SetBounds(core.Rect{X: contentX + contentW - u.dp(120), Y: topY + u.dp(40), W: u.dp(54), H: u.dp(30)})
+	u.btnDel.SetBounds(core.Rect{X: contentX + contentW - u.dp(60), Y: topY + u.dp(40), W: u.dp(46), H: u.dp(30)})
+	u.rulesList.SetBounds(core.Rect{X: cardX, Y: topY + u.dp(80), W: cardW, H: rulesH - u.dp(112)})
+	u.ruleNote.SetBounds(core.Rect{X: cardX, Y: topY + rulesH - u.dp(22), W: cardW, H: u.dp(16)})
+
+	u.logTitle.SetBounds(core.Rect{X: cardX, Y: logsY + u.dp(10), W: u.dp(236), H: u.dp(22)})
+	u.logInfo.SetBounds(core.Rect{X: contentX + contentW - u.dp(132), Y: logsY + u.dp(12), W: u.dp(104), H: u.dp(18)})
+	u.logsList.SetBounds(core.Rect{X: cardX, Y: logsY + u.dp(40), W: cardW, H: logsH - u.dp(78)})
+	u.btnLogOpen.SetBounds(core.Rect{X: cardX, Y: logsY + logsH - u.dp(38), W: u.dp(76), H: u.dp(28)})
+	u.btnLogWhite.SetBounds(core.Rect{X: cardX + u.dp(84), Y: logsY + logsH - u.dp(38), W: u.dp(90), H: u.dp(28)})
+	u.modeLabel.SetBounds(core.Rect{X: contentX + contentW - u.dp(108), Y: logsY + logsH - u.dp(16), W: u.dp(84), H: u.dp(16)})
+	u.msgLabel.SetBounds(core.Rect{X: contentX, Y: h - m - footerH, W: contentW, H: footerH})
+
+	u.layoutDialogs(w, h)
+}
+
+func (u *nativeUI) layoutDialogs(w, h int32) {
+	center := func(dw, dh int32) core.Rect {
+		return core.Rect{X: (w - dw) / 2, Y: (h - dh) / 2, W: dw, H: dh}
+	}
+
+	addRect := center(u.dp(430), u.dp(230))
+	u.addDialog.SetBounds(addRect)
+	u.addTitle.SetBounds(core.Rect{X: addRect.X + u.dp(24), Y: addRect.Y + u.dp(18), W: addRect.W - u.dp(48), H: u.dp(28)})
+	u.addHint.SetBounds(core.Rect{X: addRect.X + u.dp(24), Y: addRect.Y + u.dp(62), W: addRect.W - u.dp(48), H: u.dp(38)})
+	u.addInput.SetBounds(core.Rect{X: addRect.X + u.dp(24), Y: addRect.Y + u.dp(108), W: addRect.W - u.dp(48), H: u.dp(40)})
+	u.addCancel.SetBounds(core.Rect{X: addRect.X + addRect.W - u.dp(184), Y: addRect.Y + addRect.H - u.dp(58), W: u.dp(74), H: u.dp(36)})
+	u.addConfirm.SetBounds(core.Rect{X: addRect.X + addRect.W - u.dp(100), Y: addRect.Y + addRect.H - u.dp(58), W: u.dp(76), H: u.dp(36)})
+
+	aboutRect := center(u.dp(500), u.dp(372))
+	u.aboutDialog.SetBounds(aboutRect)
+	u.aboutTitle.SetBounds(core.Rect{X: aboutRect.X + u.dp(24), Y: aboutRect.Y + u.dp(18), W: aboutRect.W - u.dp(48), H: u.dp(28)})
+	u.aboutIcon.SetBounds(core.Rect{X: aboutRect.X + (aboutRect.W-u.dp(72))/2, Y: aboutRect.Y + u.dp(70), W: u.dp(72), H: u.dp(72)})
+	u.aboutName.SetBounds(core.Rect{X: aboutRect.X + u.dp(40), Y: aboutRect.Y + u.dp(150), W: aboutRect.W - u.dp(80), H: u.dp(40)})
+	u.aboutDesc.SetBounds(core.Rect{X: aboutRect.X + u.dp(80), Y: aboutRect.Y + u.dp(198), W: aboutRect.W - u.dp(160), H: u.dp(44)})
+	u.aboutGit.SetBounds(core.Rect{X: aboutRect.X + (aboutRect.W-u.dp(104))/2, Y: aboutRect.Y + u.dp(252), W: u.dp(104), H: u.dp(38)})
+	u.aboutVersion.SetBounds(core.Rect{X: aboutRect.X + u.dp(60), Y: aboutRect.Y + u.dp(300), W: aboutRect.W - u.dp(120), H: u.dp(24)})
+	u.aboutClose.SetBounds(core.Rect{X: aboutRect.X + aboutRect.W - u.dp(100), Y: aboutRect.Y + aboutRect.H - u.dp(58), W: u.dp(76), H: u.dp(36)})
+
+	fakeRect := center(u.dp(660), u.dp(390))
+	u.fakeConfirmDialog.SetBounds(fakeRect)
+	u.fakeConfirmTitle.SetBounds(core.Rect{X: fakeRect.X + u.dp(24), Y: fakeRect.Y + u.dp(18), W: fakeRect.W - u.dp(48), H: u.dp(28)})
+	u.fakeConfirmMessage.SetBounds(core.Rect{X: fakeRect.X + u.dp(24), Y: fakeRect.Y + u.dp(60), W: fakeRect.W - u.dp(48), H: u.dp(244)})
+	u.fakeConfirmCancel.SetBounds(core.Rect{X: fakeRect.X + fakeRect.W - u.dp(188), Y: fakeRect.Y + fakeRect.H - u.dp(58), W: u.dp(76), H: u.dp(36)})
+	u.fakeConfirmContinue.SetBounds(core.Rect{X: fakeRect.X + fakeRect.W - u.dp(100), Y: fakeRect.Y + fakeRect.H - u.dp(58), W: u.dp(76), H: u.dp(36)})
+
+	updateRect := center(u.dp(640), u.dp(560))
+	u.updateDialog.SetBounds(updateRect)
+	u.updateTitle.SetBounds(core.Rect{X: updateRect.X + u.dp(24), Y: updateRect.Y + u.dp(18), W: u.dp(120), H: u.dp(28)})
+	u.updateVersion.SetBounds(core.Rect{X: updateRect.X + u.dp(24), Y: updateRect.Y + u.dp(58), W: updateRect.W - u.dp(48), H: u.dp(24)})
+	u.updateDate.SetBounds(core.Rect{X: updateRect.X + u.dp(24), Y: updateRect.Y + u.dp(92), W: updateRect.W - u.dp(48), H: u.dp(24)})
+	u.updateNotes.SetBounds(core.Rect{X: updateRect.X + u.dp(24), Y: updateRect.Y + u.dp(126), W: updateRect.W - u.dp(48), H: u.dp(230)})
+	u.updateItems.SetBounds(core.Rect{X: updateRect.X + u.dp(24), Y: updateRect.Y + u.dp(370), W: updateRect.W - u.dp(48), H: u.dp(110)})
+	u.updateCheck.SetBounds(core.Rect{X: updateRect.X + updateRect.W - u.dp(286), Y: updateRect.Y + updateRect.H - u.dp(58), W: u.dp(90), H: u.dp(36)})
+	u.updateGo.SetBounds(core.Rect{X: updateRect.X + updateRect.W - u.dp(188), Y: updateRect.Y + updateRect.H - u.dp(58), W: u.dp(76), H: u.dp(36)})
+	u.updateClose.SetBounds(core.Rect{X: updateRect.X + updateRect.W - u.dp(100), Y: updateRect.Y + updateRect.H - u.dp(58), W: u.dp(76), H: u.dp(36)})
+
+	syncRect := center(u.dp(650), u.dp(500))
+	u.syncDialog.SetBounds(syncRect)
+	u.syncTitle.SetBounds(core.Rect{X: syncRect.X + u.dp(24), Y: syncRect.Y + u.dp(18), W: u.dp(120), H: u.dp(28)})
+	u.syncDesc.SetBounds(core.Rect{X: syncRect.X + u.dp(24), Y: syncRect.Y + u.dp(54), W: syncRect.W - u.dp(48), H: u.dp(22)})
+	u.syncDate.SetBounds(core.Rect{X: syncRect.X + u.dp(24), Y: syncRect.Y + u.dp(86), W: syncRect.W - u.dp(48), H: u.dp(24)})
+	u.syncNotes.SetBounds(core.Rect{X: syncRect.X + u.dp(24), Y: syncRect.Y + u.dp(116), W: syncRect.W - u.dp(48), H: u.dp(58)})
+	u.syncItemsPanel.SetBounds(core.Rect{X: syncRect.X + u.dp(24), Y: syncRect.Y + u.dp(184), W: syncRect.W - u.dp(48), H: u.dp(146)})
+	u.layoutSyncChecks()
+	u.syncRadioSel.SetBounds(core.Rect{X: syncRect.X + u.dp(24), Y: syncRect.Y + u.dp(344), W: syncRect.W - u.dp(48), H: u.dp(28)})
+	u.syncRadioAll.SetBounds(core.Rect{X: syncRect.X + u.dp(24), Y: syncRect.Y + u.dp(378), W: syncRect.W - u.dp(48), H: u.dp(28)})
+	u.syncRadioNever.SetBounds(core.Rect{X: syncRect.X + u.dp(24), Y: syncRect.Y + u.dp(412), W: syncRect.W - u.dp(48), H: u.dp(28)})
+	u.syncCheck.SetBounds(core.Rect{X: syncRect.X + syncRect.W - u.dp(286), Y: syncRect.Y + syncRect.H - u.dp(58), W: u.dp(90), H: u.dp(36)})
+	u.syncGo.SetBounds(core.Rect{X: syncRect.X + syncRect.W - u.dp(188), Y: syncRect.Y + syncRect.H - u.dp(58), W: u.dp(76), H: u.dp(36)})
+	u.syncClose.SetBounds(core.Rect{X: syncRect.X + syncRect.W - u.dp(100), Y: syncRect.Y + syncRect.H - u.dp(58), W: u.dp(76), H: u.dp(36)})
+
+	uploadRect := center(u.dp(600), u.dp(470))
+	u.uploadDialog.SetBounds(uploadRect)
+	u.uploadTitle.SetBounds(core.Rect{X: uploadRect.X + u.dp(24), Y: uploadRect.Y + u.dp(18), W: u.dp(120), H: u.dp(28)})
+	u.uploadClose.SetBounds(core.Rect{X: uploadRect.X + uploadRect.W - u.dp(100), Y: uploadRect.Y + u.dp(18), W: u.dp(76), H: u.dp(36)})
+	u.uploadDesc.SetBounds(core.Rect{X: uploadRect.X + u.dp(24), Y: uploadRect.Y + u.dp(64), W: uploadRect.W - u.dp(120), H: u.dp(44)})
+	u.uploadAll.SetBounds(core.Rect{X: uploadRect.X + uploadRect.W - u.dp(98), Y: uploadRect.Y + u.dp(70), W: u.dp(70), H: u.dp(28)})
+	for idx, opt := range uploadOptions {
+		y := uploadRect.Y + u.dp(122) + int32(idx)*u.dp(48)
+		u.uploadChecks[opt.Key].SetBounds(core.Rect{X: uploadRect.X + u.dp(24), Y: y, W: uploadRect.W - u.dp(48), H: u.dp(34)})
+	}
+	u.uploadWarn.SetBounds(core.Rect{X: uploadRect.X + u.dp(24), Y: uploadRect.Y + uploadRect.H - u.dp(112), W: uploadRect.W - u.dp(48), H: u.dp(48)})
+	u.uploadCancel.SetBounds(core.Rect{X: uploadRect.X + uploadRect.W - u.dp(188), Y: uploadRect.Y + uploadRect.H - u.dp(58), W: u.dp(76), H: u.dp(36)})
+	u.uploadGo.SetBounds(core.Rect{X: uploadRect.X + uploadRect.W - u.dp(100), Y: uploadRect.Y + uploadRect.H - u.dp(58), W: u.dp(76), H: u.dp(36)})
+}
