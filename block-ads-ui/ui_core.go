@@ -129,9 +129,10 @@ func (u *nativeUI) reloadData() {
 
 func (u *nativeUI) currentStatus() uiSta {
 	return uiSta{
-		Adm:  chkAdm(),
-		Run:  chkRun(),
-		Boot: hasBootKey(runName, u.exe) && hasBootKey(runNameCode, u.codeEx),
+		Adm:      chkAdm(),
+		Run:      chkRun(),
+		Boot:     hasBootKey(runName, u.exe),
+		CodeBoot: hasBootKey(runNameCode, u.codeEx),
 	}
 }
 
@@ -446,9 +447,10 @@ func (u *nativeUI) layout(size core.Size) {
 
 	u.brandLabel.SetBounds(core.Rect{X: m + u.dp(18), Y: m + u.dp(6), W: u.dp(138), H: u.dp(40)})
 	u.btnRun.SetBounds(core.Rect{X: m + u.dp(160), Y: m + u.dp(10), W: u.dp(86), H: u.dp(36)})
-	u.chkBoot.SetBounds(core.Rect{X: m + u.dp(258), Y: m + u.dp(12), W: u.dp(96), H: u.dp(30)})
-	u.adminLabel.SetBounds(core.Rect{X: m + u.dp(346), Y: m + u.dp(14), W: u.dp(58), H: u.dp(24)})
-	u.runLabel.SetBounds(core.Rect{X: m + u.dp(410), Y: m + u.dp(14), W: u.dp(58), H: u.dp(24)})
+	u.chkBoot.SetBounds(core.Rect{X: m + u.dp(258), Y: m + u.dp(12), W: u.dp(86), H: u.dp(30)})
+	u.chkCode.SetBounds(core.Rect{X: m + u.dp(352), Y: m + u.dp(12), W: u.dp(92), H: u.dp(30)})
+	u.adminLabel.SetBounds(core.Rect{X: m + u.dp(452), Y: m + u.dp(14), W: u.dp(54), H: u.dp(24)})
+	u.runLabel.SetBounds(core.Rect{X: m + u.dp(512), Y: m + u.dp(14), W: u.dp(54), H: u.dp(24)})
 	u.btnFake.SetBounds(core.Rect{X: w - m - u.dp(168), Y: m + u.dp(10), W: u.dp(82), H: u.dp(36)})
 	u.btnGit.SetBounds(core.Rect{X: w - m - u.dp(80), Y: m + u.dp(10), W: u.dp(74), H: u.dp(36)})
 

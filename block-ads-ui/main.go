@@ -65,9 +65,10 @@ type appDat struct {
 	lg  []string
 }
 type uiSta struct {
-	Adm  bool `json:"adm"`
-	Run  bool `json:"run"`
-	Boot bool `json:"boot"`
+	Adm      bool `json:"adm"`
+	Run      bool `json:"run"`
+	Boot     bool `json:"boot"`
+	CodeBoot bool `json:"codeBoot"`
 }
 
 func stopAd(dir string) error {
@@ -492,11 +493,6 @@ func chkRun() bool {
 	return strings.Contains(strings.ToLower(string(out)), strings.ToLower(exeName))
 }
 
-// 濡偓閺屻儱绱戦張楦垮殰閸?
-func hasBoot(exe string) bool {
-	return hasBootKey(runName, exe)
-}
-
 func hasBootKey(key, exe string) bool {
 	k, err := reg.OpenKey(reg.CURRENT_USER,
 		`Software\Microsoft\Windows\CurrentVersion\Run`,
@@ -513,11 +509,6 @@ func hasBootKey(key, exe string) bool {
 	val = strings.Trim(val, `"`)
 	exe = strings.Trim(exe, `"`)
 	return strings.EqualFold(val, exe)
-}
-
-// 鐠佸墽鐤嗗鈧張楦垮殰閸?
-func setBoot(exe string, on bool) error {
-	return setBootKey(runName, exe, on)
 }
 
 func setBootKey(key, exe string, on bool) error {

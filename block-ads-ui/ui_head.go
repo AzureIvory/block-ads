@@ -4,13 +4,14 @@ package main
 
 import (
 	"block-ads-ui/utils"
-	"github.com/AzureIvory/winui/core"
-	"github.com/AzureIvory/winui/widgets"
 	"os/exec"
 	"path/filepath"
 	"strings"
 	"syscall"
 	"time"
+
+	"github.com/AzureIvory/winui/core"
+	"github.com/AzureIvory/winui/widgets"
 )
 
 func (u *nativeUI) buildHeader() {
@@ -22,10 +23,16 @@ func (u *nativeUI) buildHeader() {
 	u.btnRun.SetStyle(u.primaryButtonStyle())
 	u.btnRun.SetOnClick(u.handleToggleRun)
 
-	u.chkBoot = widgets.NewCheckBox("boot", "开机自启", widgets.ModeCustom)
+	u.chkBoot = widgets.NewCheckBox("boot", "拦截自启", widgets.ModeCustom)
 	u.chkBoot.SetStyle(u.checkStyle())
 	u.chkBoot.SetOnChange(func(v bool) {
-		u.handleBootChange(v)
+		u.onAppBoot(v)
+	})
+
+	u.chkCode = widgets.NewCheckBox("code-boot", "伪装自启", widgets.ModeCustom)
+	u.chkCode.SetStyle(u.checkStyle())
+	u.chkCode.SetOnChange(func(v bool) {
+		u.onCodeBoot(v)
 	})
 
 	u.btnFake = widgets.NewButton("fake", "一键伪装", widgets.ModeCustom)
@@ -40,6 +47,7 @@ func (u *nativeUI) buildHeader() {
 		u.brandLabel,
 		u.btnRun,
 		u.chkBoot,
+		u.chkCode,
 		u.adminLabel,
 		u.runLabel,
 		u.btnFake,
@@ -50,6 +58,7 @@ func (u *nativeUI) buildHeader() {
 func (u *nativeUI) refreshStatus(st uiSta) {
 	u.status = st
 	u.chkBoot.SetChecked(st.Boot)
+	u.chkCode.SetChecked(st.CodeBoot)
 	if st.Adm {
 		u.adminLabel.SetText("管理员")
 		u.adminLabel.SetStyle(u.textStyle(12, 600, u.col(22, 163, 74), core.DTCenter|core.DTVCenter|core.DTSingleLine))
@@ -64,7 +73,9 @@ func (u *nativeUI) refreshStatus(st uiSta) {
 		u.serviceLabel.SetStyle(u.textStyle(12, 500, u.col(22, 163, 74), core.DTEndEllipsis))
 		u.btnRun.SetText("停止")
 		u.btnRun.SetStyle(u.dangerButtonStyle())
-		u.app.SetTitle("名单管理 - 已运行")
+		if u.app != nil {
+			u.app.SetTitle("名单管理 - 已运行")
+		}
 	} else {
 		u.runLabel.SetText("未运行")
 		u.runLabel.SetStyle(u.textStyle(12, 600, u.col(120, 132, 158), core.DTCenter|core.DTVCenter|core.DTSingleLine))
@@ -72,7 +83,9 @@ func (u *nativeUI) refreshStatus(st uiSta) {
 		u.serviceLabel.SetStyle(u.textStyle(12, 500, u.col(120, 132, 158), core.DTEndEllipsis))
 		u.btnRun.SetText("启动")
 		u.btnRun.SetStyle(u.primaryButtonStyle())
-		u.app.SetTitle("名单管理 - 未运行")
+		if u.app != nil {
+			u.app.SetTitle("名单管理 - 未运行")
+		}
 	}
 	if st.Adm {
 		u.modeLabel.SetText("Admin Mode")
@@ -121,13 +134,10 @@ func (u *nativeUI) handleToggleRun() {
 	}()
 }
 
-func (u *nativeUI) handleBootChange(on bool) {
+func (u *nativeUI) onAppBoot(on bool) {
 	u.showMessage("更新启动项...", false)
 	go func() {
 		err := setBootKey(runName, u.exe, on)
-		if err == nil {
-			err = setBootKey(runNameCode, u.codeEx, on)
-		}
 		_ = u.app.Post(func() {
 			if err != nil {
 				u.chkBoot.SetChecked(!on)
@@ -140,12 +150,20 @@ func (u *nativeUI) handleBootChange(on bool) {
 	}()
 }
 
-func (u *nativeUI) handleHelp() {
-	if err := goUrl("https://www.kdocs.cn/l/carLpeQqWued"); err != nil {
-		u.showMessage("无法打开使用指南: "+err.Error(), true)
-		return
-	}
-	u.showMessage("", false)
+func (u *nativeUI) onCodeBoot(on bool) {
+	u.showMessage("更新 Code 启动项...", false)
+	go func() {
+		err := setBootKey(runNameCode, u.codeEx, on)
+		_ = u.app.Post(func() {
+			if err != nil {
+				u.chkCode.SetChecked(!on)
+				u.showMessage("设置失败: "+err.Error(), true)
+				return
+			}
+			u.refreshStatus(u.currentStatus())
+			u.showMessage("", false)
+		})
+	}()
 }
 
 func (u *nativeUI) handleGit() {
@@ -164,8 +182,8 @@ func (u *nativeUI) runFakeAsync() {
 	u.showMessage("伪装中...", false)
 	go func() {
 		errs := []string{}
-		if !utils.HasProc("Code.exe") {
-			cod := filepath.Join(u.dir, "Code.exe")
+		if !utils.HasProc(codeExeName) {
+			cod := filepath.Join(u.dir, codeExeName)
 			cmd := exec.Command(cod)
 			cmd.SysProcAttr = &syscall.SysProcAttr{HideWindow: true}
 			cmd.Dir = u.dir

@@ -118,6 +118,7 @@ type nativeUI struct {
 	btnLogWhite *widgets.Button
 
 	chkBoot   *widgets.CheckBox
+	chkCode   *widgets.CheckBox
 	searchBox *widgets.EditBox
 	rulesList *widgets.ListBox
 	logsList  *widgets.ListBox
