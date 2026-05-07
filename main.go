@@ -35,9 +35,6 @@ var (
 
 // config.json
 type Config struct {
-	Notify struct {
-		Enabled bool `json:"enabled"`
-	} `json:"notify"`
 }
 
 var (
@@ -45,11 +42,7 @@ var (
 	cfg     Config
 	cfgPath string
 
-	// 弹窗并发限制：ETW高频命中时避免创建过多OS线程
-	notifySem = make(chan struct{}, 2)
-
 	// 写白名单文件互斥
-	whiteMu    sync.Mutex
 	procGateMu sync.Mutex
 	procGate   = make(map[string]time.Time)
 )
@@ -274,9 +267,7 @@ func windowsDirLower() string {
 }
 
 func defaultConfig() Config {
-	var c Config
-	c.Notify.Enabled = true
-	return c
+	return Config{}
 }
 
 func loadConfig() {
@@ -328,143 +319,6 @@ func saveConfig() error {
 	return os.Rename(tmp, cfgPath)
 }
 
-func notifyEnabled() bool {
-	cfgMu.RLock()
-	en := cfg.Notify.Enabled
-	cfgMu.RUnlock()
-	return en
-}
-
-func disableNotify() {
-	cfgMu.Lock()
-	if !cfg.Notify.Enabled {
-		cfgMu.Unlock()
-		return
-	}
-	cfg.Notify.Enabled = false
-	cfgMu.Unlock()
-	_ = saveConfig()
-}
-
-func appendLine(path, line string) error {
-	line = strings.TrimSpace(line)
-	if line == "" {
-		return nil
-	}
-	f, err := os.OpenFile(path, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
-	if err != nil {
-		return err
-	}
-	defer f.Close()
-	_, err = f.WriteString(line + "\n")
-	return err
-}
-
-func cloneSet(in map[string]struct{}) map[string]struct{} {
-	if len(in) == 0 {
-		return make(map[string]struct{})
-	}
-	out := make(map[string]struct{}, len(in)+1)
-	for k := range in {
-		out[k] = struct{}{}
-	}
-	return out
-}
-
-func cloneBlkForWhite(old *blkSet) *blkSet {
-	if old == nil {
-		return &blkSet{
-			Signers:      map[string]struct{}{},
-			Folders:      map[string]struct{}{},
-			White:        map[string]struct{}{},
-			WhiteSigners: map[string]struct{}{},
-		}
-	}
-	nb := *old
-	// 只会修改白名单两张表，其他表只读共享即可。
-	nb.White = cloneSet(old.White)
-	nb.WhiteSigners = cloneSet(old.WhiteSigners)
-	return &nb
-}
-
-func isVolumeRoot(dirLower string) bool {
-	if len(dirLower) != 3 {
-		return false
-	}
-	return dirLower[1] == ':' && (dirLower[2] == '\\' || dirLower[2] == '/')
-}
-
-func isProgramLikeDir(dirLower string) bool {
-	vol := strings.ToLower(filepath.VolumeName(dirLower))
-	if vol == "" {
-		return false
-	}
-	root := vol + `\`
-	check := func(name string) bool {
-		p := strings.ToLower(filepath.Join(root, name))
-		return dirLower == p || strings.HasPrefix(dirLower, p+`\`)
-	}
-	return check("Program Files") || check("Program Files (x86)") || check("ProgramData")
-}
-
-// 将签名/目录加入白名单：Wsign.txt + Wfolder.txt。
-// 若目录是分区根目录或 Program* 等目录，则只加入签名
-func addWhitelist(fullPath, signer string) {
-	fullPath = strings.TrimSpace(fullPath)
-	if fullPath == "" {
-		return
-	}
-	_ = curBlk() // 确保blkData非nil
-	if signer == "" {
-		signer = getSignC(fullPath)
-	}
-	signer = strings.TrimSpace(signer)
-	dirLower := strings.ToLower(filepath.Clean(filepath.Dir(fullPath)))
-
-	whiteMu.Lock()
-	defer whiteMu.Unlock()
-
-	// 签名白名单
-	if signer != "" {
-		blkMu.RLock()
-		_, ok := blkData.WhiteSigners[signer]
-		blkMu.RUnlock()
-		if !ok {
-			if err := appendLine(filepath.Join(appDir, "Wsign.txt"), signer); err == nil {
-				blkMu.Lock()
-				if _, ok2 := blkData.WhiteSigners[signer]; !ok2 {
-					nb := cloneBlkForWhite(blkData)
-					nb.WhiteSigners[signer] = struct{}{}
-					blkData = nb
-					blkLast = time.Now()
-				}
-				blkMu.Unlock()
-			}
-		}
-	}
-
-	// 目录白名单
-	if dirLower == "" || isVolumeRoot(dirLower) || isProgramLikeDir(dirLower) {
-		return
-	}
-	blkMu.RLock()
-	_, ok := blkData.White[dirLower]
-	blkMu.RUnlock()
-	if ok {
-		return
-	}
-	if err := appendLine(filepath.Join(appDir, "Wfolder.txt"), dirLower); err == nil {
-		blkMu.Lock()
-		if _, ok2 := blkData.White[dirLower]; !ok2 {
-			nb := cloneBlkForWhite(blkData)
-			nb.White[dirLower] = struct{}{}
-			blkData = nb
-			blkLast = time.Now()
-		}
-		blkMu.Unlock()
-	}
-}
-
 func normalizeLowerPath(path string) string {
 	path = strings.TrimSpace(path)
 	if path == "" {
@@ -493,54 +347,6 @@ func inWhiteDirTree(dirLower string, white map[string]struct{}) bool {
 		cur = parent
 	}
 	return false
-}
-
-func maybeNotify(fullPath, signer, reason string) {
-	if !notifyEnabled() {
-		return
-	}
-	select {
-	case notifySem <- struct{}{}:
-		go func() {
-			defer func() { <-notifySem }()
-
-			icon := utils.GetIcon(fullPath, false)
-			cfg := NotifyConfig{
-				Title:      "流氓软件拦截",
-				TitleIcon:  icon,
-				Icon:       icon,
-				Message:    filepath.Base(fullPath),
-				SubMessage: fullPath,
-				Detail:     reason,
-				Timeout:    10,
-				OnIgnore: func() {
-					disableNotify()
-				},
-				OnWhitelist: func() {
-					addWhitelist(fullPath, signer)
-				},
-			}
-			ShowNotification(cfg)
-		}()
-	default:
-		// 快速路径：不丢事件，直接入队
-		cfg := NotifyConfig{
-			Title:      "流氓软件拦截",
-			Message:    filepath.Base(fullPath),
-			SubMessage: fullPath,
-			Detail:     reason,
-			Timeout:    10,
-			OnIgnore: func() {
-				disableNotify()
-			},
-			OnWhitelist: func() {
-				addWhitelist(fullPath, signer)
-			},
-		}
-		ShowNotification(cfg)
-	}
-
-	return
 }
 
 // 初始化dll,预留一个用来调用驱动级结束进程
@@ -838,9 +644,6 @@ func fuck(pid, ppid uint32, img, signer string, hits []hitInfo, src string) {
 	if err := writeLog(mainKind, mainText, img, src); err != nil {
 		log.Printf("[ERR] 写日志失败: %v", err)
 	}
-
-	// 弹窗提示(可由config全局关闭)
-	maybeNotify(img, signer, reason)
 }
 
 func procHit(pid, ppid uint32, fullPath, src string, bl *blkSet, short bool) {
@@ -971,7 +774,6 @@ func runETW(bl *blkSet, short bool) (*etw.Session, *sync.WaitGroup, error) {
 
 func run() error {
 	flag.Parse()
-	EnableDPIAwareness()
 	exe, _ := os.Executable()
 	appDir = filepath.Dir(exe)
 	logDir = filepath.Join(appDir, "log")
