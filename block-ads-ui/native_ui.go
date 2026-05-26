@@ -195,17 +195,18 @@ func runNativeUI(dat *appDat, dir string) error {
 	ui := newUI(dat, dir)
 
 	opts := core.Options{
-		ClassName:      "BlockAdsWinUI",
-		Title:          "名单管理",
-		Width:          760,
-		Height:         620,
-		Style:          core.DefaultWindowStyle,
-		ExStyle:        core.DefaultWindowExStyle,
-		Cursor:         core.CursorArrow,
-		Background:     ui.col(245, 248, 252),
-		DoubleBuffered: true,
-		RenderMode:     core.RenderModeAuto,
+	    ClassName:      "BlockAdsWinUI",
+	    Title:          "名单管理",
+	    Width:          980,
+	    Height:         720,
+	    Style:          core.DefaultWindowStyle,
+	    ExStyle:        core.DefaultWindowExStyle,
+	    Cursor:         core.CursorArrow,
+	    Background:     ui.col(245, 248, 252),
+	    DoubleBuffered: true,
+	    RenderMode:     core.RenderModeAuto,
 	}
+	
 	if ico := loadWinUIIcon(filepath.Join(dir, "icon.ico")); ico != nil {
 		ui.icon = ico
 		opts.Icon = ico
