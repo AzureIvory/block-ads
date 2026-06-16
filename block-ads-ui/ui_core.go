@@ -424,6 +424,7 @@ func (u *nativeUI) layout(size core.Size) {
 		return
 	}
 
+
 	m := u.dp(16)
 	gap := u.dp(14)
 	headerH := u.dp(60)
@@ -431,13 +432,38 @@ func (u *nativeUI) layout(size core.Size) {
 	contentX := m + sideW + gap
 	contentW := w - contentX - m
 	topY := m + headerH + gap
-	rulesH := u.dp(284)
-	logsY := topY + rulesH + gap
+
 	footerH := u.dp(28)
-	logsH := h - logsY - m - footerH
-	if logsH < u.dp(156) {
-		logsH = u.dp(156)
+
+	contentBottom := h - m - footerH
+	availableH := contentBottom - topY
+	if availableH < u.dp(480) {
+	    availableH = u.dp(480)
 	}
+
+	rulesH := availableH * 34 / 100
+	if rulesH < u.dp(180) {
+	    rulesH = u.dp(180)
+	}
+	if rulesH > u.dp(230) {
+	    rulesH = u.dp(230)
+	}
+
+	logsY := topY + rulesH + gap
+	logsH := contentBottom - logsY
+
+	// 如果日志区不够，就反向压缩 rulesH
+	minLogsH := u.dp(300)
+	if logsH < minLogsH {
+	    diff := minLogsH - logsH
+	    rulesH -= diff
+	    if rulesH < u.dp(160) {
+	        rulesH = u.dp(160)
+	    }
+	    logsY = topY + rulesH + gap
+	    logsH = contentBottom - logsY
+	}
+
 
 	u.header.SetBounds(core.Rect{X: m, Y: m, W: w - m*2, H: headerH})
 	u.sidebar.SetBounds(core.Rect{X: m, Y: topY, W: sideW, H: h - topY - m})
@@ -445,26 +471,48 @@ func (u *nativeUI) layout(size core.Size) {
 	u.logsCard.SetBounds(core.Rect{X: contentX, Y: logsY, W: contentW, H: logsH})
 	u.mask.SetBounds(core.Rect{X: 0, Y: 0, W: w, H: h})
 
-	u.brandLabel.SetBounds(core.Rect{X: m + u.dp(18), Y: m + u.dp(6), W: u.dp(138), H: u.dp(40)})
-	u.btnRun.SetBounds(core.Rect{X: m + u.dp(160), Y: m + u.dp(10), W: u.dp(86), H: u.dp(36)})
-	u.chkBoot.SetBounds(core.Rect{X: m + u.dp(258), Y: m + u.dp(12), W: u.dp(86), H: u.dp(30)})
-	u.chkCode.SetBounds(core.Rect{X: m + u.dp(352), Y: m + u.dp(12), W: u.dp(92), H: u.dp(30)})
-	u.adminLabel.SetBounds(core.Rect{X: m + u.dp(452), Y: m + u.dp(14), W: u.dp(54), H: u.dp(24)})
-	u.runLabel.SetBounds(core.Rect{X: m + u.dp(512), Y: m + u.dp(14), W: u.dp(54), H: u.dp(24)})
-	u.btnFake.SetBounds(core.Rect{X: w - m - u.dp(168), Y: m + u.dp(10), W: u.dp(82), H: u.dp(36)})
-	u.btnGit.SetBounds(core.Rect{X: w - m - u.dp(80), Y: m + u.dp(10), W: u.dp(74), H: u.dp(36)})
+	rightGitX := w - m - u.dp(90)
+	rightFakeX := rightGitX - u.dp(92)
+
+	u.btnGit.SetBounds(core.Rect{X: rightGitX, Y: m + u.dp(10), W: u.dp(74), H: u.dp(36)})
+	u.btnFake.SetBounds(core.Rect{X: rightFakeX, Y: m + u.dp(10), W: u.dp(82), H: u.dp(36)})
+
+	leftX := m + u.dp(18)
+	u.brandLabel.SetBounds(core.Rect{X: leftX, Y: m + u.dp(6), W: u.dp(120), H: u.dp(40)})
+	leftX += u.dp(128)
+
+	u.btnRun.SetBounds(core.Rect{X: leftX, Y: m + u.dp(10), W: u.dp(82), H: u.dp(36)})
+	leftX += u.dp(90)
+
+	u.chkBoot.SetBounds(core.Rect{X: leftX, Y: m + u.dp(12), W: u.dp(82), H: u.dp(30)})
+	leftX += u.dp(88)
+
+	u.chkCode.SetBounds(core.Rect{X: leftX, Y: m + u.dp(12), W: u.dp(88), H: u.dp(30)})
+	leftX += u.dp(94)
+
+	if leftX+u.dp(120) < rightFakeX-u.dp(8) {
+	    u.adminLabel.SetBounds(core.Rect{X: leftX, Y: m + u.dp(14), W: u.dp(54), H: u.dp(24)})
+	    u.runLabel.SetBounds(core.Rect{X: leftX + u.dp(60), Y: m + u.dp(14), W: u.dp(54), H: u.dp(24)})
+	    u.adminLabel.SetVisible(true)
+	    u.runLabel.SetVisible(true)
+	} else {
+	    u.adminLabel.SetVisible(false)
+	    u.runLabel.SetVisible(false)
+	}
 
 	sideX := m + u.dp(12)
 	sideBtnW := sideW - u.dp(24)
+
 	for i, key := range listOrder {
-		y := topY + u.dp(14) + int32(i)*u.dp(48)
-		u.sideButtons[key].SetBounds(core.Rect{X: sideX, Y: y, W: sideBtnW, H: u.dp(38)})
+	    y := topY + u.dp(12) + int32(i)*u.dp(42)
+	    u.sideButtons[key].SetBounds(core.Rect{X: sideX, Y: y, W: sideBtnW, H: u.dp(34)})
 	}
-	sideActionY := h - m - u.dp(158)
-	u.btnUpload.SetBounds(core.Rect{X: sideX, Y: sideActionY, W: sideBtnW, H: u.dp(34)})
-	u.btnSync.SetBounds(core.Rect{X: sideX, Y: sideActionY + u.dp(40), W: sideBtnW, H: u.dp(34)})
-	u.btnUpdate.SetBounds(core.Rect{X: sideX, Y: sideActionY + u.dp(80), W: sideBtnW, H: u.dp(34)})
-	u.btnAbout.SetBounds(core.Rect{X: sideX, Y: sideActionY + u.dp(120), W: sideBtnW, H: u.dp(34)})
+
+	sideActionY := h - m - u.dp(146)
+	u.btnUpload.SetBounds(core.Rect{X: sideX, Y: sideActionY, W: sideBtnW, H: u.dp(32)})
+	u.btnSync.SetBounds(core.Rect{X: sideX, Y: sideActionY + u.dp(36), W: sideBtnW, H: u.dp(32)})
+	u.btnUpdate.SetBounds(core.Rect{X: sideX, Y: sideActionY + u.dp(72), W: sideBtnW, H: u.dp(32)})
+	u.btnAbout.SetBounds(core.Rect{X: sideX, Y: sideActionY + u.dp(108), W: sideBtnW, H: u.dp(32)})
 
 	cardX := contentX + u.dp(14)
 	cardW := contentW - u.dp(28)
@@ -476,13 +524,70 @@ func (u *nativeUI) layout(size core.Size) {
 	u.rulesList.SetBounds(core.Rect{X: cardX, Y: topY + u.dp(80), W: cardW, H: rulesH - u.dp(112)})
 	u.ruleNote.SetBounds(core.Rect{X: cardX, Y: topY + rulesH - u.dp(22), W: cardW, H: u.dp(16)})
 
-	u.logTitle.SetBounds(core.Rect{X: cardX, Y: logsY + u.dp(10), W: u.dp(236), H: u.dp(22)})
-	u.logInfo.SetBounds(core.Rect{X: contentX + contentW - u.dp(132), Y: logsY + u.dp(12), W: u.dp(104), H: u.dp(18)})
-	u.logsList.SetBounds(core.Rect{X: cardX, Y: logsY + u.dp(40), W: cardW, H: logsH - u.dp(78)})
-	u.btnLogOpen.SetBounds(core.Rect{X: cardX, Y: logsY + logsH - u.dp(38), W: u.dp(76), H: u.dp(28)})
-	u.btnLogWhite.SetBounds(core.Rect{X: cardX + u.dp(84), Y: logsY + logsH - u.dp(38), W: u.dp(90), H: u.dp(28)})
-	u.modeLabel.SetBounds(core.Rect{X: contentX + contentW - u.dp(108), Y: logsY + logsH - u.dp(16), W: u.dp(84), H: u.dp(16)})
-	u.msgLabel.SetBounds(core.Rect{X: contentX, Y: h - m - footerH, W: contentW, H: footerH})
+
+	logPad := u.dp(14)
+	logHeaderH := u.dp(28)
+	logFooterH := u.dp(40)
+
+
+	logCardX := contentX
+	logCardY := logsY
+	logCardW := contentW
+	logCardH := logsH
+
+	logInnerX := logCardX + logPad
+	logInnerW := logCardW - logPad*2
+
+	u.logTitle.SetBounds(core.Rect{
+	    X: logInnerX,
+	    Y: logCardY + u.dp(10),
+	    W: u.dp(236),
+	    H: u.dp(22),
+	})
+
+	u.logInfo.SetBounds(core.Rect{
+	    X: logCardX + logCardW - u.dp(132),
+	    Y: logCardY + u.dp(12),
+	    W: u.dp(104),
+	    H: u.dp(18),
+	})
+
+	listY := logCardY + logHeaderH + u.dp(8)
+	listH := logCardH - logHeaderH - logFooterH - u.dp(12)
+	if listH < u.dp(80) {
+	    listH = u.dp(80)
+	}
+
+	u.logsList.SetBounds(core.Rect{
+	    X: logInnerX,
+	    Y: listY,
+	    W: logInnerW,
+	    H: listH,
+	})
+
+	footerY := logCardY + logCardH - logFooterH + u.dp(6)
+
+	u.btnLogOpen.SetBounds(core.Rect{
+	    X: logInnerX,
+	    Y: footerY,
+	    W: u.dp(76),
+	    H: u.dp(28),
+	})
+
+	u.btnLogWhite.SetBounds(core.Rect{
+	    X: logInnerX + u.dp(84),
+	    Y: footerY,
+	    W: u.dp(90),
+	    H: u.dp(28),
+	})
+
+	u.modeLabel.SetBounds(core.Rect{
+	    X: logCardX + logCardW - u.dp(112),
+	    Y: footerY + u.dp(6),
+	    W: u.dp(88),
+	    H: u.dp(18),
+	})
+
 
 	u.layoutDialogs(w, h)
 }
