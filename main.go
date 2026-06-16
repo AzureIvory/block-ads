@@ -140,7 +140,8 @@ func getSignC(path string) string {
 	// 没缓存的情况下获取签名
 	s, err := utils.GetSignName(path)
 	if err != nil {
-		s = ""
+		//s = ""
+		return ""
 	}
 
 	// 写入缓存
@@ -413,17 +414,28 @@ func hitFolder(fullPath string, folderSet map[string]struct{}) (bool, string) {
 }
 
 // 签名黑名单
+// 只允许精确匹配
 func hitSign(signer string, signSet map[string]struct{}) (bool, string) {
 	if len(signSet) == 0 || signer == "" {
 		return false, ""
 	}
+
 	low := strings.ToLower(strings.TrimSpace(signer))
+	if low == "" {
+		return false, ""
+	}
+
 	for blk := range signSet {
 		blkLow := strings.ToLower(strings.TrimSpace(blk))
-		if low == blkLow || strings.Contains(low, blkLow) {
+		if blkLow == "" {
+			continue
+		}
+
+		if low == blkLow {
 			return true, blk
 		}
 	}
+
 	return false, ""
 }
 
