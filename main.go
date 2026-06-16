@@ -395,7 +395,7 @@ func isSysDesk(pid uint32, fullPath string) bool {
 	if lp == "" {
 		return false
 	}
-	return strings.HasPrefix(lp, windowsDirLower()+`\`) || lp == windowsDirLower()
+	return strings.HasPrefix(lp, windowsDirLower()+`\\`) || lp == windowsDirLower()
 }
 
 // 目录黑名单
