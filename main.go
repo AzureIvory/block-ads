@@ -395,7 +395,7 @@ func isSysDesk(pid uint32, fullPath string) bool {
 	if lp == "" {
 		return false
 	}
-	return strings.HasPrefix(lp, windowsDirLower()+`\\`) || lp == windowsDirLower()
+	return strings.HasPrefix(lp, windowsDirLower()+`\`) || lp == windowsDirLower()
 }
 
 // 目录黑名单
@@ -420,7 +420,7 @@ func hitSign(signer string, signSet map[string]struct{}) (bool, string) {
 	low := strings.ToLower(strings.TrimSpace(signer))
 	for blk := range signSet {
 		blkLow := strings.ToLower(strings.TrimSpace(blk))
-		if low == blkLow || strings.Contains(low, blkLow) || strings.Contains(blkLow, low) {
+		if low == blkLow || strings.Contains(low, blkLow) {
 			return true, blk
 		}
 	}

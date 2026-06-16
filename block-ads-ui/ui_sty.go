@@ -118,6 +118,14 @@ func (u *nativeUI) compactSoftButtonStyle() widgets.ButtonStyle {
 	})
 }
 
+func (u *nativeUI) panelFocusButtonStyle() widgets.ButtonStyle {
+	style := u.compactSoftButtonStyle()
+	style.ImageSizeDP = 14
+	style.PadDP = 8
+	style.GapDP = 5
+	return style
+}
+
 func (u *nativeUI) compactOutlineDangerStyle() widgets.ButtonStyle {
 	return u.btnSty(btnCfg{
 		sz: 12, wt: 600, pad: 7, ins: 10, gap: 6,

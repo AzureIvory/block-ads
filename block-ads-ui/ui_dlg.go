@@ -9,7 +9,6 @@ import (
 	"github.com/AzureIvory/winui/core"
 	"github.com/AzureIvory/winui/widgets"
 	"os"
-	"path/filepath"
 	"strings"
 	"time"
 )
@@ -51,7 +50,7 @@ func (u *nativeUI) buildAboutDialog() {
 	u.aboutTitle = u.label("about-title", "关于", 20, 700, u.col(23, 33, 61), core.DTEndEllipsis)
 	u.aboutIcon = widgets.NewImage("about-icon")
 	u.aboutIcon.SetScaleMode(widgets.ImageScaleContain)
-	if buf, err := os.ReadFile(filepath.Join(u.dir, "icon.png")); err == nil {
+	if buf, err := os.ReadFile(assetPath(u.dir, "icon.png")); err == nil {
 		_ = u.aboutIcon.LoadBytes(buf)
 	}
 	u.aboutName = u.label("about-name", "block-ads", 28, 700, u.col(47, 104, 243), core.DTCenter|core.DTEndEllipsis)

@@ -73,10 +73,10 @@ type uiSta struct {
 
 func stopAd(dir string) error {
 	if err := utils.Kill("block-ads.exe"); err != nil {
-		fmt.Println("缂佹挻娼?block-ads.exe 婢惰精瑙?", err)
+		fmt.Println("结束 block-ads.exe 失败:", err)
 	}
 	if err := etw.KillSession("blockads-ProcMon-ETW"); err != nil {
-		fmt.Println("缂佹挻娼獷TW娴兼俺鐦芥径杈Е:", err)
+		fmt.Println("结束ETW会话失败:", err)
 	}
 	p := filepath.Join(dir, "skin.txt")
 	_ = os.WriteFile(p, []byte{}, 0644)
@@ -270,7 +270,7 @@ func (d *appDat) svLst(key string) error {
 	return os.WriteFile(p, []byte(b.String()), 0644)
 }
 
-// 閹风柉绀夐崚妤勩€?
+// 拷贝列表
 func (d *appDat) all() map[string][]string {
 	d.mu.Lock()
 	defer d.mu.Unlock()
@@ -284,7 +284,7 @@ func (d *appDat) all() map[string][]string {
 	return out
 }
 
-// 閹风柉绀夊▔銊╁櫞
+// 拷贝注释
 func (d *appDat) note() map[string]string {
 	d.mu.Lock()
 	defer d.mu.Unlock()
@@ -296,7 +296,7 @@ func (d *appDat) note() map[string]string {
 	return out
 }
 
-// 閹风柉绀夐弮銉ョ箶
+// 拷贝日志
 func (d *appDat) log() []string {
 	d.mu.Lock()
 	defer d.mu.Unlock()
@@ -349,7 +349,7 @@ func (d *appDat) delLn(key string, idx int) ([]string, error) {
 	return out, nil
 }
 
-// 娴犲孩妫╄箛妤€濮為崗銉ф閸氬秴宕熼敍姝琲nd = "folder" / "sign"
+// 从日志加入白名单：kind = "folder" / "sign"
 func (d *appDat) addWhite(kind, val, path string) (bool, error) {
 	kind = strings.ToLower(strings.TrimSpace(kind))
 	val = strings.TrimSpace(val)
@@ -368,14 +368,14 @@ func (d *appDat) addWhite(kind, val, path string) (bool, error) {
 	}
 }
 
-// sign 濡€崇础閿涙碍濡哥粵鎯ф倳閸旂姴鍙哤sign.txt
+// sign 模式：把签名加入Wsign.txt
 func (d *appDat) addWsign(sign string) (bool, error) {
 	if sign == "" {
 		return false, os.ErrInvalid
 	}
 	wl := d.lst["signWhite"]
 
-	// 瀹告彃鐡ㄩ崷銊ュ灟娑撳秹鍣告径宥呭晸閸?
+	// 已存在则不重复写入
 	for _, s := range wl {
 		if strings.EqualFold(s, sign) {
 			return false, nil
@@ -390,8 +390,8 @@ func (d *appDat) addWsign(sign string) (bool, error) {
 	return true, nil
 }
 
-// folder 濡€崇础閿涙矮绮犵捄顖氱窞閸氬嫮楠囬惄顔肩秿娑擃厽澹橀崙杞扮瑢 folder.txt 鐞涘奔绔撮懛瀵告畱閸氬秴鐡ч敍灞藉閸忣櫇folder.txt
-// - 缁楊兛绔村▓闈涙嫲閺堚偓閸氬簼绔村▓鍏哥瑝閸栧綊鍘?
+// folder 模式：从路径各级目录中找出与 folder.txt 行一致的名字，加入Wfolder.txt
+// - 第一段和最后一段不匹配
 func (d *appDat) addWfolder(path string) (bool, error) {
 	if path == "" {
 		return false, os.ErrInvalid
@@ -403,7 +403,7 @@ func (d *appDat) addWfolder(path string) (bool, error) {
 	}
 	wl := d.lst["whitelist"]
 
-	// 妫板嫬顦╅悶鍞俹lder.txt
+	// 预处理folder.txt
 	fset := make(map[string]struct{})
 	for _, ln := range folders {
 		ln = strings.TrimSpace(ln)
@@ -416,13 +416,13 @@ func (d *appDat) addWfolder(path string) (bool, error) {
 		fset[strings.ToLower(ln)] = struct{}{}
 	}
 
-	// 閻滅増婀侀惂钘夋倳閸楁洟娉﹂崥鍫礉閻劋绨崢濠氬櫢
+	// 现有白名单集合，用于去重
 	wset := make(map[string]struct{})
 	for _, ln := range wl {
 		wset[strings.ToLower(strings.TrimSpace(ln))] = struct{}{}
 	}
 
-	// 缂佺喍绔撮崚鍡涙缁?
+	// 统一分隔符
 	p := strings.ReplaceAll(path, "/", `\`)
 	var segs []string
 	for _, part := range strings.Split(p, `\`) {
@@ -433,12 +433,12 @@ func (d *appDat) addWfolder(path string) (bool, error) {
 		segs = append(segs, part)
 	}
 	if len(segs) <= 2 {
-		// 閸欘亝婀侀弽鐟版嫲閺傚洣娆㈤崥宥忕礉濞屸€虫殣閸欘垰灏柊宥囨畱
+		// 只有根和文件名，没啥可匹配的
 		return false, nil
 	}
 
 	added := false
-	// 娴犲海顑囨禍灞绢唽閸掓澘鈧帗鏆熺粭顑跨癌濞?
+	// 从第二段到倒数第二段
 	for i := 1; i < len(segs)-1; i++ {
 		name := strings.TrimSpace(segs[i])
 		if name == "" {
@@ -450,7 +450,7 @@ func (d *appDat) addWfolder(path string) (bool, error) {
 			continue
 		}
 		if _, ok := wset[low]; ok {
-			// 瀹告彃婀惂钘夋倳閸?
+			// 已在白名单
 			continue
 		}
 
@@ -470,7 +470,7 @@ func (d *appDat) addWfolder(path string) (bool, error) {
 	return true, nil
 }
 
-// 閺勵垰鎯佺粻锛勬倞閸?
+// 是否管理员
 func chkAdm() bool {
 	f, err := os.Open(`\\.\PHYSICALDRIVE0`)
 	if err != nil {
@@ -480,7 +480,7 @@ func chkAdm() bool {
 	return true
 }
 
-// 閹凤附鍩呮潻娑氣柤閺勵垰鎯佹潻鎰攽
+// 拦截进程是否运行
 func chkRun() bool {
 	cmd := exec.Command("tasklist", "/FI", "IMAGENAME eq "+exeName)
 	cmd.SysProcAttr = &syscall.SysProcAttr{
@@ -532,7 +532,7 @@ func setBootKey(key, exe string, on bool) error {
 	return err
 }
 
-// 娴犮儳顓搁悶鍡楁喅濡€崇础閸氼垰濮?
+// 以管理员模式启动
 func runExe(exe string) error {
 	if _, err := os.Stat(exe); err != nil {
 		return err
@@ -548,7 +548,7 @@ func runExe(exe string) error {
 	return windows.ShellExecute(0, vPtr, ePtr, nil, dPtr, show)
 }
 
-// 閻劑绮拋銈嗙セ鐟欏牆娅掗幍鎾崇磻缂冩垿銆?
+// 用默认浏览器打开网页
 func goUrl(u string) error {
 	if u == "" {
 		return nil
@@ -560,7 +560,7 @@ func goUrl(u string) error {
 	return cmd.Start()
 }
 
-// 娴碱亣顥婄€瑰顥婇悘顐ょ钵
+// 伪装安装火绒
 func reghr() error {
 	const sub = `SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\HuorongSysdiag`
 	const tgt = `C:\Program Files\Huorong\Sysdiag\bin\HipsMain.exe`
@@ -583,7 +583,7 @@ func reghr() error {
 	return nil
 }
 
-// 娴碱亣顥婇搹姘珯閺?
+// 伪装虚拟机
 func regvm() error {
 	const sub = `Applications\VMwareHostOpen.exe\shell\open\command`
 
@@ -599,7 +599,7 @@ func regvm() error {
 	return nil
 }
 
-// 濞夈劌鍞界悰銊ゅ悏鐟佸嵕ip
+// 注册表伪装vip
 func regvip() error {
 	const sub = `SOFTWARE\LDSGameMaster\User`
 
@@ -615,7 +615,7 @@ func regvip() error {
 	return nil
 }
 
-// ini閺傚洣娆㈡导顏囶棅vip
+// ini文件伪装vip
 func inivip() error {
 	app := os.Getenv("APPDATA")
 	if app == "" {
@@ -640,7 +640,7 @@ func inivip() error {
 
 	lines := strings.Split(string(data), "\n")
 
-	// 閹?[settings]
+	// 找 [settings]
 	secSt := -1
 	for i, ln := range lines {
 		t := strings.TrimSpace(ln)
@@ -662,7 +662,7 @@ func inivip() error {
 		return os.WriteFile(cfg, []byte(strings.Join(lines, "\n")), 0644)
 	}
 
-	// 閹?[settings] 缂佹挻娼悰?
+	// 找 [settings] 结束行
 	secEd := len(lines)
 	for i := secSt + 1; i < len(lines); i++ {
 		t := strings.TrimSpace(lines[i])
@@ -672,7 +672,7 @@ func inivip() error {
 		}
 	}
 
-	// 閹?level
+	// 找 level
 	lvlIdx := -1
 	for i := secSt + 1; i < secEd; i++ {
 		t := strings.TrimSpace(lines[i])
@@ -707,7 +707,7 @@ func inivip() error {
 	return os.WriteFile(cfg, []byte(strings.Join(lines, "\n")), 0644)
 }
 
-// 娴碱亣顥婂鈧崥?60瀵湱鐛ラ幏锔藉焻
+// 伪装开启360弹窗拦截
 func ads360() error {
 	const sub = `SOFTWARE\WOW6432Node\360Safe\stat`
 
@@ -726,7 +726,7 @@ func ads360() error {
 	return nil
 }
 
-// 閹跺WORD閸婅壈顔曠純顔昏礋1
+// 把DWORD值设置为1
 func dw1(k reg.Key, name string) error {
 	v, _, err := k.GetIntegerValue(name)
 	if err == nil && v == 1 {

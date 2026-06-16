@@ -51,13 +51,15 @@ type logRow struct {
 }
 
 type nativeUI struct {
-	app    *core.App
-	scene  *widgets.Scene
-	icon   *core.Icon
-	dir    string
-	exe    string
-	codeEx string
-	dat    *appDat
+	app          *core.App
+	scene        *widgets.Scene
+	icon         *core.Icon
+	enlargeImage *core.Image
+	restoreImage *core.Image
+	dir          string
+	exe          string
+	codeEx       string
+	dat          *appDat
 
 	stopCh   chan struct{}
 	stopOnce sync.Once
@@ -66,6 +68,7 @@ type nativeUI struct {
 	filter            string
 	selectedRuleIndex int
 	selectedLogIndex  int
+	panelFocus        string
 	syncPolicy        string
 
 	status uiSta
@@ -111,11 +114,13 @@ type nativeUI struct {
 	btnUpdate *widgets.Button
 	btnAbout  *widgets.Button
 
-	btnAdd *widgets.Button
-	btnDel *widgets.Button
+	btnAdd       *widgets.Button
+	btnDel       *widgets.Button
+	btnRuleFocus *widgets.Button
 
 	btnLogOpen  *widgets.Button
 	btnLogWhite *widgets.Button
+	btnLogFocus *widgets.Button
 
 	chkBoot   *widgets.CheckBox
 	chkCode   *widgets.CheckBox
@@ -195,18 +200,18 @@ func runNativeUI(dat *appDat, dir string) error {
 	ui := newUI(dat, dir)
 
 	opts := core.Options{
-	    ClassName:      "BlockAdsWinUI",
-	    Title:          "名单管理",
-	    Width:          980,
-	    Height:         720,
-	    Style:          core.DefaultWindowStyle,
-	    ExStyle:        core.DefaultWindowExStyle,
-	    Cursor:         core.CursorArrow,
-	    Background:     ui.col(245, 248, 252),
-	    DoubleBuffered: true,
-	    RenderMode:     core.RenderModeAuto,
+		ClassName:      "BlockAdsWinUI",
+		Title:          "名单管理",
+		Width:          980,
+		Height:         720,
+		Style:          core.DefaultWindowStyle,
+		ExStyle:        core.DefaultWindowExStyle,
+		Cursor:         core.CursorArrow,
+		Background:     ui.col(245, 248, 252),
+		DoubleBuffered: true,
+		RenderMode:     core.RenderModeAuto,
 	}
-	
+
 	if ico := loadWinUIIcon(filepath.Join(dir, "icon.ico")); ico != nil {
 		ui.icon = ico
 		opts.Icon = ico

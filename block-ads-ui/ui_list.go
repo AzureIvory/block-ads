@@ -97,6 +97,12 @@ func (u *nativeUI) buildRulesCard() {
 	u.btnDel.SetEnabled(false)
 	u.btnDel.SetOnClick(u.handleDelete)
 
+	u.btnRuleFocus = widgets.NewButton("rules-focus", "放大", widgets.ModeCustom)
+	u.btnRuleFocus.SetStyle(u.panelFocusButtonStyle())
+	u.btnRuleFocus.SetKind(widgets.BtnLeft)
+	u.btnRuleFocus.SetImage(u.enlargeImage)
+	u.btnRuleFocus.SetOnClick(u.toggleRulesFocus)
+
 	u.rulesList = widgets.NewListBox("rules")
 	u.rulesList.SetStyle(u.ruleListStyle())
 	u.rulesList.SetOnChange(func(index int, item widgets.ListItem) {
@@ -110,7 +116,7 @@ func (u *nativeUI) buildRulesCard() {
 		u.btnDel.SetEnabled(true)
 	})
 
-	u.rulesCard.AddAll(u.ruleTitle, u.ruleState, u.searchBox, u.btnAdd, u.btnDel, u.rulesList, u.ruleNote)
+	u.rulesCard.AddAll(u.ruleTitle, u.ruleState, u.searchBox, u.btnAdd, u.btnDel, u.btnRuleFocus, u.rulesList, u.ruleNote)
 }
 
 func (u *nativeUI) refreshRuleList() {
@@ -146,19 +152,29 @@ func (u *nativeUI) refreshRuleList() {
 		u.rulesList.SetSelected(selected)
 	} else {
 		u.rulesList.ClearSelection()
-		if len(rows) == 0 || !u.hasRuleIndex(u.selectedRuleIndex) {
-			u.selectedRuleIndex = -1
-		}
+		u.selectedRuleIndex = -1
 	}
 
-	u.ruleTitle.SetText(fmt.Sprintf("规则列表 (%d)", len(all)))
-	if filter != "" {
-		u.ruleState.SetText(fmt.Sprintf("筛选 %d 项", len(rows)))
+	u.refreshRuleHeader(len(all), len(rows), filter != "")
+	u.refreshRuleNote()
+	u.btnDel.SetEnabled(u.selectedRuleIndex >= 0 && u.panelFocus != panelFocusLogs)
+}
+
+func (u *nativeUI) refreshRuleHeader(total, filtered int, hasFilter bool) {
+	if u.ruleTitle == nil || u.ruleState == nil {
+		return
+	}
+	if u.panelFocus == panelFocusLogs {
+		u.ruleTitle.SetText(fmt.Sprintf("%s  %d", listTitle[u.curKey], total))
+		u.ruleState.SetText("")
+		return
+	}
+	u.ruleTitle.SetText(fmt.Sprintf("规则列表 (%d)", total))
+	if hasFilter {
+		u.ruleState.SetText(fmt.Sprintf("筛选 %d 项", filtered))
 	} else {
 		u.ruleState.SetText("已加载")
 	}
-	u.refreshRuleNote()
-	u.btnDel.SetEnabled(u.selectedRuleIndex >= 0)
 }
 
 func (u *nativeUI) refreshRuleNote() {
@@ -252,11 +268,18 @@ func (u *nativeUI) buildLogsCard() {
 	u.btnLogWhite.SetEnabled(false)
 	u.btnLogWhite.SetOnClick(u.addSelectedLogToWhitelist)
 
+	u.btnLogFocus = widgets.NewButton("logs-focus", "放大", widgets.ModeCustom)
+	u.btnLogFocus.SetStyle(u.panelFocusButtonStyle())
+	u.btnLogFocus.SetKind(widgets.BtnLeft)
+	u.btnLogFocus.SetImage(u.enlargeImage)
+	u.btnLogFocus.SetOnClick(u.toggleLogsFocus)
+
 	u.msgLabel = u.label("msg", "", 12, 500, u.col(120, 132, 158), dtWordBreak)
 
 	u.logsCard.AddAll(
 		u.logTitle,
 		u.logInfo,
+		u.btnLogFocus,
 		u.logsList,
 		u.btnLogOpen,
 		u.btnLogWhite,
@@ -296,13 +319,74 @@ func (u *nativeUI) refreshLogList() {
 	} else {
 		u.logInfo.SetText(fmt.Sprintf("今日记录 %d 条", len(rows)))
 	}
+	u.refreshPanelFocusChrome()
 	u.refreshLogButtons()
+	u.relayout()
 }
 
 func (u *nativeUI) refreshLogButtons() {
+	if u.panelFocus == panelFocusRules || len(u.logRows) == 0 {
+		u.btnLogOpen.SetEnabled(false)
+		u.btnLogWhite.SetEnabled(false)
+		return
+	}
 	row, ok := u.currentLogRow()
 	u.btnLogOpen.SetEnabled(ok && strings.TrimSpace(row.Path) != "")
 	u.btnLogWhite.SetEnabled(ok && (row.Kind == "sign" || row.Kind == "folder"))
+}
+
+func (u *nativeUI) toggleRulesFocus() {
+	if u.panelFocus == panelFocusRules {
+		u.panelFocus = panelFocusNone
+	} else {
+		u.panelFocus = panelFocusRules
+	}
+	u.refreshPanelFocusChrome()
+	u.refreshLogButtons()
+	u.relayout()
+}
+
+func (u *nativeUI) toggleLogsFocus() {
+	if u.panelFocus == panelFocusLogs {
+		u.panelFocus = panelFocusNone
+	} else {
+		u.panelFocus = panelFocusLogs
+	}
+	u.refreshPanelFocusChrome()
+	u.refreshLogButtons()
+	u.relayout()
+}
+
+func (u *nativeUI) relayout() {
+	if u.app == nil {
+		return
+	}
+	u.layout(u.app.ClientSize())
+}
+
+func (u *nativeUI) refreshPanelFocusChrome() {
+	u.updatePanelFocusButton(u.btnRuleFocus, u.panelFocus == panelFocusRules)
+	u.updatePanelFocusButton(u.btnLogFocus, u.panelFocus == panelFocusLogs)
+	if u.btnLogFocus != nil {
+		u.btnLogFocus.SetEnabled(u.panelFocus != panelFocusRules)
+	}
+	if u.ruleTitle != nil {
+		total := len(u.data[u.curKey])
+		u.refreshRuleHeader(total, len(u.ruleRows), strings.TrimSpace(u.filter) != "")
+	}
+}
+
+func (u *nativeUI) updatePanelFocusButton(btn *widgets.Button, focused bool) {
+	if btn == nil {
+		return
+	}
+	if focused {
+		btn.SetText("还原")
+		btn.SetImage(u.restoreImage)
+		return
+	}
+	btn.SetText("放大")
+	btn.SetImage(u.enlargeImage)
 }
 
 func (u *nativeUI) openSelectedLog() {

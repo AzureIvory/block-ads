@@ -4,13 +4,14 @@ package main
 
 import (
 	"fmt"
-	"github.com/AzureIvory/winui/core"
-	"github.com/AzureIvory/winui/widgets"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
 	"time"
+
+	"github.com/AzureIvory/winui/core"
+	"github.com/AzureIvory/winui/widgets"
 )
 
 func (u *nativeUI) onCreate(app *core.App, scene *widgets.Scene) error {
@@ -46,6 +47,14 @@ func (u *nativeUI) onDestroy(_ *core.App, _ *widgets.Scene) {
 	if u.icon != nil {
 		_ = u.icon.Close()
 		u.icon = nil
+	}
+	if u.enlargeImage != nil {
+		_ = u.enlargeImage.Close()
+		u.enlargeImage = nil
+	}
+	if u.restoreImage != nil {
+		_ = u.restoreImage.Close()
+		u.restoreImage = nil
 	}
 }
 
@@ -210,6 +219,18 @@ func loadWinUIIconSized(path string, want int32) *core.Icon {
 	return icon
 }
 
+func assetPath(dir, name string) string {
+	return filepath.Join(dir, "assets", name)
+}
+
+func loadUIAssetImage(dir, name string) *core.Image {
+	img, err := core.LoadImageFile(assetPath(dir, name))
+	if err != nil {
+		return nil
+	}
+	return img
+}
+
 func clearPanelChildren(panel *widgets.Panel) {
 	if panel == nil {
 		return
@@ -322,6 +343,8 @@ func newUI(dat *appDat, dir string) *nativeUI {
 
 // buildAll 组装全部区域。
 func (u *nativeUI) buildAll() {
+	u.enlargeImage = loadUIAssetImage(u.dir, "Enlarge.png")
+	u.restoreImage = loadUIAssetImage(u.dir, "Minimize.png")
 	u.buildRoot()
 	u.buildHeader()
 	u.buildSidebar()
@@ -329,6 +352,7 @@ func (u *nativeUI) buildAll() {
 	u.buildLogsCard()
 	u.buildDialogs()
 	u.linkCtl()
+	u.refreshPanelFocusChrome()
 }
 
 // linkCtl 把旧控件绑定到新控制器。
@@ -424,7 +448,6 @@ func (u *nativeUI) layout(size core.Size) {
 		return
 	}
 
-
 	m := u.dp(16)
 	gap := u.dp(14)
 	headerH := u.dp(60)
@@ -436,39 +459,21 @@ func (u *nativeUI) layout(size core.Size) {
 	footerH := u.dp(28)
 
 	contentBottom := h - m - footerH
-	availableH := contentBottom - topY
-	if availableH < u.dp(480) {
-	    availableH = u.dp(480)
+	if contentBottom-topY < u.dp(480) {
+		contentBottom = topY + u.dp(480)
 	}
-
-	rulesH := availableH * 34 / 100
-	if rulesH < u.dp(180) {
-	    rulesH = u.dp(180)
-	}
-	if rulesH > u.dp(230) {
-	    rulesH = u.dp(230)
-	}
-
-	logsY := topY + rulesH + gap
-	logsH := contentBottom - logsY
-
-	// 如果日志区不够，就反向压缩 rulesH
-	minLogsH := u.dp(300)
-	if logsH < minLogsH {
-	    diff := minLogsH - logsH
-	    rulesH -= diff
-	    if rulesH < u.dp(160) {
-	        rulesH = u.dp(160)
-	    }
-	    logsY = topY + rulesH + gap
-	    logsH = contentBottom - logsY
-	}
-
+	contentPlan := planContentLayout(topY, contentBottom, gap, u.dp(44), u.dp(152), len(u.logRows), u.panelFocus)
+	rulesH := contentPlan.RulesH
+	logsY := contentPlan.LogsY
+	logsH := contentPlan.LogsH
 
 	u.header.SetBounds(core.Rect{X: m, Y: m, W: w - m*2, H: headerH})
 	u.sidebar.SetBounds(core.Rect{X: m, Y: topY, W: sideW, H: h - topY - m})
 	u.rulesCard.SetBounds(core.Rect{X: contentX, Y: topY, W: contentW, H: rulesH})
-	u.logsCard.SetBounds(core.Rect{X: contentX, Y: logsY, W: contentW, H: logsH})
+	u.logsCard.SetVisible(contentPlan.ShowLogs)
+	if contentPlan.ShowLogs {
+		u.logsCard.SetBounds(core.Rect{X: contentX, Y: logsY, W: contentW, H: logsH})
+	}
 	u.mask.SetBounds(core.Rect{X: 0, Y: 0, W: w, H: h})
 
 	rightGitX := w - m - u.dp(90)
@@ -484,28 +489,28 @@ func (u *nativeUI) layout(size core.Size) {
 	u.btnRun.SetBounds(core.Rect{X: leftX, Y: m + u.dp(10), W: u.dp(82), H: u.dp(36)})
 	leftX += u.dp(90)
 
-	u.chkBoot.SetBounds(core.Rect{X: leftX, Y: m + u.dp(12), W: u.dp(82), H: u.dp(30)})
-	leftX += u.dp(88)
+	u.chkBoot.SetBounds(core.Rect{X: leftX, Y: m + u.dp(12), W: u.dp(106), H: u.dp(30)})
+	leftX += u.dp(112)
 
-	u.chkCode.SetBounds(core.Rect{X: leftX, Y: m + u.dp(12), W: u.dp(88), H: u.dp(30)})
-	leftX += u.dp(94)
+	u.chkCode.SetBounds(core.Rect{X: leftX, Y: m + u.dp(12), W: u.dp(106), H: u.dp(30)})
+	leftX += u.dp(112)
 
 	if leftX+u.dp(120) < rightFakeX-u.dp(8) {
-	    u.adminLabel.SetBounds(core.Rect{X: leftX, Y: m + u.dp(14), W: u.dp(54), H: u.dp(24)})
-	    u.runLabel.SetBounds(core.Rect{X: leftX + u.dp(60), Y: m + u.dp(14), W: u.dp(54), H: u.dp(24)})
-	    u.adminLabel.SetVisible(true)
-	    u.runLabel.SetVisible(true)
+		u.adminLabel.SetBounds(core.Rect{X: leftX, Y: m + u.dp(14), W: u.dp(54), H: u.dp(24)})
+		u.runLabel.SetBounds(core.Rect{X: leftX + u.dp(60), Y: m + u.dp(14), W: u.dp(54), H: u.dp(24)})
+		u.adminLabel.SetVisible(true)
+		u.runLabel.SetVisible(true)
 	} else {
-	    u.adminLabel.SetVisible(false)
-	    u.runLabel.SetVisible(false)
+		u.adminLabel.SetVisible(false)
+		u.runLabel.SetVisible(false)
 	}
 
 	sideX := m + u.dp(12)
 	sideBtnW := sideW - u.dp(24)
 
 	for i, key := range listOrder {
-	    y := topY + u.dp(12) + int32(i)*u.dp(42)
-	    u.sideButtons[key].SetBounds(core.Rect{X: sideX, Y: y, W: sideBtnW, H: u.dp(34)})
+		y := topY + u.dp(12) + int32(i)*u.dp(42)
+		u.sideButtons[key].SetBounds(core.Rect{X: sideX, Y: y, W: sideBtnW, H: u.dp(34)})
 	}
 
 	sideActionY := h - m - u.dp(146)
@@ -516,19 +521,30 @@ func (u *nativeUI) layout(size core.Size) {
 
 	cardX := contentX + u.dp(14)
 	cardW := contentW - u.dp(28)
-	u.ruleTitle.SetBounds(core.Rect{X: cardX, Y: topY + u.dp(10), W: u.dp(236), H: u.dp(24)})
-	u.ruleState.SetBounds(core.Rect{X: contentX + contentW - u.dp(98), Y: topY + u.dp(12), W: u.dp(70), H: u.dp(18)})
+	u.ruleTitle.SetBounds(core.Rect{X: cardX, Y: topY + u.dp(10), W: cardW - u.dp(168), H: u.dp(24)})
+	u.btnRuleFocus.SetBounds(core.Rect{X: contentX + contentW - u.dp(82), Y: topY + u.dp(9), W: u.dp(68), H: u.dp(28)})
+	u.ruleState.SetBounds(core.Rect{X: contentX + contentW - u.dp(160), Y: topY + u.dp(12), W: u.dp(68), H: u.dp(18)})
 	u.searchBox.SetBounds(core.Rect{X: cardX, Y: topY + u.dp(40), W: cardW - u.dp(134), H: u.dp(30)})
 	u.btnAdd.SetBounds(core.Rect{X: contentX + contentW - u.dp(120), Y: topY + u.dp(40), W: u.dp(54), H: u.dp(30)})
 	u.btnDel.SetBounds(core.Rect{X: contentX + contentW - u.dp(60), Y: topY + u.dp(40), W: u.dp(46), H: u.dp(30)})
-	u.rulesList.SetBounds(core.Rect{X: cardX, Y: topY + u.dp(80), W: cardW, H: rulesH - u.dp(112)})
-	u.ruleNote.SetBounds(core.Rect{X: cardX, Y: topY + rulesH - u.dp(22), W: cardW, H: u.dp(16)})
+	ruleListH := rulesH - u.dp(116)
+	if ruleListH < u.dp(40) {
+		ruleListH = u.dp(40)
+	}
+	u.rulesList.SetBounds(core.Rect{X: cardX, Y: topY + u.dp(80), W: cardW, H: ruleListH})
+	u.ruleNote.SetBounds(core.Rect{X: cardX, Y: topY + rulesH - u.dp(28), W: cardW, H: u.dp(22)})
 
+	u.ruleState.SetVisible(contentPlan.ShowRuleBody)
+	u.searchBox.SetVisible(contentPlan.ShowRuleBody)
+	u.btnAdd.SetVisible(contentPlan.ShowRuleBody)
+	u.btnDel.SetVisible(contentPlan.ShowRuleBody)
+	u.btnRuleFocus.SetVisible(contentPlan.ShowRuleBody)
+	u.rulesList.SetVisible(contentPlan.ShowRuleBody)
+	u.ruleNote.SetVisible(contentPlan.ShowRuleBody)
 
 	logPad := u.dp(14)
 	logHeaderH := u.dp(28)
 	logFooterH := u.dp(40)
-
 
 	logCardX := contentX
 	logCardY := logsY
@@ -539,55 +555,71 @@ func (u *nativeUI) layout(size core.Size) {
 	logInnerW := logCardW - logPad*2
 
 	u.logTitle.SetBounds(core.Rect{
-	    X: logInnerX,
-	    Y: logCardY + u.dp(10),
-	    W: u.dp(236),
-	    H: u.dp(22),
+		X: logInnerX,
+		Y: logCardY + u.dp(10),
+		W: logInnerW - u.dp(220),
+		H: u.dp(22),
+	})
+
+	logFocusX := logCardX + logCardW - u.dp(82)
+	u.btnLogFocus.SetBounds(core.Rect{
+		X: logFocusX,
+		Y: logCardY + u.dp(6),
+		W: u.dp(68),
+		H: u.dp(28),
 	})
 
 	u.logInfo.SetBounds(core.Rect{
-	    X: logCardX + logCardW - u.dp(132),
-	    Y: logCardY + u.dp(12),
-	    W: u.dp(104),
-	    H: u.dp(18),
+		X: logFocusX - u.dp(134),
+		Y: logCardY + u.dp(12),
+		W: u.dp(122),
+		H: u.dp(18),
 	})
 
 	listY := logCardY + logHeaderH + u.dp(8)
 	listH := logCardH - logHeaderH - logFooterH - u.dp(12)
 	if listH < u.dp(80) {
-	    listH = u.dp(80)
+		listH = u.dp(80)
 	}
 
 	u.logsList.SetBounds(core.Rect{
-	    X: logInnerX,
-	    Y: listY,
-	    W: logInnerW,
-	    H: listH,
+		X: logInnerX,
+		Y: listY,
+		W: logInnerW,
+		H: listH,
 	})
 
 	footerY := logCardY + logCardH - logFooterH + u.dp(6)
 
 	u.btnLogOpen.SetBounds(core.Rect{
-	    X: logInnerX,
-	    Y: footerY,
-	    W: u.dp(76),
-	    H: u.dp(28),
+		X: logInnerX,
+		Y: footerY,
+		W: u.dp(76),
+		H: u.dp(28),
 	})
 
 	u.btnLogWhite.SetBounds(core.Rect{
-	    X: logInnerX + u.dp(84),
-	    Y: footerY,
-	    W: u.dp(90),
-	    H: u.dp(28),
+		X: logInnerX + u.dp(84),
+		Y: footerY,
+		W: u.dp(90),
+		H: u.dp(28),
 	})
 
 	u.modeLabel.SetBounds(core.Rect{
-	    X: logCardX + logCardW - u.dp(112),
-	    Y: footerY + u.dp(6),
-	    W: u.dp(88),
-	    H: u.dp(18),
+		X: logCardX + logCardW - u.dp(112),
+		Y: footerY + u.dp(6),
+		W: u.dp(88),
+		H: u.dp(18),
 	})
 
+	u.logTitle.SetVisible(contentPlan.ShowLogs)
+	u.logInfo.SetVisible(contentPlan.ShowLogs)
+	u.btnLogFocus.SetVisible(contentPlan.ShowLogs)
+	u.logsList.SetVisible(contentPlan.ShowLogBody)
+	u.logsList.SetEnabled(contentPlan.ShowLogBody)
+	u.btnLogOpen.SetVisible(contentPlan.ShowLogBody)
+	u.btnLogWhite.SetVisible(contentPlan.ShowLogBody)
+	u.modeLabel.SetVisible(contentPlan.ShowLogBody)
 
 	u.layoutDialogs(w, h)
 }
