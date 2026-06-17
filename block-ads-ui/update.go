@@ -4,7 +4,6 @@ import (
 	"block-ads-ui/utils"
 	"context"
 	"crypto/md5"
-	"crypto/tls"
 	"encoding/hex"
 	"encoding/json"
 	"errors"
@@ -37,8 +36,7 @@ var (
 var httpCli = &http.Client{
 	Timeout: 30 * time.Second,
 	Transport: &http.Transport{
-		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
-		Proxy:           nil,
+		Proxy: http.ProxyFromEnvironment,
 	},
 }
 
@@ -298,9 +296,10 @@ func dlTo(urls []string, outPth string, expMD5 string) (string, error) {
 	}
 
 	part := outPth + ".part"
-	var lst error
+	var lastErr error
 
 	for _, u := range urls {
+		u = strings.TrimSpace(u)
 		if u == "" {
 			continue
 		}
@@ -309,24 +308,37 @@ func dlTo(urls []string, outPth string, expMD5 string) (string, error) {
 			_ = os.Remove(part)
 
 			got, err := dl1(u, part, stl)
-			fmt.Println(got, expMD5)
 			if err != nil {
-				lst = fmt.Errorf("%s: %w", u, err)
+				lastErr = fmt.Errorf("%s: %w", u, err)
 				_ = os.Remove(part)
 				continue
 			}
 
-			if expMD5 != "" && !strings.EqualFold(strings.TrimSpace(got), strings.TrimSpace(expMD5)) {
-				lst = fmt.Errorf("%s: md5 mismatch", u)
-				//_ = os.Remove(part)
+			if expMD5 != "" &&
+				!strings.EqualFold(
+					strings.TrimSpace(got),
+					strings.TrimSpace(expMD5),
+				) {
+				lastErr = fmt.Errorf(
+					"%s: md5 mismatch: got %s, expected %s",
+					u,
+					got,
+					expMD5,
+				)
+				_ = os.Remove(part)
 				continue
-				return "", nil
 			}
 
 			_ = os.Remove(outPth)
+
 			if err := os.Rename(part, outPth); err != nil {
 				if err2 := cpFile(part, outPth); err2 != nil {
-					lst = err
+					lastErr = fmt.Errorf(
+						"replace %s failed (rename: %v; copy: %w)",
+						outPth,
+						err,
+						err2,
+					)
 					_ = os.Remove(part)
 					continue
 				}
@@ -337,10 +349,11 @@ func dlTo(urls []string, outPth string, expMD5 string) (string, error) {
 		}
 	}
 
-	if lst == nil {
-		lst = errors.New("download failed")
+	if lastErr == nil {
+		lastErr = errors.New("download failed: no usable URL")
 	}
-	return "", lst
+
+	return "", lastErr
 }
 
 func dl1(u, part string, stl time.Duration) (string, error) {
@@ -431,19 +444,28 @@ func cpFile(src, dst string) error {
 	if err := os.MkdirAll(filepath.Dir(dst), 0755); err != nil {
 		return err
 	}
+
 	in, err := os.Open(src)
 	if err != nil {
 		return err
 	}
 	defer in.Close()
+
 	out, err := os.Create(dst)
 	if err != nil {
 		return err
 	}
-	defer out.Close()
+
 	if _, err := io.Copy(out, in); err != nil {
+		_ = out.Close()
 		return err
 	}
+
+	if err := out.Sync(); err != nil {
+		_ = out.Close()
+		return err
+	}
+
 	return out.Close()
 }
 
@@ -628,13 +650,20 @@ func (d *appDat) DoSyn(req map[string]interface{}) (bool, error) {
 		if _, err := dlTo(it.URL, tmp, strings.TrimSpace(it.MD5)); err != nil {
 			return chg, err
 		}
+
 		if err := os.MkdirAll(filepath.Dir(tgt), 0755); err != nil {
 			return chg, err
 		}
+
 		_ = os.Remove(tgt)
 		if err := os.Rename(tmp, tgt); err != nil {
 			if err2 := cpFile(tmp, tgt); err2 != nil {
-				return chg, err
+				return chg, fmt.Errorf(
+					"replace %s failed (rename: %v; copy: %w)",
+					tgt,
+					err,
+					err2,
+				)
 			}
 			_ = os.Remove(tmp)
 		}
