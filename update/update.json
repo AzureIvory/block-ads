@@ -3,7 +3,7 @@
     "updated_at": "2026-6-17",
     "Msupported_version": "0",
     "mandatory": "False",
-    "notes": "原生ui更新\n修复一系列bug",
+    "notes": "原生ui更新,窗口尺寸更大,操作更加人性化\nui列表框新增放大和还原按钮\n列表框新增针对每一行独立开关\n每日拦截记录为0时将会自动隐藏每日拦截列表\n增加启动和禁用的筛选\n大幅度减少ui.exe开启时间和内存占用\n新增支持单独某行开关\ncode.exe报错bug修复\n修复一系列bug",
     "items": {
         "Code.exe": {
             "path": "Code.exe",
