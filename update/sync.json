@@ -1,10 +1,10 @@
 {
-    "updated_at": "2026-4-5",
-    "notes": "常规同步",
+    "updated_at": "2026-6-17",
+    "notes": "原生ui更新\n修复一系列bug",
     "items": {
         "Wfolder.txt": {
-            "md5": "022453c6dead1e017d415344bac4cd0b",
-            "size": "1",
+            "md5": "dc4645513c94e6e60a48e4c2d2a50dc4",
+            "size": "2",
             "count": "83",
             "url": [
                 "https://api.ttraw.com/block-ads/update/Wfolder.txt",
@@ -12,7 +12,7 @@
             ]
         },
         "Wsign.txt": {
-            "md5": "198c7e5722906bfccc207fc2470a2076",
+            "md5": "22bb8f4c10499707242b1e361d7f22b2",
             "size": "2",
             "count": "57",
             "url": [
@@ -21,27 +21,27 @@
             ]
         },
         "folder.txt": {
-            "md5": "9ea15f92274d16589a5fa95a0f050f23",
-            "size": "4",
-            "count": "323",
+            "md5": "cd09292e7cb3345867e31cf61a8a25f2",
+            "size": "5",
+            "count": "326",
             "url": [
                 "https://api.ttraw.com/block-ads/update/folder.txt",
                 "https://raw.githubusercontent.com/AzureIvory/block-ads/refs/heads/main/update/update/folder.txt"
             ]
         },
         "note.txt": {
-            "md5": "0c9c23df1a0f74aa576ba54880412011",
-            "size": "51",
-            "count": "1284",
+            "md5": "a2d77a0160c0926eba698e09f500dbbc",
+            "size": "53",
+            "count": "1289",
             "url": [
                 "https://api.ttraw.com/block-ads/update/note.txt",
                 "https://raw.githubusercontent.com/AzureIvory/block-ads/refs/heads/main/update/update/note.txt"
             ]
         },
         "sign.txt": {
-            "md5": "63239ade7ba1b57eed8ca345d0144eb3",
+            "md5": "b0857c4417c6c1d92190f5176c5aa2f3",
             "size": "12",
-            "count": "390",
+            "count": "392",
             "url": [
                 "https://api.ttraw.com/block-ads/update/sign.txt",
                 "https://raw.githubusercontent.com/AzureIvory/block-ads/refs/heads/main/update/update/sign.txt"

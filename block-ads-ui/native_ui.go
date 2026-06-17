@@ -3,7 +3,6 @@
 package main
 
 import (
-	"path/filepath"
 	"sync"
 
 	"github.com/AzureIvory/winui/core"
@@ -38,6 +37,10 @@ type ruleRow struct {
 	Index int
 	Text  string
 	Note  string
+	// Source 标识来源："txt" 为云端只读基准，"custom" 为用户自定义（在 user_rules.json 的 add 段）。
+	Source string
+	// Disabled 表示该 txt 规则是否被用户禁用（对应 user_rules.json 的 disabled 段）。
+	Disabled bool
 }
 
 type logRow struct {
@@ -56,10 +59,16 @@ type nativeUI struct {
 	icon         *core.Icon
 	enlargeImage *core.Image
 	restoreImage *core.Image
-	dir          string
-	exe          string
-	codeEx       string
-	dat          *appDat
+	// 按钮图标（在 buildAll 时加载，供按钮 SetImage 使用）。
+	fakeImage     *core.Image
+	gitImage      *core.Image
+	startImage    *core.Image
+	enableImage   *core.Image
+	disabledImage *core.Image
+	dir           string
+	exe           string
+	codeEx        string
+	dat           *appDat
 
 	stopCh   chan struct{}
 	stopOnce sync.Once
@@ -115,8 +124,12 @@ type nativeUI struct {
 	btnAbout  *widgets.Button
 
 	btnAdd       *widgets.Button
-	btnDel       *widgets.Button
+	btnEnabled   *widgets.Button // 仅看启用（开关）
+	btnDisabled  *widgets.Button // 仅看禁用（开关）
 	btnRuleFocus *widgets.Button
+
+	// ruleFilter 控制规则列表筛选："all"（默认）/"enabled"/"disabled"。
+	ruleFilter string
 
 	btnLogOpen  *widgets.Button
 	btnLogWhite *widgets.Button
@@ -138,6 +151,11 @@ type nativeUI struct {
 	addInput   *widgets.EditBox
 	addCancel  *widgets.Button
 	addConfirm *widgets.Button
+
+	// alertDialog 是 winui 自带风格的提示弹窗
+	alertDialog *widgets.Panel
+	alertLabel  *widgets.Label
+	alertClose  *widgets.Button
 
 	aboutDialog  *widgets.Panel
 	aboutTitle   *widgets.Label
@@ -163,6 +181,7 @@ type nativeUI struct {
 	updateCheck   *widgets.Button
 	updateGo      *widgets.Button
 	updateClose   *widgets.Button
+	updateWait    *widgets.AnimatedImage // 网络等待动画
 
 	syncDialog     *widgets.Panel
 	syncTitle      *widgets.Label
@@ -177,6 +196,7 @@ type nativeUI struct {
 	syncRadioAll   *widgets.RadioButton
 	syncRadioNever *widgets.RadioButton
 	syncChecks     []*widgets.CheckBox
+	syncWait       *widgets.AnimatedImage // 网络等待动画
 
 	uploadDialog *widgets.Panel
 	uploadTitle  *widgets.Label
@@ -212,7 +232,7 @@ func runNativeUI(dat *appDat, dir string) error {
 		RenderMode:     core.RenderModeAuto,
 	}
 
-	if ico := loadWinUIIcon(filepath.Join(dir, "icon.ico")); ico != nil {
+	if ico := loadWinUIIcon(); ico != nil {
 		ui.icon = ico
 		opts.Icon = ico
 	}

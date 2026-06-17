@@ -6,20 +6,46 @@ import (
 	"block-ads-ui/utils"
 	"encoding/json"
 	"fmt"
-	"github.com/AzureIvory/winui/core"
-	"github.com/AzureIvory/winui/widgets"
-	"os"
 	"strings"
 	"time"
+
+	"github.com/AzureIvory/winui/core"
+	"github.com/AzureIvory/winui/widgets"
 )
 
 func (u *nativeUI) buildDialogs() {
 	u.buildAddDialog()
+	u.buildAlertDialog()
 	u.buildAboutDialog()
 	u.buildFakeConfirmDialog()
 	u.buildUpdateDialog()
 	u.buildSyncDialog()
 	u.buildUploadDialog()
+}
+
+// buildAlertDialog 构建 winui 风格的提示弹窗
+// 文本通过 alertBox 动态设置，复用同一实例。
+func (u *nativeUI) buildAlertDialog() {
+	u.alertDialog = u.newDialog("alert-dialog")
+	u.alertLabel = u.label("alert-label", "", 15, 400, u.col(76, 91, 119), dtWordBreak)
+	u.alertLabel.SetMultiline(true)
+	u.alertLabel.SetWordWrap(true)
+	u.alertClose = widgets.NewButton("alert-close", "确定", widgets.ModeCustom)
+	u.alertClose.SetStyle(u.primaryButtonStyle())
+	u.alertClose.SetOnClick(func() {
+		u.hideDialogs()
+	})
+	u.alertDialog.AddAll(u.alertLabel, u.alertClose)
+	u.registerDialog(u.alertDialog)
+}
+
+// alertBox 用 winui 风格对话框显示提示。
+func (u *nativeUI) alertBox(text string) {
+	if u.alertLabel == nil {
+		return
+	}
+	u.alertLabel.SetText(text)
+	u.showDialog(u.alertDialog)
 }
 
 func (u *nativeUI) buildAddDialog() {
@@ -45,19 +71,68 @@ func (u *nativeUI) buildAddDialog() {
 	u.registerDialog(u.addDialog)
 }
 
+
+// tryRemoveSelectedLog 尝试卸载（查找并运行卸载程序）。
+func (u *nativeUI) tryRemoveSelectedLog() {
+	row, ok := u.currentLogRow()
+	if !ok {
+		return
+	}
+	p := strings.TrimSpace(row.Path)
+	if p == "" {
+		return
+	}
+	u.showMessage("尝试卸载中...", false)
+	go func() {
+		err := utils.Tryrm(p)
+		_ = u.app.Post(func() {
+			if err != nil {
+				u.showMessage("尝试卸载失败: "+err.Error(), true)
+				return
+			}
+			u.showMessage("已尝试卸载: "+p, false)
+		})
+	}()
+}
+
+// forceDeleteSelectedLog 强制删除文件。
+func (u *nativeUI) forceDeleteSelectedLog() {
+	row, ok := u.currentLogRow()
+	if !ok {
+		return
+	}
+	p := strings.TrimSpace(row.Path)
+	if p == "" {
+		return
+	}
+	u.showMessage("强制删除中...", false)
+	go func() {
+		err := utils.Del(p)
+		_ = u.app.Post(func() {
+			if err != nil {
+				u.showMessage("强制删除失败: "+err.Error(), true)
+				return
+			}
+			u.showMessage("已强制删除: "+p, false)
+		})
+	}()
+}
+
 func (u *nativeUI) buildAboutDialog() {
 	u.aboutDialog = u.newDialog("about-dialog")
 	u.aboutTitle = u.label("about-title", "关于", 20, 700, u.col(23, 33, 61), core.DTEndEllipsis)
 	u.aboutIcon = widgets.NewImage("about-icon")
 	u.aboutIcon.SetScaleMode(widgets.ImageScaleContain)
-	if buf, err := os.ReadFile(assetPath(u.dir, "icon.png")); err == nil {
-		_ = u.aboutIcon.LoadBytes(buf)
+	if len(assetIconPNG) > 0 {
+		_ = u.aboutIcon.LoadBytes(assetIconPNG)
 	}
 	u.aboutName = u.label("about-name", "block-ads", 28, 700, u.col(47, 104, 243), core.DTCenter|core.DTEndEllipsis)
 	u.aboutDesc = u.label("about-desc", "简单、高效的流氓软件拦截工具", 15, 400, u.col(76, 91, 119), core.DTCenter|dtWordBreak)
 	u.aboutVersion = u.label("about-version", "Version "+aboutVersionValue, 15, 500, u.col(103, 116, 145), core.DTCenter|core.DTEndEllipsis)
 	u.aboutGit = widgets.NewButton("about-git", "GitHub", widgets.ModeCustom)
 	u.aboutGit.SetStyle(u.softButtonStyle())
+	u.aboutGit.SetKind(widgets.BtnLeft)
+	u.aboutGit.SetImage(u.gitImage)
 	u.aboutGit.SetOnClick(u.handleGit)
 	u.aboutClose = widgets.NewButton("about-close", "关闭", widgets.ModeCustom)
 	u.aboutClose.SetStyle(u.primaryButtonStyle())
@@ -116,6 +191,7 @@ func (u *nativeUI) buildUpdateDialog() {
 	u.updateClose.SetOnClick(func() {
 		u.hideDialogs()
 	})
+	u.updateWait = u.newWaitAnim()
 
 	u.updateDialog.AddAll(
 		u.updateTitle,
@@ -126,6 +202,7 @@ func (u *nativeUI) buildUpdateDialog() {
 		u.updateCheck,
 		u.updateGo,
 		u.updateClose,
+		u.updateWait,
 	)
 	u.registerDialog(u.updateDialog)
 }
@@ -191,6 +268,7 @@ func (u *nativeUI) buildSyncDialog() {
 	u.syncClose.SetOnClick(func() {
 		u.hideDialogs()
 	})
+	u.syncWait = u.newWaitAnim()
 
 	u.syncDialog.AddAll(
 		u.syncTitle,
@@ -204,6 +282,7 @@ func (u *nativeUI) buildSyncDialog() {
 		u.syncCheck,
 		u.syncGo,
 		u.syncClose,
+		u.syncWait,
 	)
 	u.registerDialog(u.syncDialog)
 }
@@ -503,9 +582,11 @@ func (u *nativeUI) checkUpdateAsync(showMsg bool) {
 	if showMsg {
 		u.showMessage("检测更新中...", false)
 	}
+	u.setUpdateWaiting(true)
 	go func() {
 		info, err := u.dat.ChkUpd()
 		_ = u.app.Post(func() {
+			u.setUpdateWaiting(false)
 			if err != nil {
 				u.showMessage("检测更新失败: "+err.Error(), true)
 				return
@@ -536,12 +617,14 @@ func (u *nativeUI) doUpdateAsync() {
 		return
 	}
 	u.showMessage("更新中...", false)
+	u.setUpdateWaiting(true)
 	go func() {
 		started, err := u.dat.DoUpdNative(func() {
 			time.Sleep(250 * time.Millisecond)
 			u.app.Close()
 		})
 		_ = u.app.Post(func() {
+			u.setUpdateWaiting(false)
 			if err != nil {
 				u.showMessage("更新失败: "+err.Error(), true)
 				return
@@ -559,9 +642,11 @@ func (u *nativeUI) checkSyncAsync(showMsg bool) {
 	if showMsg {
 		u.showMessage("检查同步中...", false)
 	}
+	u.setSyncWaiting(true)
 	go func() {
 		info, err := u.dat.ChkSyn()
 		_ = u.app.Post(func() {
+			u.setSyncWaiting(false)
 			if err != nil {
 				u.showMessage("检查同步失败: "+err.Error(), true)
 				return
@@ -585,9 +670,11 @@ func (u *nativeUI) doSyncAsync() {
 		"selected": u.selectedSyncNames(),
 	}
 	u.showMessage("同步中...", false)
+	u.setSyncWaiting(true)
 	go func() {
 		ok, err := u.dat.DoSyn(req)
 		_ = u.app.Post(func() {
+			u.setSyncWaiting(false)
 			if err != nil {
 				u.showMessage("同步失败: "+err.Error(), true)
 				return

@@ -2,6 +2,7 @@ package main
 
 import (
 	"block-ads-ui/utils"
+	"encoding/json"
 	"fmt"
 	"os"
 	"os/exec"
@@ -63,7 +64,21 @@ type appDat struct {
 	lst map[string][]string
 	not map[string]string
 	lg  []string
+	// rules 保存用户层增量（新增/禁用），与 txt 现场分离，使 txt 保持云端只读基准。
+	// key 与 lstMap 一致：sign/folder/whitelist/signWhite。
+	rules userRules
 }
+
+// ruleOverride / userRules 与引擎 main.go 的结构一一对应，JSON 字段名必须保持一致。
+type ruleOverride struct {
+	Add      []string `json:"add"`
+	Disabled []string `json:"disabled"`
+}
+type userRules map[string]ruleOverride
+
+// userRulesFile 是用户层增量的文件名，与 txt 同目录。
+const userRulesFile = "user_rules.json"
+
 type uiSta struct {
 	Adm      bool `json:"adm"`
 	Run      bool `json:"run"`
@@ -199,6 +214,7 @@ func newDat(dir string) *appDat {
 	}
 	d.not = rdNote(filepath.Join(dir, noteFile))
 	d.lg = rdLog(dir)
+	d.rules = rdUserRules(filepath.Join(dir, userRulesFile))
 	return d
 }
 
@@ -252,6 +268,95 @@ func rdLog(dir string) []string {
 	return rdTxt(p)
 }
 
+// rdUserRules 读取用户层增量文件，缺失或损坏返回空 map（不阻断启动）。
+func rdUserRules(p string) userRules {
+	out := userRules{}
+	b, err := os.ReadFile(p)
+	if err != nil {
+		return out
+	}
+	_ = json.Unmarshal(b, &out)
+	return out
+}
+
+// normRule 与引擎 readSet/readSetLower 的规范化保持一致。
+// folder/whitelist 类小写 + filepath.Clean；sign/signWhite 类保持原样。
+// 两边规范化不一致会导致 disabled/add 项与规则对不上，开关失效。
+func normRule(key, val string) string {
+	val = strings.TrimSpace(val)
+	if key == "folder" || key == "whitelist" {
+		return strings.ToLower(filepath.Clean(val))
+	}
+	return val
+}
+
+// ruleOvLocked 返回某类的 override（无则零值），调用方须持锁。
+func (d *appDat) ruleOvLocked(key string) ruleOverride {
+	if d.rules == nil {
+		d.rules = userRules{}
+	}
+	return d.rules[key]
+}
+
+// mergedViewLocked 合并 txt 行 + add 段（去重，规范化比对），调用方须持锁。
+// disabled 不在此剔除：UI 仍需显示被禁用的行以便展示灰行与取消勾选状态。
+func (d *appDat) mergedViewLocked(key string) []string {
+	base := d.lst[key]
+	out := make([]string, 0, len(base))
+	seen := make(map[string]struct{}, len(base))
+	for _, s := range base {
+		n := normRule(key, s)
+		if _, ok := seen[n]; ok {
+			continue
+		}
+		seen[n] = struct{}{}
+		out = append(out, s)
+	}
+	for _, s := range d.ruleOvLocked(key).Add {
+		n := normRule(key, s)
+		if _, ok := seen[n]; ok {
+			continue
+		}
+		seen[n] = struct{}{}
+		out = append(out, s)
+	}
+	return out
+}
+
+// saveRulesLocked 持久化用户层增量，调用方须持锁。
+func (d *appDat) saveRulesLocked() error {
+	if d.rules == nil {
+		d.rules = userRules{}
+	}
+	b, err := json.MarshalIndent(d.rules, "", "  ")
+	if err != nil {
+		return err
+	}
+	return os.WriteFile(filepath.Join(d.dir, userRulesFile), b, 0644)
+}
+
+// disabledSet 返回某类规则被禁用项的规范化 key 集合，供 UI 批量判定（一次加锁）。
+func (d *appDat) disabledSet(key string) map[string]struct{} {
+	d.mu.Lock()
+	defer d.mu.Unlock()
+	out := make(map[string]struct{}, len(d.rules[key].Disabled))
+	for _, x := range d.ruleOvLocked(key).Disabled {
+		out[normRule(key, x)] = struct{}{}
+	}
+	return out
+}
+
+// txtSet 返回某类规则 txt 原始行的规范化 key 集合，供 UI 区分来源（一次加锁）。
+func (d *appDat) txtSet(key string) map[string]struct{} {
+	d.mu.Lock()
+	defer d.mu.Unlock()
+	out := make(map[string]struct{}, len(d.lst[key]))
+	for _, s := range d.lst[key] {
+		out[normRule(key, s)] = struct{}{}
+	}
+	return out
+}
+
 func (d *appDat) svLst(key string) error {
 	name, ok := lstMap[key]
 	if !ok {
@@ -270,16 +375,14 @@ func (d *appDat) svLst(key string) error {
 	return os.WriteFile(p, []byte(b.String()), 0644)
 }
 
-// 拷贝列表
+// 拷贝列表（txt 行 + 用户 add 段去重合并；disabled 不剔除，UI 仍需展示被禁用的行）
 func (d *appDat) all() map[string][]string {
 	d.mu.Lock()
 	defer d.mu.Unlock()
 
 	out := make(map[string][]string, len(d.lst))
-	for k, v := range d.lst {
-		tmp := make([]string, len(v))
-		copy(tmp, v)
-		out[k] = tmp
+	for k := range d.lst {
+		out[k] = d.mergedViewLocked(k)
 	}
 	return out
 }
@@ -307,46 +410,85 @@ func (d *appDat) log() []string {
 	return out
 }
 
+// addLn 把用户新增规则写入 user_rules.json 的 add 段（不写 txt，txt 保持云端只读基准）。
+// 与 txt 已有行、add 已有项去重，避免重复堆积。
 func (d *appDat) addLn(key, txt string) ([]string, error) {
 	txt = strings.TrimSpace(txt)
 	if txt == "" {
 		return nil, os.ErrInvalid
 	}
+	norm := normRule(key, txt)
 
 	d.mu.Lock()
 	defer d.mu.Unlock()
 
-	v := d.lst[key]
-	v = append(v, txt)
-	d.lst[key] = v
+	// 与 txt 现有行去重。
+	for _, exist := range d.lst[key] {
+		if normRule(key, exist) == norm {
+			return d.mergedViewLocked(key), nil
+		}
+	}
+	// 与 add 段已有项去重。
+	ov := d.ruleOvLocked(key)
+	for _, exist := range ov.Add {
+		if normRule(key, exist) == norm {
+			return d.mergedViewLocked(key), nil
+		}
+	}
+	ov.Add = append(ov.Add, txt)
+	d.rules[key] = ov
 
-	if err := d.svLst(key); err != nil {
+	if err := d.saveRulesLocked(); err != nil {
 		return nil, err
 	}
-
-	out := make([]string, len(v))
-	copy(out, v)
-	return out, nil
+	return d.mergedViewLocked(key), nil
 }
 
-func (d *appDat) delLn(key string, idx int) ([]string, error) {
+// toggleRule 切换某条规则的启用/禁用状态。
+//   - custom（用户自定义）规则：取消勾选 = 从 add 段真删（不弹窗）。
+//   - txt（云端）规则：勾选状态切换只动 disabled 段。
+//
+// enable=true 表示启用，enable=false 表示禁用。
+func (d *appDat) toggleRule(key, val, source string, enable bool) error {
 	d.mu.Lock()
 	defer d.mu.Unlock()
 
-	v := d.lst[key]
-	if idx < 0 || idx >= len(v) {
-		return nil, os.ErrInvalid
+	if source == "custom" {
+		// 自定义规则只有启用 / 删除两种状态。
+		if !enable {
+			norm := normRule(key, val)
+			ov := d.ruleOvLocked(key)
+			next := ov.Add[:0]
+			for _, exist := range ov.Add {
+				if normRule(key, exist) != norm {
+					next = append(next, exist)
+				}
+			}
+			ov.Add = next
+			d.rules[key] = ov
+			return d.saveRulesLocked()
+		}
+		return nil
 	}
-	v = append(v[:idx], v[idx+1:]...)
-	d.lst[key] = v
 
-	if err := d.svLst(key); err != nil {
-		return nil, err
+	// txt 规则：用 disabled 段记录禁用。
+	norm := normRule(key, val)
+	ov := d.ruleOvLocked(key)
+	dedup := func(in []string) []string {
+		out := in[:0]
+		for _, x := range in {
+			if normRule(key, x) != norm {
+				out = append(out, x)
+			}
+		}
+		return out
 	}
-
-	out := make([]string, len(v))
-	copy(out, v)
-	return out, nil
+	ov.Disabled = dedup(ov.Disabled)
+	if !enable {
+		ov.Disabled = append(ov.Disabled, val)
+	}
+	d.rules[key] = ov
+	return d.saveRulesLocked()
 }
 
 // 从日志加入白名单：kind = "folder" / "sign"

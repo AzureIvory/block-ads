@@ -118,6 +118,56 @@ func (u *nativeUI) compactSoftButtonStyle() widgets.ButtonStyle {
 	})
 }
 
+// headerIconButtonStyle 是顶栏带图标按钮的样式，
+func (u *nativeUI) headerIconButtonStyle() widgets.ButtonStyle {
+	return u.btnSty(btnCfg{
+		sz: 14, wt: 600, pad: 8, ins: 12, gap: 8,
+		txt: u.col(41, 52, 77), down: u.col(41, 52, 77), off: u.col(171, 183, 206),
+		bg: u.col(255, 255, 255), hov: u.col(242, 246, 253), prs: u.col(232, 238, 250),
+		dis: u.col(245, 248, 252), brd: u.col(220, 228, 242),
+	})
+}
+
+// ruleFilterButtonStyle 是规则列表「仅看启用 / 仅看禁用」按钮样式，
+func (u *nativeUI) ruleFilterButtonStyle() widgets.ButtonStyle {
+	return u.btnSty(btnCfg{
+		sz: 14, wt: 600, pad: 8, ins: 10, gap: 7,
+		txt: u.col(41, 52, 77), down: u.col(41, 52, 77), off: u.col(171, 183, 206),
+		bg: u.col(255, 255, 255), hov: u.col(242, 246, 253), prs: u.col(232, 238, 250),
+		dis: u.col(245, 248, 252), brd: u.col(220, 228, 242),
+	})
+}
+
+// ruleFilterActiveStyle 是筛选按钮的激活态：仅看启用用浅绿、仅看禁用用浅灰。
+func (u *nativeUI) ruleFilterEnabledActiveStyle() widgets.ButtonStyle {
+	return u.btnSty(btnCfg{
+		sz: 14, wt: 700, pad: 8, ins: 10, gap: 7,
+		txt: u.col(22, 101, 52), down: u.col(22, 101, 52), off: u.col(132, 168, 142),
+		bg: u.col(220, 252, 231), hov: u.col(209, 247, 223), prs: u.col(198, 242, 214),
+		dis: u.col(220, 252, 231), brd: u.col(134, 239, 172),
+	})
+}
+
+// ruleFilterDisabledActiveStyle 仅看禁用激活态：浅灰。
+func (u *nativeUI) ruleFilterDisabledActiveStyle() widgets.ButtonStyle {
+	return u.btnSty(btnCfg{
+		sz: 14, wt: 700, pad: 8, ins: 10, gap: 7,
+		txt: u.col(55, 65, 81), down: u.col(55, 65, 81), off: u.col(148, 163, 184),
+		bg: u.col(229, 231, 235), hov: u.col(219, 222, 228), prs: u.col(209, 213, 219),
+		dis: u.col(229, 231, 235), brd: u.col(203, 213, 225),
+	})
+}
+
+// rulePrimaryButtonStyle 是规则列表「新增」主按钮，字号 14。
+func (u *nativeUI) rulePrimaryButtonStyle() widgets.ButtonStyle {
+	return u.btnSty(btnCfg{
+		sz: 14, wt: 700, pad: 8, ins: 12, gap: 6,
+		txt: u.col(255, 255, 255), down: u.col(255, 255, 255), off: u.col(225, 232, 243),
+		bg: u.col(47, 104, 243), hov: u.col(38, 93, 228), prs: u.col(31, 78, 200),
+		dis: u.col(160, 181, 235), brd: u.col(47, 104, 243),
+	})
+}
+
 func (u *nativeUI) panelFocusButtonStyle() widgets.ButtonStyle {
 	style := u.compactSoftButtonStyle()
 	style.ImageSizeDP = 14
@@ -192,6 +242,11 @@ func (u *nativeUI) ruleListStyle() widgets.ListStyle {
 		ItemHeightDP:      30,
 		PaddingDP:         8,
 		CornerRadius:      12,
+		// 打勾列颜色：勾选用品牌蓝填充、白色标记；未勾选用浅灰描边。
+		// 必须显式配置，否则 resolveStyle 走 scene 主题时拿到零值会被渲染成黑色。
+		CheckColor:     u.col(47, 104, 243),
+		CheckMarkColor: u.col(255, 255, 255),
+		CheckBorder:    u.col(203, 213, 225),
 	}
 }
 

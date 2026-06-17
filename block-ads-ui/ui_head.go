@@ -4,6 +4,7 @@ package main
 
 import (
 	"block-ads-ui/utils"
+	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
@@ -21,6 +22,8 @@ func (u *nativeUI) buildHeader() {
 
 	u.btnRun = widgets.NewButton("run", "启动", widgets.ModeCustom)
 	u.btnRun.SetStyle(u.primaryButtonStyle())
+	u.btnRun.SetKind(widgets.BtnLeft)
+	u.btnRun.SetImage(u.startImage)
 	u.btnRun.SetOnClick(u.handleToggleRun)
 
 	u.chkBoot = widgets.NewCheckBox("boot", "拦截自启", widgets.ModeCustom)
@@ -36,11 +39,15 @@ func (u *nativeUI) buildHeader() {
 	})
 
 	u.btnFake = widgets.NewButton("fake", "一键伪装", widgets.ModeCustom)
-	u.btnFake.SetStyle(u.compactSoftButtonStyle())
+	u.btnFake.SetStyle(u.headerIconButtonStyle())
+	u.btnFake.SetKind(widgets.BtnLeft)
+	u.btnFake.SetImage(u.fakeImage)
 	u.btnFake.SetOnClick(u.handleFake)
 
 	u.btnGit = widgets.NewButton("github", "GitHub", widgets.ModeCustom)
-	u.btnGit.SetStyle(u.compactSoftButtonStyle())
+	u.btnGit.SetStyle(u.headerIconButtonStyle())
+	u.btnGit.SetKind(widgets.BtnLeft)
+	u.btnGit.SetImage(u.gitImage)
 	u.btnGit.SetOnClick(u.handleGit)
 
 	u.header.AddAll(
@@ -121,6 +128,12 @@ func (u *nativeUI) handleToggleRun() {
 		time.Sleep(700 * time.Millisecond)
 		_ = u.app.Post(func() {
 			if err != nil {
+				// 启动失败（含目标文件不存在）：弹窗提示具体原因。
+				if os.IsNotExist(err) {
+					u.alertBox("未找到拦截程序：\n" + u.exe)
+				} else {
+					u.alertBox("启动失败：\n" + err.Error())
+				}
 				u.showMessage("启动失败: "+err.Error(), true)
 				return
 			}
@@ -128,6 +141,8 @@ func (u *nativeUI) handleToggleRun() {
 			if u.status.Run {
 				u.showMessage("启动成功。", false)
 			} else {
+				// 启动指令已发出但进程未运行（如被 UAC 拒绝、被拦截器拦下）。
+				u.alertBox("启动未成功，拦截进程未运行。\n请检查是否被拒绝或被安全软件拦截。")
 				u.showMessage("已尝试启动。", false)
 			}
 		})

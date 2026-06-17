@@ -1,10 +1,11 @@
 # 进程拦截工具（Block Ads）
 
-> 本项目用于在 Windows 上基于**目录**与**签名**规则，对特定程序的运行进行拦截或放行，并提供可视化管理界面（WebView2）。
+> 本项目用于在 Windows 上基于**目录**与**签名**规则，对特定程序的运行进行拦截或放行，并提供可视化管理界面（基于原生 Win32 API 自绘 UI）。
 
 ## 下载地址
-> [蓝奏云](https://bluered.lanzouv.com/ih2bc3fug7jg)
-> [Release](https://github.com/AzureIvory/block-ads/releases)
+> [蓝奏云-压缩包](https://bluered.lanzouv.com/ibG6h3s6ch0h)
+> [蓝奏云-安装包](https://bluered.lanzouv.com/ipMHr3s6chbi)
+> [Github-Release](https://github.com/AzureIvory/block-ads/releases)
 
 ## 文件说明
 
@@ -15,6 +16,7 @@
 | **`Wfolder.txt`** | 目录白名单：匹配目录下的程序将被放行 |
 | **`Wsign.txt`** | 签名白名单：匹配数字签名信息的程序将被放行 |
 | **`note.txt`** | 注释：用于给条目添加说明 |
+| **`user_rules.json`** | 用户层规则增量：用户新增/禁用的规则记录，与原数据分离 |
 | **`UI.exe`** | 图形化界面：用于管理名单、查看拦截记录、启动/停止核心功能 |
 | **`Code.exe`** | 伪装程序：用于伪装特定人群 |
 | **`block-ads.exe`** | 核心拦截程序 |
@@ -38,15 +40,11 @@
 ## 使用说明
 ### 运行环境
 - Windows 7及以上
-- 需要安装 **WebView2 Runtime**
+- AMD64位
 
 ### 快速开始
-1. 安装 WebView2 Runtime。
-2. 解压发布包后，运行 `UI.exe`。
-3. 点击“启动”启用拦截；需要临时放行时可点击“停止”，再将目标程序目录/签名加入白名单后重新启动。
-
-### 通过拦截记录定位软件
-- 在拦截记录列表中双击条目，可定位对应程序/路径
+1. 解压发布包后，运行 `UI.exe`。
+2. 点击“启动”启用拦截；需要临时放行时可点击“停止”，再将目标程序目录/签名加入白名单后重新启动。
 
 ## 一键伪装
 
@@ -76,25 +74,19 @@
 >[AC-baidu-重定向优化百度搜狗谷歌必应搜索](https://openuserjs.org/scripts/inDarkness/AC-baidu-%E9%87%8D%E5%AE%9A%E5%90%91%E4%BC%98%E5%8C%96%E7%99%BE%E5%BA%A6%E6%90%9C%E7%8B%97%E8%B0%B7%E6%AD%8C%E5%BF%85%E5%BA%94%E6%90%9C%E7%B4%A2_favicon_%E5%8F%8C%E5%88%97)
 
 
-# 运行时
->[webview2](https://developer.microsoft.com/zh-cn/microsoft-edge/webview2)
-
 # 库
-- github.com/bi-zone/etw  
-- golang.org/x/sys/windows  
-- github.com/webview/webview_go  
-- golang.org/x/sys/windows/registry  
+- github.com/bi-zone/etw
+- golang.org/x/sys/windows
+- golang.org/x/sys/windows/registry
+- github.com/AzureIvory/winui
 
 
 ## 编译
-> go build -ldflags="-H=windowsgui -s -w" -trimpath
+### 核心拦截程序（block-ads.exe）
+> build.bat
 
-## UI编译
-> set CGO_ENABLED=1
-
->set GOARCH=amd64
-
->go build -ldflags "-H=windowsgui -s -w >-extldflags=-static" -trimpath -o Ui.exe
+### UI（Ui.exe）
+> build.bat
 
 # 致谢
 [SoftCnKiller](https://github.com/SiHaiYiYeQiu/SoftCnKiller)

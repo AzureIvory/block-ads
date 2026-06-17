@@ -203,13 +203,12 @@ func (u *nativeUI) hasRuleIndex(idx int) bool {
 	return idx >= 0 && idx < len(u.data[u.curKey])
 }
 
-func loadWinUIIcon(path string) *core.Icon {
-	return loadWinUIIconSized(path, 48)
+func loadWinUIIcon() *core.Icon {
+	return loadWinUIIconSized(assetIconICO, 48)
 }
 
-func loadWinUIIconSized(path string, want int32) *core.Icon {
-	buf, err := os.ReadFile(path)
-	if err != nil {
+func loadWinUIIconSized(buf []byte, want int32) *core.Icon {
+	if len(buf) == 0 {
 		return nil
 	}
 	icon, err := core.LoadIconFromICO(buf, want)
@@ -219,16 +218,56 @@ func loadWinUIIconSized(path string, want int32) *core.Icon {
 	return icon
 }
 
-func assetPath(dir, name string) string {
-	return filepath.Join(dir, "assets", name)
-}
-
 func loadUIAssetImage(dir, name string) *core.Image {
-	img, err := core.LoadImageFile(assetPath(dir, name))
+	img, err := core.LoadImageBytes(assetImage(name))
 	if err != nil {
 		return nil
 	}
 	return img
+}
+
+// newWaitAnim 创建网络等待动画，加载失败返回 nil。
+func (u *nativeUI) newWaitAnim() *widgets.AnimatedImage {
+	anim := widgets.NewAnimatedImage("wait-anim")
+	if err := anim.LoadGIF(assetWaitGIF); err != nil {
+		return nil
+	}
+	anim.SetVisible(false)
+	return anim
+}
+
+// setWaiting 在指定对话框内显示/隐藏等待动画。
+func (u *nativeUI) setWaiting(anim *widgets.AnimatedImage, rect core.Rect, on bool) {
+	if anim == nil {
+		return
+	}
+	anim.SetBounds(rect)
+	anim.SetVisible(on)
+	anim.SetPlaying(on)
+}
+
+// setUpdateWaiting 切换更新对话框的等待动画。
+func (u *nativeUI) setUpdateWaiting(on bool) {
+	if u.updateWait == nil {
+		return
+	}
+	r := u.updateWait.Bounds()
+	if r.Empty() {
+		r = core.Rect{X: u.dp(8), Y: u.dp(8), W: u.dp(120), H: u.dp(120)}
+	}
+	u.setWaiting(u.updateWait, r, on)
+}
+
+// setSyncWaiting 切换同步对话框的等待动画。
+func (u *nativeUI) setSyncWaiting(on bool) {
+	if u.syncWait == nil {
+		return
+	}
+	r := u.syncWait.Bounds()
+	if r.Empty() {
+		r = core.Rect{X: u.dp(8), Y: u.dp(8), W: u.dp(120), H: u.dp(120)}
+	}
+	u.setWaiting(u.syncWait, r, on)
 }
 
 func clearPanelChildren(panel *widgets.Panel) {
@@ -345,6 +384,11 @@ func newUI(dat *appDat, dir string) *nativeUI {
 func (u *nativeUI) buildAll() {
 	u.enlargeImage = loadUIAssetImage(u.dir, "Enlarge.png")
 	u.restoreImage = loadUIAssetImage(u.dir, "Minimize.png")
+	u.fakeImage = loadUIAssetImage(u.dir, "Guard.png")
+	u.gitImage = loadUIAssetImage(u.dir, "GitHub.png")
+	u.startImage = loadUIAssetImage(u.dir, "start.png")
+	u.enableImage = loadUIAssetImage(u.dir, "enable.png")
+	u.disabledImage = loadUIAssetImage(u.dir, "disabled.png")
 	u.buildRoot()
 	u.buildHeader()
 	u.buildSidebar()
@@ -476,11 +520,11 @@ func (u *nativeUI) layout(size core.Size) {
 	}
 	u.mask.SetBounds(core.Rect{X: 0, Y: 0, W: w, H: h})
 
-	rightGitX := w - m - u.dp(90)
-	rightFakeX := rightGitX - u.dp(92)
+	rightGitX := w - m - u.dp(120)
+	rightFakeX := rightGitX - u.dp(138)
 
-	u.btnGit.SetBounds(core.Rect{X: rightGitX, Y: m + u.dp(10), W: u.dp(74), H: u.dp(36)})
-	u.btnFake.SetBounds(core.Rect{X: rightFakeX, Y: m + u.dp(10), W: u.dp(82), H: u.dp(36)})
+	u.btnGit.SetBounds(core.Rect{X: rightGitX, Y: m + u.dp(8), W: u.dp(116), H: u.dp(40)})
+	u.btnFake.SetBounds(core.Rect{X: rightFakeX, Y: m + u.dp(8), W: u.dp(130), H: u.dp(40)})
 
 	leftX := m + u.dp(18)
 	u.brandLabel.SetBounds(core.Rect{X: leftX, Y: m + u.dp(6), W: u.dp(120), H: u.dp(40)})
@@ -524,9 +568,10 @@ func (u *nativeUI) layout(size core.Size) {
 	u.ruleTitle.SetBounds(core.Rect{X: cardX, Y: topY + u.dp(10), W: cardW - u.dp(168), H: u.dp(24)})
 	u.btnRuleFocus.SetBounds(core.Rect{X: contentX + contentW - u.dp(82), Y: topY + u.dp(9), W: u.dp(68), H: u.dp(28)})
 	u.ruleState.SetBounds(core.Rect{X: contentX + contentW - u.dp(160), Y: topY + u.dp(12), W: u.dp(68), H: u.dp(18)})
-	u.searchBox.SetBounds(core.Rect{X: cardX, Y: topY + u.dp(40), W: cardW - u.dp(134), H: u.dp(30)})
-	u.btnAdd.SetBounds(core.Rect{X: contentX + contentW - u.dp(120), Y: topY + u.dp(40), W: u.dp(54), H: u.dp(30)})
-	u.btnDel.SetBounds(core.Rect{X: contentX + contentW - u.dp(60), Y: topY + u.dp(40), W: u.dp(46), H: u.dp(30)})
+	u.searchBox.SetBounds(core.Rect{X: cardX, Y: topY + u.dp(40), W: cardW - u.dp(292), H: u.dp(30)})
+	u.btnEnabled.SetBounds(core.Rect{X: contentX + contentW - u.dp(280), Y: topY + u.dp(40), W: u.dp(96), H: u.dp(30)})
+	u.btnDisabled.SetBounds(core.Rect{X: contentX + contentW - u.dp(176), Y: topY + u.dp(40), W: u.dp(96), H: u.dp(30)})
+	u.btnAdd.SetBounds(core.Rect{X: contentX + contentW - u.dp(72), Y: topY + u.dp(40), W: u.dp(58), H: u.dp(30)})
 	ruleListH := rulesH - u.dp(116)
 	if ruleListH < u.dp(40) {
 		ruleListH = u.dp(40)
@@ -537,7 +582,8 @@ func (u *nativeUI) layout(size core.Size) {
 	u.ruleState.SetVisible(contentPlan.ShowRuleBody)
 	u.searchBox.SetVisible(contentPlan.ShowRuleBody)
 	u.btnAdd.SetVisible(contentPlan.ShowRuleBody)
-	u.btnDel.SetVisible(contentPlan.ShowRuleBody)
+	u.btnEnabled.SetVisible(contentPlan.ShowRuleBody)
+	u.btnDisabled.SetVisible(contentPlan.ShowRuleBody)
 	u.btnRuleFocus.SetVisible(contentPlan.ShowRuleBody)
 	u.rulesList.SetVisible(contentPlan.ShowRuleBody)
 	u.ruleNote.SetVisible(contentPlan.ShowRuleBody)
@@ -637,6 +683,12 @@ func (u *nativeUI) layoutDialogs(w, h int32) {
 	u.addCancel.SetBounds(core.Rect{X: addRect.X + addRect.W - u.dp(184), Y: addRect.Y + addRect.H - u.dp(58), W: u.dp(74), H: u.dp(36)})
 	u.addConfirm.SetBounds(core.Rect{X: addRect.X + addRect.W - u.dp(100), Y: addRect.Y + addRect.H - u.dp(58), W: u.dp(76), H: u.dp(36)})
 
+	alertRect := center(u.dp(420), u.dp(200))
+	u.alertDialog.SetBounds(alertRect)
+	u.alertLabel.SetBounds(core.Rect{X: alertRect.X + u.dp(24), Y: alertRect.Y + u.dp(24), W: alertRect.W - u.dp(48), H: alertRect.H - u.dp(110)})
+	u.alertClose.SetBounds(core.Rect{X: alertRect.X + (alertRect.W-u.dp(76))/2, Y: alertRect.Y + alertRect.H - u.dp(58), W: u.dp(76), H: u.dp(36)})
+
+
 	aboutRect := center(u.dp(500), u.dp(372))
 	u.aboutDialog.SetBounds(aboutRect)
 	u.aboutTitle.SetBounds(core.Rect{X: aboutRect.X + u.dp(24), Y: aboutRect.Y + u.dp(18), W: aboutRect.W - u.dp(48), H: u.dp(28)})
@@ -664,6 +716,7 @@ func (u *nativeUI) layoutDialogs(w, h int32) {
 	u.updateCheck.SetBounds(core.Rect{X: updateRect.X + updateRect.W - u.dp(286), Y: updateRect.Y + updateRect.H - u.dp(58), W: u.dp(90), H: u.dp(36)})
 	u.updateGo.SetBounds(core.Rect{X: updateRect.X + updateRect.W - u.dp(188), Y: updateRect.Y + updateRect.H - u.dp(58), W: u.dp(76), H: u.dp(36)})
 	u.updateClose.SetBounds(core.Rect{X: updateRect.X + updateRect.W - u.dp(100), Y: updateRect.Y + updateRect.H - u.dp(58), W: u.dp(76), H: u.dp(36)})
+	u.setWaiting(u.updateWait, core.Rect{X: updateRect.X + (updateRect.W-u.dp(120))/2, Y: updateRect.Y + u.dp(160), W: u.dp(120), H: u.dp(120)}, u.updateWait != nil && u.updateWait.Visible())
 
 	syncRect := center(u.dp(650), u.dp(500))
 	u.syncDialog.SetBounds(syncRect)
@@ -679,6 +732,7 @@ func (u *nativeUI) layoutDialogs(w, h int32) {
 	u.syncCheck.SetBounds(core.Rect{X: syncRect.X + syncRect.W - u.dp(286), Y: syncRect.Y + syncRect.H - u.dp(58), W: u.dp(90), H: u.dp(36)})
 	u.syncGo.SetBounds(core.Rect{X: syncRect.X + syncRect.W - u.dp(188), Y: syncRect.Y + syncRect.H - u.dp(58), W: u.dp(76), H: u.dp(36)})
 	u.syncClose.SetBounds(core.Rect{X: syncRect.X + syncRect.W - u.dp(100), Y: syncRect.Y + syncRect.H - u.dp(58), W: u.dp(76), H: u.dp(36)})
+	u.setWaiting(u.syncWait, core.Rect{X: syncRect.X + (syncRect.W-u.dp(120))/2, Y: syncRect.Y + u.dp(150), W: u.dp(120), H: u.dp(120)}, u.syncWait != nil && u.syncWait.Visible())
 
 	uploadRect := center(u.dp(600), u.dp(470))
 	u.uploadDialog.SetBounds(uploadRect)

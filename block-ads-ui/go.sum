@@ -6,6 +6,10 @@ github.com/AzureIvory/winui v0.0.0-20260506031225-5262d392387a h1:IARjkxgbVZKFQD
 github.com/AzureIvory/winui v0.0.0-20260506031225-5262d392387a/go.mod h1:SgTDwLjYVac+/XDxWNAraGLQhLeA4KQ0NBLomSpdPMw=
 github.com/AzureIvory/winui v0.0.0-20260507010134-7b61168b17b0 h1:WqmRNF+AYIWns5kLuYt999PIjBkAfIEgyFL1r55OXRo=
 github.com/AzureIvory/winui v0.0.0-20260507010134-7b61168b17b0/go.mod h1:SgTDwLjYVac+/XDxWNAraGLQhLeA4KQ0NBLomSpdPMw=
+github.com/AzureIvory/winui v0.0.0-20260617034450-5af77f0797bc h1:cQTNomXaHXIpOoetwg1YeDNQOTTtMqdEGFu6Wo3i/d4=
+github.com/AzureIvory/winui v0.0.0-20260617034450-5af77f0797bc/go.mod h1:SgTDwLjYVac+/XDxWNAraGLQhLeA4KQ0NBLomSpdPMw=
+github.com/AzureIvory/winui v0.0.0-20260617053449-806b6891370c h1:vuGGUya3sy/lfSeOa5b6P73dbnxn2uvrsgq3s+FtLuE=
+github.com/AzureIvory/winui v0.0.0-20260617053449-806b6891370c/go.mod h1:SgTDwLjYVac+/XDxWNAraGLQhLeA4KQ0NBLomSpdPMw=
 github.com/Microsoft/go-winio v0.4.14 h1:+hMXMk01us9KgxGb7ftKQt2Xpf5hH/yky+TDA+qxleU=
 github.com/Microsoft/go-winio v0.4.14/go.mod h1:qXqCSQ3Xa7+6tgxaGTIe4Kpcdsi+P8jBhyzoq1bpyYA=
 github.com/bi-zone/etw v0.0.0-20210519083747-fe9042eb0ea8 h1:mu/7j4dwooeHJVd40dlsefisptEztBbFMcmxp+LvBLw=

@@ -201,6 +201,18 @@ func readBlk(baseDir string) (*blkSet, error) {
 	foldSet, _ := readSetLower(filepath.Join(baseDir, "folder.txt"))
 	whiteFoldSet, _ := readSetLower(filepath.Join(baseDir, "Wfolder.txt"))
 	whiteSignSet, _ := readSet(filepath.Join(baseDir, "Wsign.txt"))
+
+	// 叠加用户层增量（新增 / 禁用），txt 本身只读，不存放用户开关状态。
+	ur := readUserRules(filepath.Join(baseDir, "user_rules.json"))
+	applyAdd(signSet, "sign", ur["sign"].Add)
+	applyAdd(foldSet, "folder", ur["folder"].Add)
+	applyAdd(whiteFoldSet, "whitelist", ur["whitelist"].Add)
+	applyAdd(whiteSignSet, "signWhite", ur["signWhite"].Add)
+	applyDisable(signSet, "sign", ur["sign"].Disabled)
+	applyDisable(foldSet, "folder", ur["folder"].Disabled)
+	applyDisable(whiteFoldSet, "whitelist", ur["whitelist"].Disabled)
+	applyDisable(whiteSignSet, "signWhite", ur["signWhite"].Disabled)
+
 	return &blkSet{
 		Signers:      signSet,
 		Folders:      foldSet,
@@ -249,6 +261,60 @@ func readSetLower(path string) (map[string]struct{}, error) {
 		out[line] = struct{}{}
 	}
 	return out, sc.Err()
+}
+
+// ruleOverride 描述用户在某一类规则上的增量改动：add 为新增，disabled 为禁用。
+// 与 block-ads-ui 的 userRules 结构一一对应，JSON 字段名必须保持一致。
+type ruleOverride struct {
+	Add      []string `json:"add"`
+	Disabled []string `json:"disabled"`
+}
+
+// userRules 按 lstMap 的 key（sign/folder/whitelist/signWhite）记录用户层增量。
+type userRules map[string]ruleOverride
+
+// readUserRules 读取 user_rules.json。文件缺失或解析失败时返回空 map，
+// 不阻断引擎启动；与 readSet 的容错语义保持一致。
+func readUserRules(path string) userRules {
+	out := userRules{}
+	b, err := os.ReadFile(path)
+	if err != nil {
+		return out
+	}
+	_ = json.Unmarshal(b, &out)
+	return out
+}
+
+// normRule 对规则文本做与 readSet/readSetLower 一致的规范化。
+// folder/whitelist 类需小写 + filepath.Clean；sign/signWhite 类保持原样。
+// key 与 block-ads-ui 的 lstMap key 保持一致。规范化逻辑必须与 UI 侧完全相同，
+// 否则 disabled/add 项与引擎 set 内的 key 对不上会导致开关失效。
+func normRule(key, val string) string {
+	val = strings.TrimSpace(val)
+	if key == "folder" || key == "whitelist" {
+		return strings.ToLower(filepath.Clean(val))
+	}
+	return val
+}
+
+// applyAdd 将用户新增的规则合并进集合，folder 类先规范化。
+func applyAdd(set map[string]struct{}, key string, add []string) {
+	for _, v := range add {
+		if strings.TrimSpace(v) == "" {
+			continue
+		}
+		set[normRule(key, v)] = struct{}{}
+	}
+}
+
+// applyDisable 从集合中剔除用户禁用的规则，folder 类先规范化以匹配集合 key。
+func applyDisable(set map[string]struct{}, key string, disabled []string) {
+	for _, v := range disabled {
+		if strings.TrimSpace(v) == "" {
+			continue
+		}
+		delete(set, normRule(key, v))
+	}
 }
 
 func windowsDirLower() string {

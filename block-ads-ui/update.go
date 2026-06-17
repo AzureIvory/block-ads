@@ -534,6 +534,9 @@ func (d *appDat) ChkUpd() (UpdateInfo, error) {
 }
 
 func (d *appDat) ChkSyn() (SyncInfo, error) {
+	updMu.Lock()
+	defer updMu.Unlock()
+
 	var rmt SyncManifest
 	_, _, err := getJSON(synUrls, &rmt)
 	if err != nil {
@@ -574,6 +577,9 @@ func (d *appDat) ChkSyn() (SyncInfo, error) {
 }
 
 func (d *appDat) DoSyn(req map[string]interface{}) (bool, error) {
+	updMu.Lock()
+	defer updMu.Unlock()
+
 	pol := strings.ToLower(strings.TrimSpace(fmt.Sprint(req["policy"])))
 	if pol == "" {
 		pol = "auto_selected"
@@ -667,6 +673,13 @@ func (d *appDat) DoUpdNative(onExit func()) (bool, error) {
 	if err := os.MkdirAll(tmpDir, 0755); err != nil {
 		return false, err
 	}
+	// 失败时清理临时目录。
+	success := false
+	defer func() {
+		if !success {
+			_ = os.RemoveAll(tmpDir)
+		}
+	}()
 
 	for _, name := range keys {
 		it := rmt.Items[name]
@@ -728,6 +741,7 @@ func (d *appDat) DoUpdNative(onExit func()) (bool, error) {
 			onExit()
 		}()
 	}
+	success = true
 	return true, nil
 }
 
