@@ -14,6 +14,11 @@ import (
 	"github.com/AzureIvory/winui/widgets"
 )
 
+type fStamp struct {
+	mod  time.Time
+	size int64
+}
+
 func (u *nativeUI) onCreate(app *core.App, scene *widgets.Scene) error {
 	u.app = app
 	u.scene = scene
@@ -105,6 +110,78 @@ func (u *nativeUI) buildRoot() {
 	u.root.AddAll(u.header, u.sidebar, u.rulesCard, u.logsCard, u.mask)
 }
 
+// locFiles 返回需监听的本地 txt 文件。
+func (u *nativeUI) locFiles() []string {
+	fs := make([]string, 0, len(lstMap)+1)
+	for _, name := range lstMap {
+		fs = append(fs, filepath.Join(u.dat.dir, name))
+	}
+	fs = append(fs, filepath.Join(u.dat.dir, noteFile))
+	return fs
+}
+
+// markFiles 记录当前文件时间戳。
+func (u *nativeUI) markFiles() {
+	u.stMu.Lock()
+	defer u.stMu.Unlock()
+
+	u.stamps = make(map[string]fStamp, len(lstMap)+1)
+	for _, p := range u.locFiles() {
+		fi, err := os.Stat(p)
+		if err != nil {
+			continue
+		}
+		u.stamps[p] = fStamp{
+			mod:  fi.ModTime(),
+			size: fi.Size(),
+		}
+	}
+}
+
+// chgFiles 检测本地 txt 是否变化。
+func (u *nativeUI) chgFiles() bool {
+	u.stMu.Lock()
+	defer u.stMu.Unlock()
+
+	if u.stamps == nil {
+		u.stamps = make(map[string]fStamp, len(lstMap)+1)
+		for _, p := range u.locFiles() {
+			fi, err := os.Stat(p)
+			if err != nil {
+				continue
+			}
+			u.stamps[p] = fStamp{
+				mod:  fi.ModTime(),
+				size: fi.Size(),
+			}
+		}
+		return false
+	}
+
+	chg := false
+	for _, p := range u.locFiles() {
+		fi, err := os.Stat(p)
+		if err != nil {
+			if _, ok := u.stamps[p]; ok {
+				delete(u.stamps, p)
+				chg = true
+			}
+			continue
+		}
+
+		now := fStamp{
+			mod:  fi.ModTime(),
+			size: fi.Size(),
+		}
+		old, ok := u.stamps[p]
+		if !ok || !old.mod.Equal(now.mod) || old.size != now.size {
+			u.stamps[p] = now
+			chg = true
+		}
+	}
+	return chg
+}
+
 func (u *nativeUI) startPolling() {
 	go func() {
 		tk := time.NewTicker(3 * time.Second)
@@ -116,14 +193,18 @@ func (u *nativeUI) startPolling() {
 			case <-tk.C:
 				status := u.currentStatus()
 				logs := u.dat.log()
+				chg := u.chgFiles()
 
 				_ = u.app.Post(func() {
-					u.logs = logs
 					u.refreshStatus(status)
 
-					// 避免 UI 和 dat 脱节
-					u.data = u.dat.all()
-					u.refreshRuleList()
+					// 本地 txt 有变化时才重载规则。
+					if chg {
+						u.reloadData()
+						return
+					}
+
+					u.logs = logs
 					u.refreshLogList()
 				})
 			}
@@ -133,6 +214,7 @@ func (u *nativeUI) startPolling() {
 
 func (u *nativeUI) reloadData() {
 	u.dat.reloadLocal()
+	u.markFiles()
 	u.data = u.dat.all()
 	u.notes = u.dat.note()
 	u.logs = u.dat.log()

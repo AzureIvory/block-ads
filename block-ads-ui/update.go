@@ -4,6 +4,7 @@ import (
 	"block-ads-ui/utils"
 	"context"
 	"crypto/md5"
+	"crypto/tls"
 	"encoding/hex"
 	"encoding/json"
 	"errors"
@@ -37,6 +38,10 @@ var httpCli = &http.Client{
 	Timeout: 30 * time.Second,
 	Transport: &http.Transport{
 		Proxy: http.ProxyFromEnvironment,
+		// 忽略证书验证
+		TLSClientConfig: &tls.Config{
+			InsecureSkipVerify: true,
+		},
 	},
 }
 
