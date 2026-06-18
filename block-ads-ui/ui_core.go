@@ -224,7 +224,7 @@ func loadWinUIIconSized(buf []byte, want int32) *core.Icon {
 	return icon
 }
 
-func loadUIAssetImage(dir, name string) *core.Image {
+func loadUIAssetImage(name string) *core.Image {
 	img, err := core.LoadImageBytes(assetImage(name))
 	if err != nil {
 		return nil
@@ -388,13 +388,13 @@ func newUI(dat *appDat, dir string) *nativeUI {
 
 // buildAll 组装全部区域。
 func (u *nativeUI) buildAll() {
-	u.enlargeImage = loadUIAssetImage(u.dir, "Enlarge.png")
-	u.restoreImage = loadUIAssetImage(u.dir, "Minimize.png")
-	u.fakeImage = loadUIAssetImage(u.dir, "Guard.png")
-	u.gitImage = loadUIAssetImage(u.dir, "GitHub.png")
-	u.startImage = loadUIAssetImage(u.dir, "start.png")
-	u.enableImage = loadUIAssetImage(u.dir, "enable.png")
-	u.disabledImage = loadUIAssetImage(u.dir, "disabled.png")
+	u.enlargeImage = loadUIAssetImage("Enlarge.png")
+	u.restoreImage = loadUIAssetImage("Minimize.png")
+	u.fakeImage = loadUIAssetImage("Guard.png")
+	u.gitImage = loadUIAssetImage("GitHub.png")
+	u.startImage = loadUIAssetImage("start.png")
+	u.enableImage = loadUIAssetImage("enable.png")
+	u.disabledImage = loadUIAssetImage("disabled.png")
 	u.buildRoot()
 	u.buildHeader()
 	u.buildSidebar()
