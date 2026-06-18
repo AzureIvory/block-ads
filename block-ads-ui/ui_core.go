@@ -116,9 +116,14 @@ func (u *nativeUI) startPolling() {
 			case <-tk.C:
 				status := u.currentStatus()
 				logs := u.dat.log()
+
 				_ = u.app.Post(func() {
 					u.logs = logs
 					u.refreshStatus(status)
+
+					// 避免 UI 和 dat 脱节
+					u.data = u.dat.all()
+					u.refreshRuleList()
 					u.refreshLogList()
 				})
 			}
@@ -127,6 +132,7 @@ func (u *nativeUI) startPolling() {
 }
 
 func (u *nativeUI) reloadData() {
+	u.dat.reloadLocal()
 	u.data = u.dat.all()
 	u.notes = u.dat.note()
 	u.logs = u.dat.log()
@@ -687,7 +693,6 @@ func (u *nativeUI) layoutDialogs(w, h int32) {
 	u.alertDialog.SetBounds(alertRect)
 	u.alertLabel.SetBounds(core.Rect{X: alertRect.X + u.dp(24), Y: alertRect.Y + u.dp(24), W: alertRect.W - u.dp(48), H: alertRect.H - u.dp(110)})
 	u.alertClose.SetBounds(core.Rect{X: alertRect.X + (alertRect.W-u.dp(76))/2, Y: alertRect.Y + alertRect.H - u.dp(58), W: u.dp(76), H: u.dp(36)})
-
 
 	aboutRect := center(u.dp(500), u.dp(372))
 	u.aboutDialog.SetBounds(aboutRect)
