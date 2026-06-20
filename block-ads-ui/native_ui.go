@@ -73,6 +73,9 @@ type nativeUI struct {
 	stopCh   chan struct{}
 	stopOnce sync.Once
 
+	stMu   sync.Mutex
+	stamps map[string]fStamp
+
 	curKey            string
 	filter            string
 	selectedRuleIndex int

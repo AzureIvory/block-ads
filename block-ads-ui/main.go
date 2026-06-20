@@ -208,14 +208,27 @@ func newDat(dir string) *appDat {
 		not: make(map[string]string),
 		lg:  nil,
 	}
+	d.reloadLocalLocked()
+	d.lg = rdLog(dir)
+	return d
+}
+
+// reloadLocalLocked 重新读取磁盘上的规则、备注和用户增量。
+// 调用方必须保证不会并发修改 d 的内存视图。
+func (d *appDat) reloadLocalLocked() {
 	for k, name := range lstMap {
-		p := filepath.Join(dir, name)
+		p := filepath.Join(d.dir, name)
 		d.lst[k] = rdTxt(p)
 	}
-	d.not = rdNote(filepath.Join(dir, noteFile))
-	d.lg = rdLog(dir)
-	d.rules = rdUserRules(filepath.Join(dir, userRulesFile))
-	return d
+	d.not = rdNote(filepath.Join(d.dir, noteFile))
+	d.rules = rdUserRules(filepath.Join(d.dir, userRulesFile))
+}
+
+// reloadLocal 重新读取磁盘上的规则、备注和用户增量。
+func (d *appDat) reloadLocal() {
+	d.mu.Lock()
+	defer d.mu.Unlock()
+	d.reloadLocalLocked()
 }
 
 func rdTxt(p string) []string {

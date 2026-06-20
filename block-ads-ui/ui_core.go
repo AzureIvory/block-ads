@@ -14,6 +14,11 @@ import (
 	"github.com/AzureIvory/winui/widgets"
 )
 
+type fStamp struct {
+	mod  time.Time
+	size int64
+}
+
 func (u *nativeUI) onCreate(app *core.App, scene *widgets.Scene) error {
 	u.app = app
 	u.scene = scene
@@ -105,6 +110,78 @@ func (u *nativeUI) buildRoot() {
 	u.root.AddAll(u.header, u.sidebar, u.rulesCard, u.logsCard, u.mask)
 }
 
+// locFiles 返回需监听的本地 txt 文件。
+func (u *nativeUI) locFiles() []string {
+	fs := make([]string, 0, len(lstMap)+1)
+	for _, name := range lstMap {
+		fs = append(fs, filepath.Join(u.dat.dir, name))
+	}
+	fs = append(fs, filepath.Join(u.dat.dir, noteFile))
+	return fs
+}
+
+// markFiles 记录当前文件时间戳。
+func (u *nativeUI) markFiles() {
+	u.stMu.Lock()
+	defer u.stMu.Unlock()
+
+	u.stamps = make(map[string]fStamp, len(lstMap)+1)
+	for _, p := range u.locFiles() {
+		fi, err := os.Stat(p)
+		if err != nil {
+			continue
+		}
+		u.stamps[p] = fStamp{
+			mod:  fi.ModTime(),
+			size: fi.Size(),
+		}
+	}
+}
+
+// chgFiles 检测本地 txt 是否变化。
+func (u *nativeUI) chgFiles() bool {
+	u.stMu.Lock()
+	defer u.stMu.Unlock()
+
+	if u.stamps == nil {
+		u.stamps = make(map[string]fStamp, len(lstMap)+1)
+		for _, p := range u.locFiles() {
+			fi, err := os.Stat(p)
+			if err != nil {
+				continue
+			}
+			u.stamps[p] = fStamp{
+				mod:  fi.ModTime(),
+				size: fi.Size(),
+			}
+		}
+		return false
+	}
+
+	chg := false
+	for _, p := range u.locFiles() {
+		fi, err := os.Stat(p)
+		if err != nil {
+			if _, ok := u.stamps[p]; ok {
+				delete(u.stamps, p)
+				chg = true
+			}
+			continue
+		}
+
+		now := fStamp{
+			mod:  fi.ModTime(),
+			size: fi.Size(),
+		}
+		old, ok := u.stamps[p]
+		if !ok || !old.mod.Equal(now.mod) || old.size != now.size {
+			u.stamps[p] = now
+			chg = true
+		}
+	}
+	return chg
+}
+
 func (u *nativeUI) startPolling() {
 	go func() {
 		tk := time.NewTicker(3 * time.Second)
@@ -116,9 +193,18 @@ func (u *nativeUI) startPolling() {
 			case <-tk.C:
 				status := u.currentStatus()
 				logs := u.dat.log()
+				chg := u.chgFiles()
+
 				_ = u.app.Post(func() {
-					u.logs = logs
 					u.refreshStatus(status)
+
+					// 本地 txt 有变化时才重载规则。
+					if chg {
+						u.reloadData()
+						return
+					}
+
+					u.logs = logs
 					u.refreshLogList()
 				})
 			}
@@ -127,6 +213,8 @@ func (u *nativeUI) startPolling() {
 }
 
 func (u *nativeUI) reloadData() {
+	u.dat.reloadLocal()
+	u.markFiles()
 	u.data = u.dat.all()
 	u.notes = u.dat.note()
 	u.logs = u.dat.log()
@@ -218,7 +306,7 @@ func loadWinUIIconSized(buf []byte, want int32) *core.Icon {
 	return icon
 }
 
-func loadUIAssetImage(dir, name string) *core.Image {
+func loadUIAssetImage(name string) *core.Image {
 	img, err := core.LoadImageBytes(assetImage(name))
 	if err != nil {
 		return nil
@@ -382,13 +470,13 @@ func newUI(dat *appDat, dir string) *nativeUI {
 
 // buildAll 组装全部区域。
 func (u *nativeUI) buildAll() {
-	u.enlargeImage = loadUIAssetImage(u.dir, "Enlarge.png")
-	u.restoreImage = loadUIAssetImage(u.dir, "Minimize.png")
-	u.fakeImage = loadUIAssetImage(u.dir, "Guard.png")
-	u.gitImage = loadUIAssetImage(u.dir, "GitHub.png")
-	u.startImage = loadUIAssetImage(u.dir, "start.png")
-	u.enableImage = loadUIAssetImage(u.dir, "enable.png")
-	u.disabledImage = loadUIAssetImage(u.dir, "disabled.png")
+	u.enlargeImage = loadUIAssetImage("Enlarge.png")
+	u.restoreImage = loadUIAssetImage("Minimize.png")
+	u.fakeImage = loadUIAssetImage("Guard.png")
+	u.gitImage = loadUIAssetImage("GitHub.png")
+	u.startImage = loadUIAssetImage("start.png")
+	u.enableImage = loadUIAssetImage("enable.png")
+	u.disabledImage = loadUIAssetImage("disabled.png")
 	u.buildRoot()
 	u.buildHeader()
 	u.buildSidebar()
@@ -687,7 +775,6 @@ func (u *nativeUI) layoutDialogs(w, h int32) {
 	u.alertDialog.SetBounds(alertRect)
 	u.alertLabel.SetBounds(core.Rect{X: alertRect.X + u.dp(24), Y: alertRect.Y + u.dp(24), W: alertRect.W - u.dp(48), H: alertRect.H - u.dp(110)})
 	u.alertClose.SetBounds(core.Rect{X: alertRect.X + (alertRect.W-u.dp(76))/2, Y: alertRect.Y + alertRect.H - u.dp(58), W: u.dp(76), H: u.dp(36)})
-
 
 	aboutRect := center(u.dp(500), u.dp(372))
 	u.aboutDialog.SetBounds(aboutRect)
