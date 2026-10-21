@@ -43,6 +43,8 @@ func InspectRecovery(root string) ([]RecoveryFinding, error) {
 			finding.Disposition, finding.Evidence = inspectReferenceOperation(root, operation)
 		case "remove_persistence":
 			finding.Disposition, finding.Evidence = inspectPersistenceRemoval(root, operation)
+		case "restore_persistence":
+			finding.Disposition, finding.Evidence = inspectPersistenceRestore(root, operation)
 		case "case_commit":
 			finding.Disposition, finding.Evidence = inspectCaseCommit(root, operation)
 		}
@@ -492,7 +494,23 @@ func inspectCaseCommitGaps(root string, existing []RecoveryFinding) ([]RecoveryF
 			if err := json.Unmarshal(b, &operation); err != nil {
 				return nil, err
 			}
-			if operation.Action != "restore_file" || operation.CaseID != c.ID {
+			if operation.CaseID != c.ID {
+				continue
+			}
+			if operation.Action == "restore_persistence" {
+				for _, item := range c.Persistence {
+					if PersistenceID(item.Type, item.Location, item.Name) != operation.PersistenceID || item.Status == "restored" {
+						continue
+					}
+					key := c.ID + "\x00persistence\x00" + operation.PersistenceID
+					if !seen[key] {
+						seen[key] = true
+						findings = append(findings, RecoveryFinding{Operation: operation, Disposition: "manual_review", Evidence: "restore_persistence committed but case item state was not committed"})
+					}
+				}
+				continue
+			}
+			if operation.Action != "restore_file" {
 				continue
 			}
 			for _, artifact := range c.Artifacts {

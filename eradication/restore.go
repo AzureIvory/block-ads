@@ -4,6 +4,7 @@ package eradication
 
 import (
 	"context"
+	"crypto/sha256"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -111,15 +112,52 @@ func RestoreCaseWithObserver(root, id string, observer OperationObserver) error 
 				continue
 			}
 			precondition := fmt.Sprintf("type=%s location=%s backup=%s", item.Type, item.Location, item.BackupPath)
-			if err := runJournaled(root, OperationEntry{
+			intent := OperationEntry{
 				CaseID: id, PersistenceID: PersistenceID(item.Type, item.Location, item.Name),
 				Action: "restore_persistence", Target: item.Name, RelatedPath: item.Target, Precondition: precondition,
-			}, observer, func() error {
-				return restorePersistence(root, id, *item)
+				PersistenceType: item.Type, PersistenceLocation: item.Location, BackupPath: item.BackupPath,
+				ExpectedValue: item.Evidence, ValueType: item.ValueType,
+			}
+			if item.Type == "startup_link" || item.Type == "task" {
+				if !backupWithin(root, id, item.BackupPath) {
+					err := fmt.Errorf("persistence backup outside case directory")
+					item.Error = err.Error()
+					failures = append(failures, err)
+					continue
+				}
+				hash, err := fileSHA256(item.BackupPath)
+				if err != nil {
+					item.Error = err.Error()
+					failures = append(failures, err)
+					continue
+				}
+				intent.ExpectedHash = hash
+			}
+			if err := runJournaled(root, intent, observer, func() error {
+				if item.Target == "" {
+					return fmt.Errorf("restore item lacks an associated artifact path")
+				}
+				if intent.ExpectedHash != "" {
+					if hash, err := fileSHA256(item.BackupPath); err != nil || hash != intent.ExpectedHash {
+						return fmt.Errorf("persistence backup changed after intent: %v", err)
+					}
+				}
+				if err := restorePersistence(root, id, *item, intent.ExpectedHash); err != nil {
+					return err
+				}
+				if item.Type == "registry_run" || item.Type == "startup_link" {
+					present, err := persistenceRestoreObserved(root, intent)
+					if err != nil || !present {
+						return fmt.Errorf("restored persistence verification failed (present=%t): %v", present, err)
+					}
+				}
+				return nil
 			}); err != nil {
+				item.Error = err.Error()
 				failures = append(failures, fmt.Errorf("restore %s %s: %w", item.Type, item.Name, err))
 			} else {
 				item.Status = "restored"
+				item.Error = ""
 			}
 		}
 	}
@@ -224,9 +262,12 @@ func backupWithin(root, id, path string) bool {
 	return beneath(path, base)
 }
 
-func restorePersistence(root, id string, item PersistenceItem) error {
+func restorePersistence(root, id string, item PersistenceItem, expectedBackupHash string) error {
 	switch item.Type {
 	case "registry_run":
+		if item.ValueType != registry.SZ && item.ValueType != registry.EXPAND_SZ {
+			return fmt.Errorf("unsupported registry value type %d", item.ValueType)
+		}
 		for _, loc := range runLocations {
 			if locationName(loc) != item.Location {
 				continue
@@ -236,17 +277,16 @@ func restorePersistence(root, id string, item PersistenceItem) error {
 				return err
 			}
 			defer key.Close()
-			if existing, _, err := key.GetStringValue(item.Name); err == nil {
-				if existing == item.Evidence {
+			if existing, valueType, err := key.GetStringValue(item.Name); err == nil {
+				if existing == item.Evidence && valueType == item.ValueType {
 					return nil
 				}
-				return fmt.Errorf("Run value already exists with different content")
+				return fmt.Errorf("Run value already exists with different content or type")
+			} else if !errors.Is(err, registry.ErrNotExist) {
+				return fmt.Errorf("cannot inspect existing Run value: %w", err)
 			}
 			if item.ValueType == registry.EXPAND_SZ {
 				return key.SetExpandStringValue(item.Name, item.Evidence)
-			}
-			if item.ValueType != registry.SZ {
-				return fmt.Errorf("unsupported registry value type %d", item.ValueType)
 			}
 			return key.SetStringValue(item.Name, item.Evidence)
 		}
@@ -266,12 +306,17 @@ func restorePersistence(root, id string, item PersistenceItem) error {
 		}
 		if _, err := os.Lstat(item.Location); err == nil {
 			return fmt.Errorf("shortcut path already exists")
+		} else if !errors.Is(err, os.ErrNotExist) {
+			return err
 		}
 		b, err := os.ReadFile(item.BackupPath)
 		if err != nil {
 			return err
 		}
-		return atomicWrite(item.Location, b)
+		if expectedBackupHash == "" || fmt.Sprintf("%x", sha256.Sum256(b)) != expectedBackupHash {
+			return fmt.Errorf("shortcut backup changed before publication")
+		}
+		return publishRestoredShortcut(item.Location, b)
 	case "task":
 		if !backupWithin(root, id, item.BackupPath) {
 			return fmt.Errorf("task backup outside case directory")

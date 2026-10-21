@@ -123,6 +123,18 @@ func TestJournalSequenceCorruptionIsRejected(t *testing.T) {
 			{ID: "first", Sequence: 1, Phase: "intent"},
 			{ID: "first", Sequence: 2, Phase: "committed"},
 		}},
+		{"backup hash mismatch", []eradication.OperationEntry{
+			{ID: "first", Sequence: 1, Phase: "intent", ExpectedHash: "original"},
+			{ID: "first", Sequence: 1, Phase: "committed", ExpectedHash: "replacement"},
+		}},
+		{"persistence location mismatch", []eradication.OperationEntry{
+			{ID: "first", Sequence: 1, Phase: "intent", PersistenceLocation: "Run"},
+			{ID: "first", Sequence: 1, Phase: "committed", PersistenceLocation: "RunOnce"},
+		}},
+		{"registry type mismatch", []eradication.OperationEntry{
+			{ID: "first", Sequence: 1, Phase: "intent", ValueType: 1},
+			{ID: "first", Sequence: 1, Phase: "committed", ValueType: 2},
+		}},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			root := testRoot(t)

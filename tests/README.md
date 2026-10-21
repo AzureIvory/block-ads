@@ -25,6 +25,8 @@ $env:BLOCK_ADS_TEST_REAL_PERSISTENCE = '1'
 go test ./tests -run '^(TestRegistryRunAndRunOnceRoundTrip|TestScheduledTaskRoundTrip)$' -count=1 -v
 ```
 
+同一隔离 runner 还执行 `TestRunRestoreChecksValueTypeAndCrashBoundaries`，验证 Run 恢复的三个崩溃边界、`REG_EXPAND_SZ` 保留及同内容不同类型/二进制占位值拒绝覆盖。普通测试中的 `TestCrashAtStartupRestoreBoundaries`、`TestStartupRestoreRefusesChangedInputs`、`TestStartupRestoreRecoveryDetectsConflicts` 和 `TestStartupRestoreCommitsVerifiedEvidence` 使用隔离目录验证快捷方式恢复，不触碰真实 Startup 目录。
+
 真实加载 DLL 的测试需要 Windows C 编译器 `gcc`，会在隔离目录编译一个无签名测试 DLL，让可控子进程加载，再验证 EXE/DLL 隔离、恢复和重启后的重新命中：
 
 ```powershell

@@ -155,7 +155,7 @@ func TestRestoreWaitsForOccupiedExecutableBeforeStartup(t *testing.T) {
 	if err := os.WriteFile(backup, []byte("shortcut backup"), 0600); err != nil {
 		t.Fatal(err)
 	}
-	c.Persistence = append(c.Persistence, eradication.PersistenceItem{Type: "startup_link", Location: link, BackupPath: backup, Status: "removed"})
+	c.Persistence = append(c.Persistence, eradication.PersistenceItem{Type: "startup_link", Name: filepath.Base(link), Location: link, Target: path, BackupPath: backup, Status: "removed"})
 	b, err := json.Marshal(c)
 	if err != nil {
 		t.Fatal(err)
@@ -424,7 +424,7 @@ func TestShortcutBackupRestoresExactBytes(t *testing.T) {
 	if err := os.WriteFile(backup, data, 0600); err != nil {
 		t.Fatal(err)
 	}
-	c := eradication.Case{ID: "shortcut-case", Persistence: []eradication.PersistenceItem{{Type: "startup_link", Location: link, BackupPath: backup, Status: "removed"}}}
+	c := eradication.Case{ID: "shortcut-case", Persistence: []eradication.PersistenceItem{{Type: "startup_link", Name: filepath.Base(link), Location: link, Target: filepath.Join(appData, "sample.exe"), BackupPath: backup, Status: "removed"}}}
 	b, err := json.Marshal(c)
 	if err != nil {
 		t.Fatal(err)

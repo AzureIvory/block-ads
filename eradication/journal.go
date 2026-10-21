@@ -254,7 +254,10 @@ func ValidateJournalOrder(root string) error {
 		}
 		for id, result := range results {
 			intent, ok := intents[id]
-			if !ok || intent.Sequence != result.Sequence || intent.Action != result.Action || intent.Target != result.Target {
+			// Only outcome fields may change. Recovery relies on the complete
+			// persistence/file identity and preconditions recorded by the intent.
+			result.Phase, result.Error, result.At = intent.Phase, intent.Error, intent.At
+			if !ok || intent != result {
 				return fmt.Errorf("journal result does not match intent %s", id)
 			}
 		}
