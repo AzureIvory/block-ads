@@ -12,6 +12,7 @@ import (
 	"testing"
 	"time"
 
+	"golang.org/x/sys/windows"
 	"golang.org/x/sys/windows/registry"
 )
 
@@ -133,8 +134,13 @@ func TestPostCleanDetectsRestartedImageWithoutTerminatingIt(t *testing.T) {
 	if !found || c.Status != "partial_failure" {
 		t.Fatalf("restarted process not reported: %+v", c)
 	}
-	if child.ProcessState != nil {
-		t.Fatal("verification waited for or terminated restarted process")
+	h, err := windows.OpenProcess(windows.SYNCHRONIZE, false, uint32(child.Process.Pid))
+	if err != nil {
+		t.Fatalf("restarted process is no longer queryable: %v", err)
+	}
+	defer windows.CloseHandle(h)
+	if state, err := windows.WaitForSingleObject(h, 0); err != nil || state != uint32(windows.WAIT_TIMEOUT) {
+		t.Fatalf("verification did not preserve the live restarted process: state=%d err=%v", state, err)
 	}
 }
 
