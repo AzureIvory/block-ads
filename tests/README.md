@@ -27,6 +27,8 @@ go test ./tests -run '^(TestRegistryRunAndRunOnceRoundTrip|TestScheduledTaskRoun
 
 同一隔离 runner 还执行 `TestRunRestoreChecksValueTypeAndCrashBoundaries`，验证 Run 恢复的三个崩溃边界、`REG_EXPAND_SZ` 保留及同内容不同类型/二进制占位值拒绝覆盖。普通测试中的 `TestCrashAtStartupRestoreBoundaries`、`TestStartupRestoreRefusesChangedInputs`、`TestStartupRestoreRecoveryDetectsConflicts` 和 `TestStartupRestoreCommitsVerifiedEvidence` 使用隔离目录验证快捷方式恢复，不触碰真实 Startup 目录。
 
+`TestTaskXMLMatchesCompleteDefinition` 和 `TestTaskXMLRejectsIncompleteOrAmbiguousDefinitions` 在普通测试中验证完整 XML 比较、UTF-16 与命名空间前缀、参数空格保留、配置差异和损坏输入；不访问系统任务。`TestTaskRestoreVerificationAndCrashBoundaries` 仅由上述隔离 runner 开启，覆盖真实任务完整 XML 恢复、三个崩溃边界、恢复后配置被更改、备份变化、占位任务不覆盖及任务位置校验。
+
 真实加载 DLL 的测试需要 Windows C 编译器 `gcc`，会在隔离目录编译一个无签名测试 DLL，让可控子进程加载，再验证 EXE/DLL 隔离、恢复和重启后的重新命中：
 
 ```powershell

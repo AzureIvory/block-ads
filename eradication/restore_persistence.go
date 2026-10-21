@@ -49,6 +49,8 @@ func persistenceRestoreObserved(root string, operation OperationEntry) (bool, er
 		return false, fmt.Errorf("restore intent lacks persistence identity or artifact association")
 	}
 	switch operation.PersistenceType {
+	case "task":
+		return taskRestoreObserved(root, operation)
 	case "registry_run":
 		if operation.ValueType != registry.SZ && operation.ValueType != registry.EXPAND_SZ {
 			return false, fmt.Errorf("unsupported Run value type")
@@ -113,7 +115,7 @@ func persistenceRestoreObserved(root string, operation OperationEntry) (bool, er
 }
 
 func inspectPersistenceRestore(root string, operation OperationEntry) (string, string) {
-	if operation.PersistenceType != "registry_run" && operation.PersistenceType != "startup_link" {
+	if operation.PersistenceType != "registry_run" && operation.PersistenceType != "startup_link" && operation.PersistenceType != "task" {
 		return "manual_review", "persistence restore requires type-specific verification"
 	}
 	present, err := persistenceRestoreObserved(root, operation)

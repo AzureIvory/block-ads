@@ -3,17 +3,14 @@
 package eradication
 
 import (
-	"context"
 	"crypto/sha256"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"strings"
-	"time"
 
 	"golang.org/x/sys/windows"
 	"golang.org/x/sys/windows/registry"
@@ -145,7 +142,7 @@ func RestoreCaseWithObserver(root, id string, observer OperationObserver) error 
 				if err := restorePersistence(root, id, *item, intent.ExpectedHash); err != nil {
 					return err
 				}
-				if item.Type == "registry_run" || item.Type == "startup_link" {
+				if item.Type == "registry_run" || item.Type == "startup_link" || item.Type == "task" {
 					present, err := persistenceRestoreObserved(root, intent)
 					if err != nil || !present {
 						return fmt.Errorf("restored persistence verification failed (present=%t): %v", present, err)
@@ -318,23 +315,7 @@ func restorePersistence(root, id string, item PersistenceItem, expectedBackupHas
 		}
 		return publishRestoredShortcut(item.Location, b)
 	case "task":
-		if !backupWithin(root, id, item.BackupPath) {
-			return fmt.Errorf("task backup outside case directory")
-		}
-		ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
-		defer cancel()
-		tool, err := systemTool("schtasks.exe")
-		if err != nil {
-			return err
-		}
-		if err := exec.CommandContext(ctx, tool, "/Query", "/TN", item.Name).Run(); err == nil {
-			return fmt.Errorf("task already exists")
-		}
-		out, err := exec.CommandContext(ctx, tool, "/Create", "/TN", item.Name, "/XML", item.BackupPath).CombinedOutput()
-		if err != nil {
-			return fmt.Errorf("schtasks create: %w: %s", err, strings.TrimSpace(string(out)))
-		}
-		return nil
+		return restoreTask(root, id, item, expectedBackupHash)
 	case "service":
 		if !backupWithin(root, id, item.BackupPath) {
 			return fmt.Errorf("service backup outside case directory")
