@@ -3,6 +3,7 @@
 package main
 
 import (
+	"block-ads/eradication"
 	"fmt"
 	"os"
 	"os/exec"
@@ -194,9 +195,11 @@ func (u *nativeUI) startPolling() {
 				status := u.currentStatus()
 				logs := u.dat.log()
 				chg := u.chgFiles()
+				reports, issues, caseErr := eradication.ListCaseReports(u.dir, 100)
 
 				_ = u.app.Post(func() {
 					u.refreshStatus(status)
+					u.applyCaseReports(reports, issues, caseErr)
 
 					// 本地 txt 有变化时才重载规则。
 					if chg {
@@ -623,6 +626,8 @@ func (u *nativeUI) layout(size core.Size) {
 
 	u.chkBoot.SetBounds(core.Rect{X: leftX, Y: m + u.dp(12), W: u.dp(106), H: u.dp(30)})
 	leftX += u.dp(112)
+	u.chkEradication.SetBounds(core.Rect{X: leftX, Y: m + u.dp(12), W: u.dp(106), H: u.dp(30)})
+	leftX += u.dp(112)
 
 	u.chkCode.SetBounds(core.Rect{X: leftX, Y: m + u.dp(12), W: u.dp(106), H: u.dp(30)})
 	leftX += u.dp(112)
@@ -650,6 +655,8 @@ func (u *nativeUI) layout(size core.Size) {
 	u.btnSync.SetBounds(core.Rect{X: sideX, Y: sideActionY + u.dp(36), W: sideBtnW, H: u.dp(32)})
 	u.btnUpdate.SetBounds(core.Rect{X: sideX, Y: sideActionY + u.dp(72), W: sideBtnW, H: u.dp(32)})
 	u.btnAbout.SetBounds(core.Rect{X: sideX, Y: sideActionY + u.dp(108), W: sideBtnW, H: u.dp(32)})
+	u.btnCases.SetBounds(core.Rect{X: sideX, Y: topY + u.dp(190), W: sideBtnW, H: u.dp(34)})
+	u.eradicationHint.SetBounds(core.Rect{X: sideX, Y: topY + u.dp(238), W: sideBtnW, H: u.dp(100)})
 
 	cardX := contentX + u.dp(14)
 	cardW := contentW - u.dp(28)
@@ -759,6 +766,7 @@ func (u *nativeUI) layout(size core.Size) {
 }
 
 func (u *nativeUI) layoutDialogs(w, h int32) {
+	u.layoutCasesDialog(w, h)
 	center := func(dw, dh int32) core.Rect {
 		return core.Rect{X: (w - dw) / 2, Y: (h - dh) / 2, W: dw, H: dh}
 	}

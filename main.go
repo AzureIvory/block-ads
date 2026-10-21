@@ -2,6 +2,7 @@ package main
 
 import (
 	"block-ads/eradication"
+	"block-ads/settings"
 	"block-ads/utils"
 	"bufio"
 	"encoding/json"
@@ -35,11 +36,9 @@ var (
 )
 
 // config.json
-type Config struct {
-}
+type Config = settings.Config
 
 var (
-	cfgMu   sync.RWMutex
 	cfg     Config
 	cfgPath string
 
@@ -332,7 +331,7 @@ func windowsDirLower() string {
 }
 
 func defaultConfig() Config {
-	return Config{}
+	return settings.Default()
 }
 
 func loadConfig() {
@@ -341,47 +340,12 @@ func loadConfig() {
 		appDir = filepath.Dir(exe)
 	}
 	cfgPath = filepath.Join(appDir, "config.json")
-	base := defaultConfig()
-
-	b, err := os.ReadFile(cfgPath)
+	var err error
+	cfg, err = settings.Load(cfgPath)
 	if err != nil {
-		cfgMu.Lock()
-		cfg = base
-		cfgMu.Unlock()
-		_ = saveConfig()
-		return
-	}
-
-	if err := json.Unmarshal(b, &base); err != nil {
-		// 配置损坏：备份后重置
-		_ = os.WriteFile(cfgPath+".bad", b, 0644)
-		cfgMu.Lock()
 		cfg = defaultConfig()
-		cfgMu.Unlock()
-		_ = saveConfig()
-		return
+		log.Printf("[CONFIG] 配置读取失败，使用仅拦截模式: %v", err)
 	}
-
-	cfgMu.Lock()
-	cfg = base
-	cfgMu.Unlock()
-}
-
-func saveConfig() error {
-	cfgMu.RLock()
-	b, err := json.MarshalIndent(cfg, "", "  ")
-	cfgMu.RUnlock()
-	if err != nil {
-		return err
-	}
-
-	tmp := cfgPath + ".tmp"
-	if err := os.WriteFile(tmp, b, 0644); err != nil {
-		return err
-	}
-	// Windows: rename 不能覆盖已存在文件
-	_ = os.Remove(cfgPath)
-	return os.Rename(tmp, cfgPath)
 }
 
 func normalizeLowerPath(path string) string {
@@ -674,6 +638,10 @@ func procHit(pid, ppid uint32, fullPath, src string, eventAt time.Time, bl *blkS
 	if !procGate.Enter(pid, fullPath) {
 		return
 	}
+	if eradicator == nil {
+		fuck(pid, ppid, fullPath, signer, hits, src)
+		return
+	}
 	eradication.DispatchMatchedProcess(eradicator, eradication.Match{
 		PID: pid, ParentPID: ppid, Image: fullPath, Signer: signer,
 		RuleKind: hits[0].Kind, Rule: hits[0].Text, Source: src, EventAt: eventAt,
@@ -803,15 +771,18 @@ func run() error {
 		}
 	}
 	var err error
-	eradicator, err = eradication.NewManagerWithObservation(appDir, 256, 2, eradication.ObservationOptions{Window: 10 * time.Second, Interval: time.Second})
-	if err != nil {
-		return err
-	}
-	eradicator.OnContainment = func(hit eradication.HitEvent, exited bool, err error) {
-		if !exited || err != nil {
-			log.Printf("[ERADICATION] PID %d exit verification failed: %v", hit.PID, err)
+	if cfg.EradicationMode == settings.AutoQuarantine {
+		eradicator, err = eradication.NewManagerWithObservation(appDir, 256, 2, eradication.ObservationOptions{Window: 10 * time.Second, Interval: time.Second})
+		if err != nil {
+			return err
+		}
+		eradicator.OnContainment = func(hit eradication.HitEvent, exited bool, err error) {
+			if !exited || err != nil {
+				log.Printf("[ERADICATION] PID %d exit verification failed: %v", hit.PID, err)
+			}
 		}
 	}
+	log.Printf("[CONFIG] eradication_mode=%s", cfg.EradicationMode)
 	// 并发扫描；退出时先等扫描结束，再关闭根除队列。
 	scanDone := make(chan struct{})
 	go func() {

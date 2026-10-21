@@ -3,6 +3,7 @@
 package main
 
 import (
+	"block-ads/eradication"
 	"sync"
 
 	"github.com/AzureIvory/winui/core"
@@ -138,11 +139,22 @@ type nativeUI struct {
 	btnLogWhite *widgets.Button
 	btnLogFocus *widgets.Button
 
-	chkBoot   *widgets.CheckBox
-	chkCode   *widgets.CheckBox
-	searchBox *widgets.EditBox
-	rulesList *widgets.ListBox
-	logsList  *widgets.ListBox
+	chkBoot         *widgets.CheckBox
+	chkEradication  *widgets.CheckBox
+	eradicationHint *widgets.Label
+	btnCases        *widgets.Button
+	casesDialog     *widgets.Panel
+	casesTitle      *widgets.Label
+	casesList       *widgets.ListBox
+	casesDetail     *widgets.EditBox
+	casesClose      *widgets.Button
+	casesRefresh    *widgets.Button
+	caseReports     []eradication.CaseReport
+	caseSelected    string
+	chkCode         *widgets.CheckBox
+	searchBox       *widgets.EditBox
+	rulesList       *widgets.ListBox
+	logsList        *widgets.ListBox
 
 	sideButtons map[string]*widgets.Button
 
