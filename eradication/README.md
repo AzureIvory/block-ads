@@ -13,6 +13,8 @@
 
 每次任务在 `eradication/cases/<id>.json` 留下结果。处置前先保存 `<id>-plan.json`；计划任务 XML、快捷方式及服务注册表项另存于 `eradication/backups/<id>/`。快捷方式的 target、arguments、working directory 分开记录，并保留原始 `.lnk` 文件。隔离失败或即时校验失败记为 `pending`；即时处置成功记为 `pending_verification`，直到完成持续观察及重启后验证才能称为根除完成。同一管理器内的处置串行执行；隔离后的文件有稳定 artifact ID 与独立归属记录，多个 PID 命中同一文件时，各 case 引用该记录，实际文件只隔离一次。
 
+处置结束后会独立只读核对：原命中 PID 的创建身份及退出状态、进程快照中是否仍有相同 EXE 完整路径、已隔离/共享关联文件的原路径是否缺失，以及已移除 Run/Task/Startup 的精确位置是否仍为空。PID 已被复用时只记录原进程已退出，不操作新进程；同名候选进程无法查询完整路径时记为无法确认。每项检查写入独立 Action Journal，case 的 `verification` 保存范围、时间、operation ID、结果与证据；日志写入失败记为 `incomplete`，不能算通过。发现原路径或持久化位置重新占位、或同路径进程再运行，会保留现场并记为 `partial_failure`，不会凭这次观察再次删除或终止。占位内容不一定来自原软件，归因仍待后续调查。即时核对通过仍为 `pending_verification`；持续观察和重启后验证尚未完成。当前按删除用途优先推进这些验证，额外恢复扩展暂缓。
+
 原件删除遇到共享冲突时，先用 Windows Restart Manager 枚举占用者。只有占用进程的创建时间、镜像路径与文件 identity 都对应命中的 EXE，才会终止并确认退出；随后重试删除。其他占用进程不会被终止。仍被占用时尝试登记 `MoveFileEx(MOVEFILE_DELAY_UNTIL_REBOOT)`，case 和 artifact 保持 `pending_reboot`，原件仍存在，不能计为已隔离。登记通常需要管理员或 LocalSystem 权限；失败则保持 `pending`。重启后的实际删除尚需复查；登记只证明请求已写入系统，且路径在重启前被替换时有误删风险。
 
 ## 恢复

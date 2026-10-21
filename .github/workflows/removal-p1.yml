@@ -26,7 +26,7 @@ jobs:
       - name: Real persistence round-trip tests
         env:
           BLOCK_ADS_TEST_REAL_PERSISTENCE: '1'
-        run: go test ./tests -run '^(TestRegistryRunAndRunOnceRoundTrip|TestScheduledTaskRoundTrip|TestCrashAtRunRemovalBoundaries|TestCrashAtTaskRemovalBoundaries|TestRunRestoreChecksValueTypeAndCrashBoundaries|TestTaskRestoreVerificationAndCrashBoundaries)$' -count=1 -v
+        run: go test ./tests -run '^(TestRegistryRunAndRunOnceRoundTrip|TestScheduledTaskRoundTrip|TestCrashAtRunRemovalBoundaries|TestCrashAtTaskRemovalBoundaries|TestRunRestoreChecksValueTypeAndCrashBoundaries|TestTaskRestoreVerificationAndCrashBoundaries|TestPostCleanDetectsRealPersistenceRecreation)$' -count=1 -v
       - name: Loaded DLL quarantine and restore
         env:
           BLOCK_ADS_TEST_LIVE_DLL: '1'

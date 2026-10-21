@@ -76,15 +76,16 @@ type PersistenceItem struct {
 }
 
 type Case struct {
-	ID          string            `json:"id"`
-	Status      string            `json:"status"`
-	Hit         HitEvent          `json:"hit"`
-	StartedAt   time.Time         `json:"started_at"`
-	FinishedAt  time.Time         `json:"finished_at,omitempty"`
-	ProcessExit string            `json:"process_exit"`
-	Errors      []string          `json:"errors,omitempty"`
-	Artifacts   []Artifact        `json:"artifacts"`
-	Persistence []PersistenceItem `json:"persistence"`
+	ID           string               `json:"id"`
+	Status       string               `json:"status"`
+	Hit          HitEvent             `json:"hit"`
+	StartedAt    time.Time            `json:"started_at"`
+	FinishedAt   time.Time            `json:"finished_at,omitempty"`
+	ProcessExit  string               `json:"process_exit"`
+	Errors       []string             `json:"errors,omitempty"`
+	Artifacts    []Artifact           `json:"artifacts"`
+	Persistence  []PersistenceItem    `json:"persistence"`
+	Verification *VerificationSummary `json:"verification,omitempty"`
 }
 
 type Manager struct {
@@ -209,6 +210,9 @@ func (m *Manager) handle(hit HitEvent) {
 	defer m.remediateMu.Unlock()
 	c := Case{ID: newCaseID(hit), Status: "pending", Hit: hit, StartedAt: time.Now(), Artifacts: []Artifact{}, Persistence: []PersistenceItem{}}
 	defer func() {
+		if c.ProcessExit == "verified" && hasRemovedArtifacts(c) {
+			c.Verification = verifyPostClean(m.root, c, m.OnOperation)
+		}
 		c.Status = caseStatus(c)
 		c.FinishedAt = time.Now()
 		if err := m.saveCase(c); err != nil {
@@ -374,12 +378,13 @@ func caseStatus(c Case) string {
 	// recreate files and persistence after this worker exits. A future post-clean
 	// observation (including a reboot check) must explicitly mark completion.
 	status := "pending_verification"
+	pending := false
 	for _, a := range c.Artifacts {
 		if a.Status == "pending_reboot" {
 			return "pending_reboot"
 		}
 		if a.Status == "pending" || a.Status == "failed" {
-			return "pending"
+			pending = true
 		}
 		if a.Status == "review" {
 			status = "review"
@@ -387,11 +392,17 @@ func caseStatus(c Case) string {
 	}
 	for _, item := range c.Persistence {
 		if item.Status == "pending" || item.Status == "failed" || item.Status == "delete_requested" {
-			return "pending"
+			pending = true
 		}
 		if item.Status == "review" || item.Status == "experimental_review" {
 			status = "review"
 		}
+	}
+	if c.Verification != nil && c.Verification.Status == "failed" {
+		return "partial_failure"
+	}
+	if pending {
+		return "pending"
 	}
 	return status
 }

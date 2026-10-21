@@ -2,6 +2,8 @@
 
 按顺序推进，每项完成后记录测试场景、结果和提交。当前已有共享 artifact 归属记录及部分操作日志，但正式状态机、自动崩溃恢复和持续验证尚未实现。先把前六项验证扎实，再扩展检测范围。
 
+当前优先级已按实际用途调整：优先推进删除后的独立验证、重生观察、失败状态及只读结果展示。现有恢复功能保留，额外的恢复能力和自动回滚扩展暂缓，不再作为这些后续工作的前置条件；操作日志及崩溃后避免误删的检查仍继续保留。
+
 ## 1. HitEvent / integration correctness
 
 当前进度：`tests/` 中的可控子进程、模拟 ETW 属性、身份拒绝、双 PID 共享文件及恢复归属测试已通过。真实 Kernel Process ETW provider 测试在 Windows workflow 上通过，覆盖真实进程事件、HitEvent 和 case 的一对一追溯；本机非管理员会话仍无法启动 ETW session。加载 DLL 的进程在隔离、恢复、重启后再次命中并产生新 case；尚待原 `fuck` 日志的系统级回归和真实 PID 复用压力。
@@ -58,11 +60,11 @@
 
 ## 6. Post-clean verification
 
-- [ ] 在处置后立即核对原 EXE/DLL 不存在、命中进程已退出、精确关联的 Run/Task/Startup 未重建；服务继续只记录 `experimental_review`。
+- [x] 在处置后立即核对实际隔离/共享关联的原 EXE/DLL 不存在、命中进程已退出、相同镜像路径没有再次运行、已移除的 Run/Task/Startup 未重新占位；服务继续只记录 `experimental_review`。每项检查有独立 intent/result 与 case 中的 operation 引用、时间、范围和证据；无法读取为 `unknown`，日志失败不能记为通过。发现残留/重新占位记为 `partial_failure`（待重启删除仍优先保留 `pending_reboot`），单次通过仍保持 `pending_verification` 并标明需要观察和重启核对。不因同哈希文件、不同类型 Run 值或无关任务占位而再次删除；是否由原软件重建仍需进一步归因。
 - [ ] 设置有界观察窗口，检查文件、进程和持久化项是否重生；记录重生时间与关联的 updater/watchdog/helper 证据。仅凭一次文件不存在不能进入 `Verified`。
 - [ ] 在许可且具备可归因数据时观察 payload 下载或重新释放迹象；网络活动本身不能单独证明与命中软件有关。
 - [ ] 重启后再次验证文件、进程和持久化项；若无法自动完成，case 保持 `pending_verification` 并明确需要人工复查。
-- [ ] 将每次验证的范围、时间、结果和证据写入 Action Journal；全部必要检查通过后才转入 `Verified`，复现则进入 `PartialFailure` 或新一轮有归属的处置。
+- [ ] 将每次验证的范围、时间、结果和证据写入 Action Journal；即时核对已落盘，仍需覆盖有界观察及重启验证。全部必要检查通过后才转入 `Verified`，复现则进入 `PartialFailure` 或新一轮有归属的处置。
 
 ## 7. GUI read-only API
 

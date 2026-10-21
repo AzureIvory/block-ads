@@ -44,6 +44,8 @@ type OperationEntry struct {
 	Precondition        string    `json:"precondition,omitempty"`
 	Phase               string    `json:"phase"`
 	Error               string    `json:"error,omitempty"`
+	Outcome             string    `json:"outcome,omitempty"`
+	Evidence            string    `json:"evidence,omitempty"`
 	At                  time.Time `json:"at"`
 }
 
@@ -155,6 +157,11 @@ func nextOperationSequence(dir string) (uint64, error) {
 }
 
 func runJournaled(root string, entry OperationEntry, observer OperationObserver, perform func() error) error {
+	return runJournaledResult(root, entry, observer, func(_ *OperationEntry) error { return perform() })
+}
+
+// Result fields describe observations made after the durable intent.
+func runJournaledResult(root string, entry OperationEntry, observer OperationObserver, perform func(*OperationEntry) error) error {
 	entry.ID = newCaseID(HitEvent{})
 	entry.Phase = "intent"
 	entry.At = time.Now()
@@ -164,7 +171,7 @@ func runJournaled(root string, entry OperationEntry, observer OperationObserver,
 	if observer != nil {
 		observer(entry, "after_intent")
 	}
-	actionErr := perform()
+	actionErr := perform(&entry)
 	if observer != nil {
 		observer(entry, "after_action")
 	}
@@ -257,6 +264,7 @@ func ValidateJournalOrder(root string) error {
 			// Only outcome fields may change. Recovery relies on the complete
 			// persistence/file identity and preconditions recorded by the intent.
 			result.Phase, result.Error, result.At = intent.Phase, intent.Error, intent.At
+			result.Outcome, result.Evidence = intent.Outcome, intent.Evidence
 			if !ok || intent != result {
 				return fmt.Errorf("journal result does not match intent %s", id)
 			}
