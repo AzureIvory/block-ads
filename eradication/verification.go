@@ -47,10 +47,14 @@ func hasRemovedArtifacts(c Case) bool {
 }
 
 func verifyPostClean(root string, c Case, observer OperationObserver) *VerificationSummary {
-	summary := &VerificationSummary{Scope: "immediate", Status: "passed", StartedAt: time.Now(), RequiresReboot: true, RequiresObservation: true}
+	return verifyPostCleanScope(root, c, observer, "immediate")
+}
+
+func verifyPostCleanScope(root string, c Case, observer OperationObserver, scope string) *VerificationSummary {
+	summary := &VerificationSummary{Scope: scope, Status: "passed", StartedAt: time.Now(), RequiresReboot: true, RequiresObservation: true}
 	check := func(kind string, entry OperationEntry, observe func() (string, string)) {
 		entry.CaseID, entry.Action = c.ID, "verify_"+kind
-		entry.Precondition = "read-only post-clean observation; no retry, deletion or restoration"
+		entry.Precondition = "scope=" + scope + "; read-only post-clean observation; no retry, deletion or restoration"
 		result := VerificationCheck{Kind: kind, Target: entry.Target, Outcome: "unknown"}
 		err := runJournaledResult(root, entry, observer, func(operation *OperationEntry) error {
 			result.OperationID, result.At = operation.ID, time.Now()

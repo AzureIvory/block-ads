@@ -802,7 +802,11 @@ func run() error {
 			log.Printf("[ERADICATION] 未完成操作需核对: case=%s action=%s target=%s state=%s evidence=%s", operation.CaseID, operation.Action, operation.Target, finding.Disposition, finding.Evidence)
 		}
 	}
-	eradicator = eradication.NewManager(appDir, 256, 2)
+	var err error
+	eradicator, err = eradication.NewManagerWithObservation(appDir, 256, 2, eradication.ObservationOptions{Window: 10 * time.Second, Interval: time.Second})
+	if err != nil {
+		return err
+	}
 	eradicator.OnContainment = func(hit eradication.HitEvent, exited bool, err error) {
 		if !exited || err != nil {
 			log.Printf("[ERADICATION] PID %d exit verification failed: %v", hit.PID, err)

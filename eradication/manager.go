@@ -86,6 +86,7 @@ type Case struct {
 	Artifacts    []Artifact           `json:"artifacts"`
 	Persistence  []PersistenceItem    `json:"persistence"`
 	Verification *VerificationSummary `json:"verification,omitempty"`
+	Observation  *ObservationSummary  `json:"observation,omitempty"`
 }
 
 type Manager struct {
@@ -98,6 +99,9 @@ type Manager struct {
 	closed                 bool
 	workers                sync.WaitGroup
 	closeOnce              sync.Once
+	observationStop        chan struct{}
+	observations           sync.WaitGroup
+	observationOptions     ObservationOptions
 	OnContainment          func(HitEvent, bool, error)
 	OnOperation            OperationObserver
 	ScheduleDeleteAtReboot func(string) error
@@ -106,6 +110,19 @@ type Manager struct {
 }
 
 func NewManager(root string, queueSize, workerCount int) *Manager {
+	return newManager(root, queueSize, workerCount, ObservationOptions{})
+}
+
+// NewManagerWithObservation enables background sampling without delaying the
+// remediation queue. A zero window retains immediate-only verification.
+func NewManagerWithObservation(root string, queueSize, workerCount int, options ObservationOptions) (*Manager, error) {
+	if err := options.validate(); err != nil {
+		return nil, err
+	}
+	return newManager(root, queueSize, workerCount, options), nil
+}
+
+func newManager(root string, queueSize, workerCount int, options ObservationOptions) *Manager {
 	if queueSize < 1 {
 		queueSize = 256
 	}
@@ -113,6 +130,8 @@ func NewManager(root string, queueSize, workerCount int) *Manager {
 		workerCount = 2
 	}
 	m := &Manager{root: root, pending: make([]HitEvent, 0, queueSize), seenEvents: map[string]struct{}{}, ScheduleDeleteAtReboot: scheduleDeleteAtReboot}
+	m.observationStop = make(chan struct{})
+	m.observationOptions = options
 	m.recoveryBlocked = map[string]OperationEntry{}
 	if findings, err := InspectRecovery(root); err != nil {
 		m.recoveryReadErr = err
@@ -189,10 +208,12 @@ func (m *Manager) Close() {
 	m.closeOnce.Do(func() {
 		m.queueMu.Lock()
 		m.closed = true
+		close(m.observationStop)
 		m.queueReady.Broadcast()
 		m.queueMu.Unlock()
 	})
 	m.workers.Wait()
+	m.observations.Wait()
 }
 
 func newCaseID(hit HitEvent) string {
@@ -215,8 +236,14 @@ func (m *Manager) handle(hit HitEvent) {
 		}
 		c.Status = caseStatus(c)
 		c.FinishedAt = time.Now()
+		if m.observationOptions.Window > 0 && c.Status == "pending_verification" && c.Verification != nil && c.Verification.Status == "passed" {
+			c.Observation = newObservation(m.observationOptions)
+		}
 		if err := m.saveCase(c); err != nil {
 			log.Printf("[ERADICATION] case %s save failed: %v", c.ID, err)
+		} else if c.Observation != nil {
+			m.observations.Add(1)
+			go m.observeCase(c.ID, c.Observation.ID)
 		}
 	}()
 	if m.recoveryReadErr != nil {
@@ -398,7 +425,7 @@ func caseStatus(c Case) string {
 			status = "review"
 		}
 	}
-	if c.Verification != nil && c.Verification.Status == "failed" {
+	if c.Verification != nil && c.Verification.Status == "failed" || c.Observation != nil && c.Observation.Status == "failed" {
 		return "partial_failure"
 	}
 	if pending {
@@ -412,6 +439,18 @@ func (m *Manager) saveCase(c Case) error {
 }
 
 func commitCase(root string, c Case, observer OperationObserver) error {
+	path := filepath.Join(root, "eradication", "cases", c.ID+".json")
+	previousHash, err := fileSHA256(path)
+	if err != nil && !os.IsNotExist(err) {
+		return err
+	}
+	if os.IsNotExist(err) {
+		previousHash = ""
+	}
+	return commitCaseExpected(root, c, observer, previousHash)
+}
+
+func commitCaseExpected(root string, c Case, observer OperationObserver, previousHash string) error {
 	dir := filepath.Join(root, "eradication", "cases")
 	if err := os.MkdirAll(dir, 0700); err != nil {
 		return err
@@ -422,13 +461,6 @@ func commitCase(root string, c Case, observer OperationObserver) error {
 	}
 	sum := sha256.Sum256(b)
 	path := filepath.Join(dir, c.ID+".json")
-	previousHash, err := fileSHA256(path)
-	if err != nil && !os.IsNotExist(err) {
-		return err
-	}
-	if os.IsNotExist(err) {
-		previousHash = ""
-	}
 	return runJournaled(root, OperationEntry{
 		CaseID: c.ID, Action: "case_commit", Target: c.Hit.Image, RelatedPath: c.Hit.Image,
 		ExpectedHash: hex.EncodeToString(sum[:]), PreviousHash: previousHash,

@@ -17,6 +17,8 @@
 
 原件删除遇到共享冲突时，先用 Windows Restart Manager 枚举占用者。只有占用进程的创建时间、镜像路径与文件 identity 都对应命中的 EXE，才会终止并确认退出；随后重试删除。其他占用进程不会被终止。仍被占用时尝试登记 `MoveFileEx(MOVEFILE_DELAY_UNTIL_REBOOT)`，case 和 artifact 保持 `pending_reboot`，原件仍存在，不能计为已隔离。登记通常需要管理员或 LocalSystem 权限；失败则保持 `pending`。重启后的实际删除尚需复查；登记只证明请求已写入系统，且路径在重启前被替换时有误删风险。
 
+核心程序在即时核对通过的 `pending_verification` case 上继续后台观察 10 秒，默认每秒重复核对文件、进程与已移除持久化位置。等待不阻塞后续清理，单次采样和 case 提交与清理串行；每次采样仍写入独立 journal。case 的 `observation` 保存窗口截止时间、样本数量、最大采样间隔、各项证据和终态。发现重生进入 `partial_failure` 并保留现场；最终样本在截止后开始且所有检查通过、采样间隔不超过配置两倍时，才记为观察 `completed`。读取失败、日志失败或采样过迟记为 `incomplete`，关闭程序前未完成记为 `interrupted`；这些情况仍需要继续观察。后台提交会核对读取时的 case 哈希，发现 case 被其他操作修改时停止，避免用旧结果覆盖新状态。观察完成只消除当前窗口的观察要求，case 仍为 `pending_verification` 并要求重启后核对。采样无法保证捕获两次检查之间的瞬时重生；PID/父 PID 仅作为调查证据，不自动认定关联来源。进程被强制结束时可能留下 `observing`，没有完整窗口的提交记录便不能视为通过；当前不自动续跑旧窗口。直接使用 `NewManager` 的调用保留即时核对行为，后台观察由 `NewManagerWithObservation` 显式启用。
+
 ## 恢复
 
 使用 `block-ads.exe --restore-case <id>` 从隔离区恢复 EXE/DLL，并恢复可自动重建的 Run 项、Startup 快捷方式和计划任务。共享 artifact 的关联 case 先执行该命令释放引用，owner case 在引用释放后执行实际恢复；已有不同内容的原路径不会被覆盖。服务备份保留为 `.reg` 供人工检查，当前没有自动服务处置，也无需自动恢复服务。
