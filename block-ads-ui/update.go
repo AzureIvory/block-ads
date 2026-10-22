@@ -684,9 +684,7 @@ func (d *appDat) DoSyn(req map[string]interface{}) (bool, error) {
 		}
 		chg = true
 	}
-	if err := migration.finish(d.dir); err != nil {
-		return chg, err
-	}
+
 	_ = os.RemoveAll(filepath.Join(d.dir, ".sync_tmp"))
 	return chg, nil
 }
@@ -854,9 +852,6 @@ func AppPend(pendPth string, waitPID int) error {
 		if err := UpFRetry(tmp, tgt, isExe); err != nil {
 			return err
 		}
-	}
-	if err := migration.finish(base); err != nil {
-		return err
 	}
 
 	// 写 version.json
