@@ -341,11 +341,15 @@ func (d *appDat) saveRulesLocked() error {
 	if d.rules == nil {
 		d.rules = userRules{}
 	}
-	b, err := json.MarshalIndent(d.rules, "", "  ")
+	return writeUserRules(filepath.Join(d.dir, userRulesFile), d.rules)
+}
+
+func writeUserRules(path string, rules userRules) error {
+	b, err := json.MarshalIndent(rules, "", "  ")
 	if err != nil {
 		return err
 	}
-	return os.WriteFile(filepath.Join(d.dir, userRulesFile), b, 0644)
+	return os.WriteFile(path, b, 0644)
 }
 
 // disabledSet 返回某类规则被禁用项的规范化 key 集合，供 UI 批量判定（一次加锁）。
@@ -368,24 +372,6 @@ func (d *appDat) txtSet(key string) map[string]struct{} {
 		out[normRule(key, s)] = struct{}{}
 	}
 	return out
-}
-
-func (d *appDat) svLst(key string) error {
-	name, ok := lstMap[key]
-	if !ok {
-		return nil
-	}
-	p := filepath.Join(d.dir, name)
-	v := d.lst[key]
-
-	var b strings.Builder
-	for i, s := range v {
-		b.WriteString(s)
-		if i != len(v)-1 {
-			b.WriteString("\n")
-		}
-	}
-	return os.WriteFile(p, []byte(b.String()), 0644)
 }
 
 // 拷贝列表（txt 行 + 用户 add 段去重合并；disabled 不剔除，UI 仍需展示被禁用的行）
@@ -523,12 +509,12 @@ func (d *appDat) addWhite(kind, val, path string) (bool, error) {
 	}
 }
 
-// sign 模式：把签名加入Wsign.txt
+// sign 模式：把签名加入用户规则层，避免同步覆盖。
 func (d *appDat) addWsign(sign string) (bool, error) {
 	if sign == "" {
 		return false, os.ErrInvalid
 	}
-	wl := d.lst["signWhite"]
+	wl := d.mergedViewLocked("signWhite")
 
 	// 已存在则不重复写入
 	for _, s := range wl {
@@ -537,9 +523,10 @@ func (d *appDat) addWsign(sign string) (bool, error) {
 		}
 	}
 
-	wl = append(wl, sign)
-	d.lst["signWhite"] = wl
-	if err := d.svLst("signWhite"); err != nil {
+	ov := d.ruleOvLocked("signWhite")
+	ov.Add = append(ov.Add, sign)
+	d.rules["signWhite"] = ov
+	if err := d.saveRulesLocked(); err != nil {
 		return false, err
 	}
 	return true, nil
@@ -552,11 +539,12 @@ func (d *appDat) addWfolder(path string) (bool, error) {
 		return false, os.ErrInvalid
 	}
 
-	folders := d.lst["folder"]
+	folders := d.mergedViewLocked("folder")
 	if len(folders) == 0 {
 		return false, nil
 	}
-	wl := d.lst["whitelist"]
+	wl := d.mergedViewLocked("whitelist")
+	baseLen := len(wl)
 
 	// 预处理folder.txt
 	fset := make(map[string]struct{})
@@ -618,8 +606,13 @@ func (d *appDat) addWfolder(path string) (bool, error) {
 		return false, nil
 	}
 
-	d.lst["whitelist"] = wl
-	if err := d.svLst("whitelist"); err != nil {
+	ov := d.ruleOvLocked("whitelist")
+	// 仅追加本次新增的目录；云端基准仍保留在 Wfolder.txt。
+	for _, name := range wl[baseLen:] {
+		ov.Add = append(ov.Add, name)
+	}
+	d.rules["whitelist"] = ov
+	if err := d.saveRulesLocked(); err != nil {
 		return false, err
 	}
 	return true, nil

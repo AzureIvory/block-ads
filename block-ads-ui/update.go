@@ -606,6 +606,10 @@ func (d *appDat) ChkSyn() (SyncInfo, error) {
 func (d *appDat) DoSyn(req map[string]interface{}) (bool, error) {
 	updMu.Lock()
 	defer updMu.Unlock()
+	migration, err := newLegacyRuleMigration(d.dir)
+	if err != nil {
+		return false, err
+	}
 
 	pol := strings.ToLower(strings.TrimSpace(fmt.Sprint(req["policy"])))
 	if pol == "" {
@@ -620,13 +624,16 @@ func (d *appDat) DoSyn(req map[string]interface{}) (bool, error) {
 	}
 
 	var rmt SyncManifest
-	_, _, err := getJSON(synUrls, &rmt)
+	_, _, err = getJSON(synUrls, &rmt)
 	if err != nil {
 		return false, err
 	}
 
 	chg := false
 	for name, it := range rmt.Items {
+		if strings.EqualFold(filepath.Clean(name), userRulesFile) {
+			continue
+		}
 		if pol == "never" {
 			continue
 		}
@@ -655,6 +662,9 @@ func (d *appDat) DoSyn(req map[string]interface{}) (bool, error) {
 		if _, err := dlTo(it.URL, tmp, strings.TrimSpace(it.MD5)); err != nil {
 			return chg, err
 		}
+		if err := migration.preserve(d.dir, name, tmp); err != nil {
+			return chg, err
+		}
 
 		if err := os.MkdirAll(filepath.Dir(tgt), 0755); err != nil {
 			return chg, err
@@ -673,6 +683,9 @@ func (d *appDat) DoSyn(req map[string]interface{}) (bool, error) {
 			_ = os.Remove(tmp)
 		}
 		chg = true
+	}
+	if err := migration.finish(d.dir); err != nil {
+		return chg, err
 	}
 	_ = os.RemoveAll(filepath.Join(d.dir, ".sync_tmp"))
 	return chg, nil
@@ -720,6 +733,9 @@ func (d *appDat) DoUpdNative(onExit func()) (bool, error) {
 		rel := it.Path
 		if rel == "" {
 			rel = name
+		}
+		if strings.EqualFold(filepath.Clean(rel), userRulesFile) {
+			continue
 		}
 
 		tgt, err := safeJoin(d.dir, rel)
@@ -790,6 +806,10 @@ func AppPend(pendPth string, waitPID int) error {
 	}
 
 	base := filepath.Dir(pendPth)
+	migration, err := newLegacyRuleMigration(base)
+	if err != nil {
+		return err
+	}
 	if pend.TmpDir == "" {
 		pend.TmpDir = filepath.Join(base, ".update_tmp")
 	}
@@ -810,6 +830,9 @@ func AppPend(pendPth string, waitPID int) error {
 
 	for _, it := range pend.Items {
 		rel := it.RelPath
+		if strings.EqualFold(filepath.Clean(rel), userRulesFile) {
+			return fmt.Errorf("update must not replace %s", userRulesFile)
+		}
 
 		tmp, err := safeJoin(pend.TmpDir, rel)
 		if err != nil {
@@ -823,11 +846,17 @@ func AppPend(pendPth string, waitPID int) error {
 		if err := os.MkdirAll(filepath.Dir(tgt), 0755); err != nil {
 			return err
 		}
+		if err := migration.preserve(base, rel, tmp); err != nil {
+			return err
+		}
 
 		isExe := strings.HasSuffix(strings.ToLower(tgt), ".exe")
 		if err := UpFRetry(tmp, tgt, isExe); err != nil {
 			return err
 		}
+	}
+	if err := migration.finish(base); err != nil {
+		return err
 	}
 
 	// 写 version.json

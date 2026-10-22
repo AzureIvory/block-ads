@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/AzureIvory/winui/core"
 	"github.com/AzureIvory/winui/widgets"
@@ -85,7 +86,18 @@ func (u *nativeUI) buildRulesCard() {
 	u.searchBox.SetStyle(u.compactEditStyle())
 	u.searchBox.SetOnChange(func(text string) {
 		u.filter = strings.TrimSpace(text)
-		u.refreshRuleList()
+		u.searchSeq++
+		seq := u.searchSeq
+		if u.searchTimer != nil {
+			u.searchTimer.Stop()
+		}
+		u.searchTimer = time.AfterFunc(180*time.Millisecond, func() {
+			_ = u.app.Post(func() {
+				if seq == u.searchSeq {
+					u.refreshRuleList()
+				}
+			})
+		})
 	})
 
 	u.btnAdd = widgets.NewButton("add", "新增", widgets.ModeCustom)
