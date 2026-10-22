@@ -1,6 +1,8 @@
 package main
 
 import (
+	"block-ads/eradication"
+	"block-ads/settings"
 	"block-ads/utils"
 	"bufio"
 	"encoding/json"
@@ -34,25 +36,20 @@ var (
 )
 
 // config.json
-type Config struct {
-}
+type Config = settings.Config
 
 var (
-	cfgMu   sync.RWMutex
 	cfg     Config
 	cfgPath string
 
-	// 写白名单文件互斥
-	procGateMu sync.Mutex
-	procGate   = make(map[string]time.Time)
+	procGate = eradication.NewProcessGate(20 * time.Second)
 )
-
-const procGateTTL = 20 * time.Second
 
 // 日志
 var (
-	appDir string
-	logDir string //日志目录
+	appDir     string
+	logDir     string //日志目录
+	eradicator *eradication.Manager
 )
 
 // 黑名单 + 白名单
@@ -334,7 +331,7 @@ func windowsDirLower() string {
 }
 
 func defaultConfig() Config {
-	return Config{}
+	return settings.Default()
 }
 
 func loadConfig() {
@@ -343,47 +340,12 @@ func loadConfig() {
 		appDir = filepath.Dir(exe)
 	}
 	cfgPath = filepath.Join(appDir, "config.json")
-	base := defaultConfig()
-
-	b, err := os.ReadFile(cfgPath)
+	var err error
+	cfg, err = settings.Load(cfgPath)
 	if err != nil {
-		cfgMu.Lock()
-		cfg = base
-		cfgMu.Unlock()
-		_ = saveConfig()
-		return
-	}
-
-	if err := json.Unmarshal(b, &base); err != nil {
-		// 配置损坏：备份后重置
-		_ = os.WriteFile(cfgPath+".bad", b, 0644)
-		cfgMu.Lock()
 		cfg = defaultConfig()
-		cfgMu.Unlock()
-		_ = saveConfig()
-		return
+		log.Printf("[CONFIG] 配置读取失败，使用仅拦截模式: %v", err)
 	}
-
-	cfgMu.Lock()
-	cfg = base
-	cfgMu.Unlock()
-}
-
-func saveConfig() error {
-	cfgMu.RLock()
-	b, err := json.MarshalIndent(cfg, "", "  ")
-	cfgMu.RUnlock()
-	if err != nil {
-		return err
-	}
-
-	tmp := cfgPath + ".tmp"
-	if err := os.WriteFile(tmp, b, 0644); err != nil {
-		return err
-	}
-	// Windows: rename 不能覆盖已存在文件
-	_ = os.Remove(cfgPath)
-	return os.Rename(tmp, cfgPath)
 }
 
 func normalizeLowerPath(path string) string {
@@ -533,82 +495,6 @@ func inWhite(fullPath string, white map[string]struct{}) bool {
 }
 
 // 处理NT路径
-func processCreateTime(pid uint32) (windows.Filetime, error) {
-	h, err := windows.OpenProcess(windows.PROCESS_QUERY_LIMITED_INFORMATION, false, pid)
-	if err != nil {
-		return windows.Filetime{}, err
-	}
-	defer windows.CloseHandle(h)
-
-	var create, exit, kernel, user windows.Filetime
-	if err := windows.GetProcessTimes(h, &create, &exit, &kernel, &user); err != nil {
-		return windows.Filetime{}, err
-	}
-	return create, nil
-}
-
-func processGateKey(pid uint32, fullPath string) string {
-	if create, err := processCreateTime(pid); err == nil {
-		return fmt.Sprintf("%d:%d:%d", pid, create.HighDateTime, create.LowDateTime)
-	}
-	return fmt.Sprintf("%d:%s", pid, normalizeLowerPath(fullPath))
-}
-
-func enterProcessGate(pid uint32, fullPath string) bool {
-	key := processGateKey(pid, fullPath)
-	if key == "" {
-		return true
-	}
-
-	now := time.Now()
-	cutoff := now.Add(-procGateTTL)
-
-	procGateMu.Lock()
-	defer procGateMu.Unlock()
-
-	for k, seenAt := range procGate {
-		if seenAt.Before(cutoff) {
-			delete(procGate, k)
-		}
-	}
-
-	if seenAt, ok := procGate[key]; ok && now.Sub(seenAt) < procGateTTL {
-		return false
-	}
-
-	procGate[key] = now
-	return true
-}
-
-func fixPath(pid uint32, maybePath string) string {
-	translated := utils.NToWin(maybePath)
-	lp := strings.ToLower(translated)
-	if strings.Contains(lp, ":\\") && strings.HasSuffix(lp, ".exe") {
-		return translated
-	}
-	if p, err := utils.ProcPath(pid); err == nil && p != "" {
-		return utils.NToWin(p)
-	}
-	return translated
-}
-
-func pickImg(props map[string]interface{}) string {
-	keys := []string{
-		"ImageName", "ImageFileName", "FullImageName", "FileName", "Image", "ProcessName",
-	}
-	for _, k := range keys {
-		if v, ok := props[k]; ok {
-			if s, ok := v.(string); ok && s != "" {
-				return s
-			}
-			if b, ok := v.([]byte); ok && len(b) > 0 {
-				return string(b)
-			}
-		}
-	}
-	return ""
-}
-
 type hitInfo struct {
 	Kind string
 	Text string
@@ -724,7 +610,7 @@ func fuck(pid, ppid uint32, img, signer string, hits []hitInfo, src string) {
 	}
 }
 
-func procHit(pid, ppid uint32, fullPath, src string, bl *blkSet, short bool) {
+func procHit(pid, ppid uint32, fullPath, src string, eventAt time.Time, bl *blkSet, short bool) {
 	fullPath = utils.NToWin(fullPath)
 	if !utils.IsExe(fullPath) {
 		return
@@ -749,11 +635,20 @@ func procHit(pid, ppid uint32, fullPath, src string, bl *blkSet, short bool) {
 	if len(hits) == 0 {
 		return
 	}
-	if !enterProcessGate(pid, fullPath) {
+	if !procGate.Enter(pid, fullPath) {
 		return
 	}
-	//干掉黑名单
-	fuck(pid, ppid, fullPath, signer, hits, src)
+	if eradicator == nil {
+		fuck(pid, ppid, fullPath, signer, hits, src)
+		return
+	}
+	eradication.DispatchMatchedProcess(eradicator, eradication.Match{
+		PID: pid, ParentPID: ppid, Image: fullPath, Signer: signer,
+		RuleKind: hits[0].Kind, Rule: hits[0].Text, Source: src, EventAt: eventAt,
+	}, func() {
+		// Preserve the original immediate kill and log for every matched process.
+		fuck(pid, ppid, fullPath, signer, hits, src)
+	})
 }
 
 // 扫描
@@ -773,12 +668,11 @@ func scanNow(bl *blkSet, short bool, workers int) {
 			if pid == 0 || pid == 4 || pid == self {
 				continue
 			}
-			fullPath, err := utils.ProcPath(pid)
-			if err != nil || fullPath == "" {
+			candidate, ok := eradication.ScanCandidate(pid)
+			if !ok {
 				continue
 			}
-
-			procHit(pid, 0, fullPath, "SCAN-HIT", bl, short)
+			procHit(candidate.PID, candidate.ParentPID, candidate.Image, candidate.Source, candidate.EventAt, bl, short)
 		}
 	}
 
@@ -824,19 +718,11 @@ func runETW(bl *blkSet, short bool) (*etw.Session, *sync.WaitGroup, error) {
 			return
 		}
 
-		//从payload取PID，不行再header
-		pid, ok := utils.GetU32(props, "ProcessID", "ProcessId", "PID")
+		candidate, ok := eradication.ProcessCreateFromProperties(props, e.Header.ProcessID, e.Header.TimeStamp)
 		if !ok {
-			pid = e.Header.ProcessID
-		}
-		ppid, _ := utils.GetU32(props, "ParentProcessID", "ParentProcessId", "ParentId", "ParentID")
-
-		img := fixPath(pid, pickImg(props))
-		if img == "" {
 			return
 		}
-
-		procHit(pid, ppid, img, "ETW-HIT", bl, short)
+		procHit(candidate.PID, candidate.ParentPID, candidate.Image, candidate.Source, candidate.EventAt, bl, short)
 	}
 
 	var wg sync.WaitGroup
@@ -876,9 +762,37 @@ func run() error {
 	blkData = bl
 	blkLast = time.Now()
 	blkMu.Unlock()
-
-	// 并发扫描
-	go scanNow(bl, *fShort, *fWork)
+	if findings, err := eradication.InspectRecovery(appDir); err != nil {
+		log.Printf("[ERADICATION] 操作日志检查失败: %v", err)
+	} else {
+		for _, finding := range findings {
+			operation := finding.Operation
+			log.Printf("[ERADICATION] 未完成操作需核对: case=%s action=%s target=%s state=%s evidence=%s", operation.CaseID, operation.Action, operation.Target, finding.Disposition, finding.Evidence)
+		}
+	}
+	var err error
+	if cfg.EradicationMode == settings.AutoQuarantine {
+		eradicator, err = eradication.NewManagerWithObservation(appDir, 256, 2, eradication.ObservationOptions{Window: 10 * time.Second, Interval: time.Second})
+		if err != nil {
+			return err
+		}
+		eradicator.OnContainment = func(hit eradication.HitEvent, exited bool, err error) {
+			if !exited || err != nil {
+				log.Printf("[ERADICATION] PID %d exit verification failed: %v", hit.PID, err)
+			}
+		}
+	}
+	log.Printf("[CONFIG] eradication_mode=%s", cfg.EradicationMode)
+	// 并发扫描；退出时先等扫描结束，再关闭根除队列。
+	scanDone := make(chan struct{})
+	go func() {
+		defer close(scanDone)
+		scanNow(bl, *fShort, *fWork)
+	}()
+	defer func() {
+		<-scanDone
+		eradicator.Close()
+	}()
 
 	//runETW
 	session, wg, err := runETW(bl, *fShort)
@@ -898,6 +812,17 @@ func run() error {
 }
 
 func main() {
+	if len(os.Args) == 3 && os.Args[1] == "--restore-case" {
+		exe, err := os.Executable()
+		if err == nil {
+			err = eradication.RestoreCase(filepath.Dir(exe), os.Args[2])
+		}
+		if err != nil {
+			log.Fatalf("[RESTORE] %v", err)
+		}
+		log.Printf("[RESTORE] case %s restored", os.Args[2])
+		return
+	}
 	if err := run(); err != nil {
 		log.Fatalf("[FATAL] %v", err)
 	}

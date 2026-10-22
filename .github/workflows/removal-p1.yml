@@ -1,0 +1,33 @@
+name: Removal integration
+
+on:
+  push:
+    branches: [codex/removal]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  windows-integration:
+    runs-on: windows-2022
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: false
+      - name: Regular tests
+        run: go test ./...
+      - name: Live Kernel Process ETW test
+        env:
+          BLOCK_ADS_TEST_LIVE_ETW: '1'
+        run: go test ./tests -run '^TestLiveKernelProcessETW$' -count=1 -v
+      - name: Real persistence round-trip tests
+        env:
+          BLOCK_ADS_TEST_REAL_PERSISTENCE: '1'
+        run: go test ./tests -run '^(TestRegistryRunAndRunOnceRoundTrip|TestScheduledTaskRoundTrip|TestCrashAtRunRemovalBoundaries|TestCrashAtTaskRemovalBoundaries|TestRunRestoreChecksValueTypeAndCrashBoundaries|TestTaskRestoreVerificationAndCrashBoundaries|TestPostCleanDetectsRealPersistenceRecreation|TestObservationDetectsRealPersistenceRecreation)$' -count=1 -v
+      - name: Loaded DLL quarantine and restore
+        env:
+          BLOCK_ADS_TEST_LIVE_DLL: '1'
+        run: go test ./tests -run '^TestLoadedDLLQuarantineAndRestore$' -count=1 -v

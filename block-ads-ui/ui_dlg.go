@@ -21,6 +21,7 @@ func (u *nativeUI) buildDialogs() {
 	u.buildUpdateDialog()
 	u.buildSyncDialog()
 	u.buildUploadDialog()
+	u.buildCasesDialog()
 }
 
 // buildAlertDialog 构建 winui 风格的提示弹窗
@@ -70,7 +71,6 @@ func (u *nativeUI) buildAddDialog() {
 	u.addDialog.AddAll(u.addTitle, u.addHint, u.addInput, u.addCancel, u.addConfirm)
 	u.registerDialog(u.addDialog)
 }
-
 
 // tryRemoveSelectedLog 尝试卸载（查找并运行卸载程序）。
 func (u *nativeUI) tryRemoveSelectedLog() {
