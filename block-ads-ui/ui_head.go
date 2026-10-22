@@ -64,6 +64,7 @@ func (u *nativeUI) buildHeader() {
 
 func (u *nativeUI) refreshStatus(st uiSta) {
 	u.status = st
+	u.refreshEradicationMode()
 	u.chkBoot.SetChecked(st.Boot)
 	u.chkCode.SetChecked(st.CodeBoot)
 	if st.Adm {

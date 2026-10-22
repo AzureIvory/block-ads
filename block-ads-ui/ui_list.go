@@ -49,6 +49,7 @@ func (u *nativeUI) buildSidebar() {
 	})
 
 	u.sidebar.AddAll(u.btnUpload, u.btnSync, u.btnUpdate, u.btnAbout)
+	u.buildEradicationControls()
 }
 
 func (u *nativeUI) refreshSidebar() {
