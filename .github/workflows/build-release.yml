@@ -1,0 +1,132 @@
+name: Build and release Windows
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+    tags: ['v[0-9]*']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: windows-2022
+    timeout-minutes: 20
+    defaults:
+      run:
+        shell: pwsh
+    env:
+      GOOS: windows
+      GOARCH: amd64
+      CGO_ENABLED: '1'
+      GOFLAGS: -mod=readonly
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache-dependency-path: |
+            go.sum
+            block-ads-ui/go.sum
+
+      - name: Test core
+        run: go test ./...
+
+      - name: Test UI module
+        working-directory: block-ads-ui
+        run: go test ./...
+
+      - name: Build executables from source
+        run: |
+          $output = Join-Path $env:RUNNER_TEMP 'block-ads-release'
+          New-Item -ItemType Directory -Force -Path $output | Out-Null
+          $targets = @(
+            @{ Directory = '.'; Name = 'block-ads.exe' },
+            @{ Directory = 'block-ads-ui'; Name = 'Ui.exe' },
+            @{ Directory = 'fake'; Name = 'Code.exe' }
+          )
+          foreach ($target in $targets) {
+            Push-Location (Join-Path $env:GITHUB_WORKSPACE $target.Directory)
+            try {
+              go build -ldflags '-H=windowsgui -s -w -extldflags=-static' -trimpath -o (Join-Path $output $target.Name) .
+              if ($LASTEXITCODE -ne 0) { throw "Build failed: $($target.Name)" }
+            } finally {
+              Pop-Location
+            }
+          }
+
+      - name: Package portable distribution
+        run: |
+          $output = Join-Path $env:RUNNER_TEMP 'block-ads-release'
+          $package = Join-Path $env:RUNNER_TEMP 'block-ads-package'
+          New-Item -ItemType Directory -Force -Path $package | Out-Null
+          $label = "build-$env:GITHUB_RUN_NUMBER-$($env:GITHUB_SHA.Substring(0, 7))"
+          $version = '0'
+          if ($env:GITHUB_REF_TYPE -eq 'tag' -and $env:GITHUB_REF_NAME.StartsWith('v')) {
+            if ($env:GITHUB_REF_NAME -notmatch '^v[0-9][0-9A-Za-z.+-]*$') { throw 'Unsupported version tag' }
+            $label = $env:GITHUB_REF_NAME
+            $version = $label.Substring(1)
+          }
+          # Use an explicit allowlist. Never package a developer's config,
+          # user rules, logs, quarantine files or committed prebuilt EXEs.
+          foreach ($name in @('block-ads.exe', 'Ui.exe', 'Code.exe')) {
+            Copy-Item -LiteralPath (Join-Path $output $name) -Destination $package
+          }
+          foreach ($name in @('sign.txt', 'folder.txt', 'Wsign.txt', 'Wfolder.txt', 'note.txt', 'README.md')) {
+            Copy-Item -LiteralPath (Join-Path $env:GITHUB_WORKSPACE $name) -Destination $package
+          }
+          $manifest = [ordered]@{
+            version = $version
+            updated_at = [DateTime]::UtcNow.ToString('yyyy-MM-dd')
+            notes = "Build $env:GITHUB_SHA"
+            items = @{}
+          }
+          $manifest | ConvertTo-Json -Depth 4 | Set-Content -LiteralPath (Join-Path $package 'version.json') -Encoding utf8NoBOM
+          Copy-Item -LiteralPath (Join-Path $package 'version.json') -Destination $output
+          $archive = Join-Path $output "block-ads-$label-windows-amd64.zip"
+          Compress-Archive -Path (Join-Path $package '*') -DestinationPath $archive -CompressionLevel Optimal
+          $checksums = Get-ChildItem -LiteralPath $output -File | Sort-Object Name | ForEach-Object {
+            $hash = (Get-FileHash -LiteralPath $_.FullName -Algorithm SHA256).Hash.ToLowerInvariant()
+            "$hash  $($_.Name)"
+          }
+          $checksums | Set-Content -LiteralPath (Join-Path $output 'SHA256SUMS.txt') -Encoding utf8NoBOM
+          "### Windows AMD64 build`n`nPortable ZIP, three executables, version.json and SHA-256 checksums are available in the workflow artifact." >> $env:GITHUB_STEP_SUMMARY
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: block-ads-windows-amd64-${{ github.run_number }}
+          path: ${{ runner.temp }}/block-ads-release/*
+          if-no-files-found: error
+          retention-days: 30
+
+  release:
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    concurrency:
+      group: release-${{ github.ref }}
+      cancel-in-progress: false
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: block-ads-windows-amd64-${{ github.run_number }}
+          path: release-assets
+      - name: Publish versioned release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          args=("$RELEASE_TAG" release-assets/* --verify-tag --generate-notes --title "Block Ads $RELEASE_TAG")
+          if [[ "$RELEASE_TAG" == *-* ]]; then
+            args+=(--prerelease --latest=false)
+          fi
+          # Do not overwrite existing releases or silently replace their assets.
+          gh release create "${args[@]}"
