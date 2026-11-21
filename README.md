@@ -3,8 +3,6 @@
 > 本项目用于在 Windows 上基于**目录**与**签名**规则，对特定程序的运行进行拦截或放行，并提供可视化管理界面（基于原生 Win32 API 自绘 UI）。
 
 ## 下载地址
-> [蓝奏云-压缩包](https://bluered.lanzouv.com/ibG6h3s6ch0h)
-> [蓝奏云-安装包](https://bluered.lanzouv.com/ipMHr3s6chbi)
 > [Github-Release](https://github.com/AzureIvory/block-ads/releases)
 
 ## 文件说明
